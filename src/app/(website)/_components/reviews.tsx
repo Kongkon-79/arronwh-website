@@ -40,7 +40,7 @@ const reviews = [
 
 const Reviews = () => {
   return (
-    <section className="overflow-hidden bg-white py-12 md:py-14">
+    <section id="reviews" className="overflow-hidden bg-white py-12 md:py-14">
       <div className="container mx-auto px-0">
         <div className="mx-auto max-w-[540px] px-4 text-center">
           <h2 className="font-sora text-[24px] font-semibold text-[#334155] md:text-[34px]">

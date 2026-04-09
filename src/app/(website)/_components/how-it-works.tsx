@@ -40,7 +40,7 @@ const workSteps: WorkStep[] = [
 
 const HowItWorks = () => {
   return (
-    <section className="bg-white py-12 md:py-16">
+    <section id="how-it-works" className="bg-white py-12 md:py-16">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-[1120px]">
           <div className="mx-auto max-w-[560px] text-center">

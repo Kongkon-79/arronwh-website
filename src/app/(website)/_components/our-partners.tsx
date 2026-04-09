@@ -61,7 +61,7 @@ const OurPartners = () => {
                     alt={partner.alt}
                     width={160}
                     height={52}
-                    className="h-auto max-h-[22px] w-auto max-w-full object-contain opacity-65 grayscale md:max-h-[26px]"
+                    className="h-auto max-h-[22px] w-auto max-w-full object-cover opacity-65 grayscale md:max-h-[26px]"
                   />
                 </div>
               ))}

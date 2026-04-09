@@ -74,7 +74,7 @@ const themeClasses = {
 
 const ExploreOurHeating = () => {
   return (
-    <section className="bg-white py-12 md:py-16">
+    <section id="heating" className="bg-white py-12 md:py-16">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-[1030px]">
           <div className="mx-auto max-w-[520px] text-center">
