@@ -1,14 +1,15 @@
 import React from 'react'
-import SectionHeader from './_components/SectionHeader'
-import VehicleHistoryContent from './_components/VehicleHistoryContent'
 
-const TermsAndContionPage = () => {
+import Faq from '../_components/faq'
+import PrivacyPolicyContainer from './_components/privacy-policy-container'
+
+const PrivacyPolicyPage = () => {
   return (
     <div>
-      <SectionHeader/>
-      <VehicleHistoryContent/>
+      <PrivacyPolicyContainer/>
+      <Faq/>
     </div>
   )
 }
 
-export default TermsAndContionPage
+export default PrivacyPolicyPage

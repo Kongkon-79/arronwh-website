@@ -1,12 +1,13 @@
 import React from 'react'
-import SectionHeader from './_components/SectionHeader'
-import VehicleHistoryContent from './_components/VehicleHistoryContent'
+
+import Faq from '../_components/faq'
+import TermsConditionsContainer from './_components/terms-and-condition-container'
 
 const TermsAndContionPage = () => {
   return (
     <div>
-      <SectionHeader/>
-      <VehicleHistoryContent/>
+      <TermsConditionsContainer/>
+      <Faq/>
     </div>
   )
 }
