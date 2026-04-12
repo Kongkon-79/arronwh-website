@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { Check, ChevronRight } from "lucide-react";
 
 const heroPoints = [
@@ -43,15 +42,15 @@ const HeroSection = () => {
             </div>
           </div>
 
-          <div className="mx-auto flex w-full max-w-[560px] items-center justify-center lg:justify-end">
-            <div className="relative w-full max-w-[520px]">
-              <Image
-                src="/assets/images/hero_image.png"
-                alt="Boiler discount promotion"
-                width={1200}
-                height={900}
-                priority
-                className="h-auto w-full object-contain"
+          <div className="mx-auto flex w-full max-w-[560px] items-center justify-center lg:justify-end ">
+            <div className="relative w-full max-w-[520px] ">
+              <video
+                src="/assets/videos/hero_video.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="h-[420px] w-full object-cover md:h-[420px] lg:h-[456px] rounded-[12px]"
               />
             </div>
           </div>
