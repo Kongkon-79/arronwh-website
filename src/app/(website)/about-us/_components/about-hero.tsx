@@ -2,14 +2,14 @@ import Image from "next/image";
 
 export default function AboutHero() {
   return (
-    <section className="bg-[#f3f3f3] px-4 py-14 sm:px-6 md:py-16 lg:px-8 lg:py-20">
+    <section className="bg-white px-4 py-14 sm:px-6 md:py-16 lg:px-8 lg:py-20">
       <div className="mx-auto max-w-[1320px]">
         <div className="mb-10 text-center sm:mb-12 lg:mb-14">
-          <h2 className="text-[26px] font-semibold leading-[1.2] tracking-[-0.02em] text-[#24364B] sm:text-[34px] md:text-[42px] lg:text-[48px]">
+          <h2 className="heading ">
             We’re on a mission to simplify home heating.
           </h2>
 
-          <p className="mx-auto mt-3 max-w-[700px] text-[13px] leading-6 text-[#5D6B7A] sm:text-[14px] md:text-[15px]">
+          <p className="desc mt-2">
             No confusing quotes · No hidden cost · Everything online, fast &
             transparent
           </p>
@@ -17,11 +17,11 @@ export default function AboutHero() {
 
         <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.35fr] lg:gap-12 xl:gap-16">
           <div className="max-w-[500px]">
-            <h3 className="mb-5 text-[28px] font-semibold leading-[1.2] tracking-[-0.02em] text-[#24364B] sm:text-[32px] md:text-[36px]">
+            <h3 className="mb-5 heading">
               Our story
             </h3>
 
-            <div className="space-y-4 text-[14px] leading-7 text-[#445468] sm:text-[15px] md:text-[16px] md:leading-8">
+            <div className="space-y-4 desc">
               <p>
                 When you decide to upgrade your boiler, it shouldn’t feel
                 complicated or stressful — but for many homeowners, it still

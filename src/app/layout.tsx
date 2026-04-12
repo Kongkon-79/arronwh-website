@@ -5,24 +5,12 @@ import AuthProvider from "@/components/providers/AuthProvider";
 import AppProvider from "@/components/providers/AppProvider";
 import NextTopLoader from "nextjs-toploader";
 
-import { Sora, Poppins, Inter } from "next/font/google";
+import { Outfit } from "next/font/google";
 
-const sora = Sora({
+const outfit = Outfit({
   subsets: ["latin"],
-  variable: "--font-sora",
-  weight: ["400", "500", "600", "700"],
-});
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  variable: "--font-poppins",
-  weight: ["400", "500", "600", "700"],
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  weight: ["400", "500", "600", "700"],
+  weight: ["100","200","300","400","500","600","700","800","900"],
+  variable: "--font-outfit", // optional (for Tailwind)
 });
 
 export const metadata: Metadata = {
@@ -38,10 +26,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sora.variable} ${poppins.variable} ${inter.variable}`}
+      className={outfit.variable}
     >
       <body>
-        <NextTopLoader color="#1E3A8A" height={3} showSpinner={false} />
+        <NextTopLoader color="#FFDE59" height={3} showSpinner={false} />
         <AuthProvider>
           <AppProvider>
             {children}

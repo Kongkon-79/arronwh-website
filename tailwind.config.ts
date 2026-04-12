@@ -51,10 +51,8 @@ const config: Config = {
           "5": "hsl(var(--chart-5))",
         },
       },
-      fontFamily: {
-        sora: ["var(--font-sora)", "sans-serif"],
-        poppins: ["var(--font-poppins)", "sans-serif"],
-        inter: ["var(--font-inter)", "sans-serif"],
+       fontFamily: {
+        sans: ["var(--font-outfit)", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
