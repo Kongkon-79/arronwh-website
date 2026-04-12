@@ -29,7 +29,7 @@ export default function RootLayout({
       className={outfit.variable}
     >
       <body>
-        <NextTopLoader color="#1E3A8A" height={3} showSpinner={false} />
+        <NextTopLoader color="#FFDE59" height={3} showSpinner={false} />
         <AuthProvider>
           <AppProvider>
             {children}
