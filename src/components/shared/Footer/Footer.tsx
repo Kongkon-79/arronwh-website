@@ -58,13 +58,13 @@ const Footer = () => {
               <Link href="/" className="block desc">
                 New boilers
               </Link>
-              <Link href="/" className="block desc">
+              <Link href="/#reviews" className="block desc">
                 Reviews
               </Link>
-              <Link href="/" className="block desc">
+              <Link href="/#how-it-works" className="block desc">
                 How It Works
               </Link>
-              <Link href="/" className="block desc">
+              <Link href="/about-us" className="block desc">
                 About Us
               </Link>
             </div>
