@@ -12,6 +12,14 @@ body{
   @apply bg-white
 }
 
+.heading {
+  @apply text-xl md:text-2xl lg:text-3xl font-bold leading-normal text-[#2D3D4D] 
+}
+
+.desc{
+  @apply text-sm md:text-base font-normal leading-normal text-[#2D3D4D]
+}
+
 .bg_color{
   background-color: #F4FFF4
 }

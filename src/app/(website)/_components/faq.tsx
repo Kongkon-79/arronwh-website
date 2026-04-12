@@ -1,5 +1,6 @@
 "use client";
 
+import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
 
 type FaqItem = {
@@ -39,11 +40,11 @@ const Faq = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="bg-white py-12 md:py-16">
-      <div className="container mx-auto px-4">
-        <div className="mx-auto max-w-[760px]">
+    <section className="bg-white py-6 md:py-8 lg:py-10">
+      <div className="container mx-auto px-4 pb-4 md:pb-5 lg:pb-6">
+        <div className="">
           <div className="text-center">
-            <h2 className="font-sora text-[24px] font-semibold text-[#334155] md:text-[32px]">
+            <h2 className="heading">
               Most frequently asked questions
             </h2>
           </div>
@@ -53,17 +54,17 @@ const Faq = () => {
               const isOpen = openIndex === index;
 
               return (
-                <div key={item.question} className="border-b border-[#EEF2F6] pb-3">
+                <div key={item.question} className="border-b border-[2D3D4D] pb-2">
                   <button
                     type="button"
                     onClick={() => setOpenIndex(isOpen ? null : index)}
                     className="flex w-full items-start justify-between gap-6 py-2 text-left"
                   >
-                    <span className="pr-2 text-[13px] font-medium leading-6 text-[#334155] md:text-[14px]">
+                    <span className="text-base md:text-lg font-medium leading-normal text-[#2D3D4D]">
                       {item.question}
                     </span>
                     <span className="mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center text-[20px] font-light leading-none text-primary">
-                      {isOpen ? "−" : "+"}
+                      {isOpen ?  <Minus /> : <Plus />}
                     </span>
                   </button>
 
@@ -72,7 +73,7 @@ const Faq = () => {
                       isOpen ? "max-h-32 opacity-100" : "max-h-0 opacity-0"
                     }`}
                   >
-                    <p className="max-w-[680px] pt-1 text-[12px] leading-6 text-[#475569] md:text-[13px]">
+                    <p className="text-sm md:text-base font-normal leading-normal text-[#2D3D4D]">
                       {item.answer}
                     </p>
                   </div>

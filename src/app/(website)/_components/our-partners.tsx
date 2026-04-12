@@ -23,7 +23,7 @@ const OurPartners = () => {
       <div className="container mx-auto px-0">
         <div className="flex flex-col items-center">
           <div className="flex flex-wrap items-center justify-center gap-2 px-4 text-center text-[9px] font-medium leading-none text-[#334155] md:text-[10px]">
-            <span className="font-medium text-[#475569]">Excellent</span>
+            <span className="text-sm md:text-base leading-normal font-medium text-[#2D3D4D]">Excellent</span>
 
             <div className="flex items-center gap-1">
               {Array.from({ length: 5 }).map((_, index) => (
@@ -36,16 +36,16 @@ const OurPartners = () => {
               ))}
             </div>
 
-            <span className="text-[#475569]">4.8 Out of 5 based on 56,714 reviews</span>
-            <span className="font-semibold text-[#00B67A]">Trustpilot</span>
+            <span className="text-sm md:text-base font-normal leading-normal text-[#2D3D4D]">4.8 Out of 5 based on 56,714 reviews</span>
+            <span className="flex items-center gap-1 font-normal leading-normal text-sm md:text-base text-[#2D3D4D]"><Star className="text-[#00A56F] w-5 h-5 fill-[#00A56F]"/> Trustpilot</span>
           </div>
 
-          <h2 className="pt-5 font-sora text-[22px] font-semibold leading-none text-[#334155] md:text-[24px]">
+          <h2 className="pt-5 font-bold leading-normal text-[#2D3D4D] text-xl md:text-2xl lg:text-3xl">
             Our Partners
           </h2>
         </div>
 
-        <div className="relative mt-7 w-full">
+        <div className="relative mt-8 w-full">
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-white to-transparent md:w-16" />
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-white to-transparent md:w-16" />
 
@@ -54,14 +54,14 @@ const OurPartners = () => {
               {loopedPartnerLogos.map((partner, index) => (
                 <div
                   key={`${partner.src}-${index}`}
-                  className="flex h-[34px] w-[88px] flex-shrink-0 items-center justify-center md:h-[40px] md:w-[112px]"
+                  className="flex h-[34px] w-[88px] flex-shrink-0 items-center justify-center md:h-[80px] md:w-[163px]"
                 >
                   <Image
                     src={partner.src}
                     alt={partner.alt}
                     width={160}
                     height={52}
-                    className="h-auto max-h-[22px] w-auto max-w-full object-cover opacity-65 grayscale md:max-h-[26px]"
+                   className="w-[163px] h-[80px] object-cover"
                   />
                 </div>
               ))}
