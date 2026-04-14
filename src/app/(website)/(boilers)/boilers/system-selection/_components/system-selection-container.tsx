@@ -1,7 +1,6 @@
 "use client";
 
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
-import BoilerFrameFooter from "@/app/(website)/(boilers)/_components/boiler-frame-footer";
 import { boilerProducts } from "@/app/(website)/(boilers)/boilers/property-overview/_lib/property-overview-data";
 import { cn } from "@/lib/utils";
 import {
@@ -211,7 +210,6 @@ const SystemSelectionContainer = () => {
             </button>
           </div>
 
-      <BoilerFrameFooter />
     </BoilerFlowShell>
   );
 };

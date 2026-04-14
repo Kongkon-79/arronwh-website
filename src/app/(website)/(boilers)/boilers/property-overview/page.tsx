@@ -3,7 +3,7 @@ import PropertyOverviewContainer from "./_components/property-overview-container
 
 const PropertyOverviewPage = () => {
   return (
-    <div>
+    <div className="">
       <PropertyOverviewContainer />
     </div>
   );

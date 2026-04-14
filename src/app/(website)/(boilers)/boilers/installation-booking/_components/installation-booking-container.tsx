@@ -1,7 +1,6 @@
 "use client";
 
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
-import BoilerFrameFooter from "@/app/(website)/(boilers)/_components/boiler-frame-footer";
 import { cn } from "@/lib/utils";
 import {
   CalendarDays,
@@ -326,7 +325,6 @@ const InstallationBookingContainer = () => {
             </button>
           </div>
 
-      <BoilerFrameFooter />
     </BoilerFlowShell>
   );
 };

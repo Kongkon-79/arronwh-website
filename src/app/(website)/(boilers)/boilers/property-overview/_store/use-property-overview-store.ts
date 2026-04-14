@@ -6,6 +6,7 @@ export type PersonalInfo = {
   sureName: string;
   email: string;
   mobleNumber: string;
+  postcode: string;
 };
 
 type ApiQuizAnswer = {
@@ -48,6 +49,7 @@ const defaultPersonalInfo: PersonalInfo = {
   sureName: "",
   email: "",
   mobleNumber: "",
+  postcode: "",
 };
 
 const resolveQuoteEndpoint = () => {
@@ -56,7 +58,7 @@ const resolveQuoteEndpoint = () => {
   }
 
   if (process.env.NEXT_PUBLIC_BACKEND_URL) {
-    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/quotes`;
+    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/quote`;
   }
 
   return "/api/quotes";
