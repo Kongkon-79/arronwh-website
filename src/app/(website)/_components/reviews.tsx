@@ -40,15 +40,19 @@ const reviews = [
 
 const Reviews = () => {
   return (
-    <section id="reviews" className="overflow-hidden bg-white py-12 md:py-14">
+    <section
+      id="reviews"
+      className="overflow-x-hidden overflow-y-visible bg-white py-12 md:py-14"
+    >
       <div className="container mx-auto px-0">
         <div className="px-4 text-center">
-          <h2 className="heading">
-            What Our Customers Say
-          </h2>
+          <h2 className="heading">What Our Customers Say</h2>
 
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-[10px] leading-none text-[#334155] md:text-[11px]">
-            <span className="text-sm md:text-base leading-normal font-medium text-[#2D3D4D]">Excellent</span>
+            <span className="text-sm md:text-base leading-normal font-medium text-[#2D3D4D]">
+              Excellent
+            </span>
+
             <div className="flex items-center gap-1">
               {Array.from({ length: 5 }).map((_, index) => (
                 <span
@@ -59,12 +63,20 @@ const Reviews = () => {
                 </span>
               ))}
             </div>
-             <span className="text-sm md:text-base font-normal leading-normal text-[#2D3D4D]">4.8 Out of 5 based on 56,714 reviews</span>
-            <span className="flex items-center gap-1 font-normal leading-normal text-sm md:text-base text-[#2D3D4D]"><Star className="text-[#00A56F] w-5 h-5 fill-[#00A56F]"/> Trustpilot</span>
+
+            <span className="text-sm md:text-base font-normal leading-normal text-[#2D3D4D]">
+              4.8 Out of 5 based on 56,714 reviews
+            </span>
+
+            <span className="flex items-center gap-1 font-normal leading-normal text-sm md:text-base text-[#2D3D4D]">
+              <Star className="text-[#00A56F] w-5 h-5 fill-[#00A56F]" />
+              Trustpilot
+            </span>
           </div>
         </div>
 
-        <div className="mt-8">
+        {/* Carousel */}
+        <div className="mt-8 py-6">
           <Carousel
             opts={{
               align: "start",
@@ -77,15 +89,22 @@ const Reviews = () => {
                 stopOnMouseEnter: true,
               }),
             ]}
-            className="w-full"
+            className="w-full overflow-visible"
           >
-            <CarouselContent className="-ml-6">
+            <CarouselContent className="-ml-6 overflow-visible py-6">
               {reviews.map((review, index) => (
                 <CarouselItem
                   key={`${review.name}-${index}`}
                   className="basis-[88%] pl-6 sm:basis-[62%] md:basis-[38%] lg:basis-[31%] xl:basis-[28%]"
                 >
-                  <article className="flex min-h-[240px] flex-col rounded-[10px] bg-white p-4 shadow-[0px_0px_10px_0px_#EE6766] ">
+                  {/* CARD */}
+                  <article className="flex min-h-[240px] flex-col rounded-[10px] bg-white p-4 
+                    shadow-[0_0px_12px_#EE6766] 
+                    transition-all duration-300
+                    hover:shadow-[0_6px_25px_rgba(238,103,102,0.5)]
+                    hover:-translate-y-1"
+                  >
+                    {/* Stars */}
                     <div className="flex items-center gap-1">
                       {Array.from({ length: 5 }).map((_, starIndex) => (
                         <span
@@ -97,10 +116,10 @@ const Reviews = () => {
                       ))}
                     </div>
 
-                    <p className="mt-3 desc">
-                      {review.quote}
-                    </p>
+                    {/* Review */}
+                    <p className="mt-3 desc">{review.quote}</p>
 
+                    {/* Footer */}
                     <div className="mt-auto pt-5">
                       <div className="flex items-center justify-between gap-3">
                         <h3 className="text-sm md:text-base leading-normal font-bold text-[#2D3D4D]">
@@ -110,6 +129,7 @@ const Reviews = () => {
                           Verified customer
                         </span>
                       </div>
+
                       <p className="mt-3 text-xs md:text-sm font-normal leading-normal text-[#2D3D4D]">
                         {review.location}
                       </p>
@@ -120,25 +140,6 @@ const Reviews = () => {
             </CarouselContent>
           </Carousel>
         </div>
-{/* 
-        <div className="mx-auto mt-9 flex max-w-[760px] flex-col items-center justify-between gap-5 px-4 text-center md:flex-row md:text-left">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#0EA76B] text-[#0EA76B]">
-              <MessageCircleMore className="h-5 w-5" />
-            </span>
-            <p className="text-[13px] font-medium text-[#334155] md:text-[14px]">
-              Want to know more reasons why people choose YOLO HEAT?
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className="flex h-10 min-w-[112px] items-center justify-center rounded-[6px] bg-[#0EA76B] px-6 text-[12px] font-semibold text-white transition-colors hover:bg-[#0A965F]"
-          >
-            Tell me more
-          </button>
-        </div> */}
-
       </div>
     </section>
   );

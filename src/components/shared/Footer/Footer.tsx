@@ -55,7 +55,7 @@ const Footer = () => {
             </h3>
 
             <div className="mt-4 space-y-3">
-              <Link href="/" className="block desc">
+              <Link href="/#heating" className="block desc">
                 New boilers
               </Link>
               <Link href="/#reviews" className="block desc">
@@ -76,10 +76,7 @@ const Footer = () => {
             </h3>
 
             <div className="mt-4 space-y-3">
-              <Link href="/" className="block desc">
-                Heating&apos;s Installation
-              </Link>
-              <Link href="/" className="block desc">
+              <Link href="/#heating" className="block desc">
                 Boiler Installation
               </Link>
               <Link href="/privacy-policy" className="block desc">
