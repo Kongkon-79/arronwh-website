@@ -123,7 +123,7 @@ const Navbar = () => {
 
             <div className="hidden md:block">
               <Link
-                href="/#heating"
+                href="/boilers/property-overview"
                 className="inline-flex h-[46px] items-center justify-center rounded-[8px] bg-primary px-5 text-[15px] font-medium leading-normal text-[#2D3D4D] transition-colors hover:bg-[#F3CF43]"
               >
                 Get your fixed price

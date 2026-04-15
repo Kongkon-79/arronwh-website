@@ -6,10 +6,12 @@ import AppProvider from "@/components/providers/AppProvider";
 import NextTopLoader from "nextjs-toploader";
 
 import { Outfit } from "next/font/google";
+import Navbar from "@/components/shared/Navbar/Navbar";
+import Footer from "@/components/shared/Footer/Footer";
 
 const outfit = Outfit({
   subsets: ["latin"],
-  weight: ["100","200","300","400","500","600","700","800","900"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
   variable: "--font-outfit", // optional (for Tailwind)
 });
 
@@ -24,16 +26,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={outfit.variable}
-    >
+    <html lang="en" className={outfit.variable}>
       <body>
         <NextTopLoader color="#FFDE59" height={3} showSpinner={false} />
         <AuthProvider>
           <AppProvider>
+            <Navbar />
             {children}
-
+            <Footer />
             <Toaster />
           </AppProvider>
         </AuthProvider>
