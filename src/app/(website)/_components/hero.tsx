@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import Link from "next/link";
 
 const heroPoints = [
   "Boiler installation from the next working day*",
@@ -24,10 +25,11 @@ const HeroSection = () => {
                 day installation available.
               </p>
 
-              <button className="mt-6 inline-flex h-12 items-center gap-2 rounded-[8px] bg-primary px-6 text-sm md:text-base leading-normal font-semibold text-[#2D3D4D] transition-transform duration-300 hover:-translate-y-0.5 hover:bg-[#F3D13B]">
-                Get your fixed price
-                {/* <ChevronRight className="h-4 w-4" /> */}
-              </button>
+              <Link href="boilers/property-overview">
+                <button className="mt-6 inline-flex h-12 items-center gap-2 rounded-[8px] bg-primary px-6 text-sm md:text-base leading-normal font-semibold text-[#2D3D4D] transition-transform duration-300 hover:-translate-y-0.5 hover:bg-[#F3D13B]">
+                  Get your fixed price
+                </button>
+              </Link>
 
               <ul className="mt-6 space-y-2">
                 {heroPoints.map((point) => (
