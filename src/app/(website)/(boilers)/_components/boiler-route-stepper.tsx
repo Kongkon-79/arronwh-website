@@ -1,9 +1,10 @@
 "use client";
 
-import { MessageCircleQuestion } from "lucide-react";
+import { MessageCircleQuestion, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 type BoilerRouteStepperProps = {
   activeStep: 1 | 2 | 3 | 4;
@@ -17,37 +18,53 @@ const routeSteps = [
 ];
 
 const BoilerRouteStepper = ({ activeStep }: BoilerRouteStepperProps) => {
-  const visibleSteps =
-    activeStep === 1 ? routeSteps : routeSteps.filter((step) => step.id >= 2);
+  const router = useRouter();
+
+  // Find previous step for back button navigation
+  const prevStep = routeSteps.find((s) => s.id === activeStep - 1);
 
   return (
-    <div className="overflow-hidden rounded-[12px] border border-[#DDE4EE] bg-white">
-      <div className="grid h-[56px] grid-cols-[104px_1fr_90px] md:grid-cols-[126px_1fr_104px]">
-        <div className="flex items-center justify-center border-r border-[#E7ECF3] bg-[#FBFCFE]">
+    <div className="overflow-hidden rounded-full border border-[#DDE4EE] bg-white shadow-sm">
+      <div className="flex h-[56px] items-stretch md:h-[64px]">
+        {/* Left Section: Back Button + Logo */}
+        <div 
+          className={cn(
+            "flex items-center gap-2 border-r border-[#E7ECF3] px-3 md:gap-4 md:px-6 transition-colors duration-300 bg-primary"
+          )}
+        >
+          <button 
+            type="button"
+            onClick={() => prevStep ? router.push(prevStep.href) : router.back()}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 transition hover:bg-black/5 md:h-10 md:w-10"
+          >
+            <ArrowLeft className="h-4 w-4 md:h-5 md:w-5 text-[#2D3D4D]" />
+          </button>
           <Image
             src="/assets/images/logo.png"
             alt="Yolo Heat"
-            width={72}
-            height={28}
-            className="h-5 w-auto object-contain"
+            width={120}
+            height={40}
+            className="h-4 w-auto object-contain md:h-8"
           />
         </div>
 
-        <div className="grid grid-cols-3 bg-white">
-          {visibleSteps.map((step, index) => {
+        {/* Steps Section */}
+        <div className="flex flex-1 items-stretch bg-white">
+          {routeSteps.map((step) => {
             const active = step.id === activeStep;
             const completed = step.id < activeStep;
+            const isYellow = active || completed;
+            const isLastYellow = active;
 
             return (
               <Link
                 key={step.id}
                 href={step.href}
                 className={cn(
-                  "relative flex items-center justify-center border-r border-[#E7ECF3] px-2 text-center text-[11px] font-semibold text-[#4D5A6A] transition md:text-[13px]",
-                  active && "bg-primary text-[#2D3D4D]",
-                  active && "rounded-r-[999px]",
-                  completed && "bg-[#FFF8DA]",
-                  index === visibleSteps.length - 1 && "border-r-0"
+                  "relative flex flex-1 items-center justify-center px-1 text-center text-[9px] font-semibold text-[#4D5A6A] transition md:px-4 md:text-[13px] last:border-r-0 border-r border-[#E7ECF3]",
+                  isYellow && "bg-primary text-[#2D3D4D] border-transparent",
+                  isLastYellow && "rounded-r-full z-10",
+                  !isYellow && "bg-white"
                 )}
               >
                 {step.label}
@@ -56,14 +73,17 @@ const BoilerRouteStepper = ({ activeStep }: BoilerRouteStepperProps) => {
           })}
         </div>
 
-        <button
-          type="button"
-          className="flex items-center justify-center gap-1 border-l border-[#E7ECF3] bg-white text-[#5A6776] transition hover:bg-[#F8FAFC]"
-        >
-          <MessageCircleQuestion className="h-4 w-4" />
-          <span className="text-sm font-medium">Help</span>
-          <span className="hidden text-xs text-[#7E8996] md:inline">2:40</span>
-        </button>
+        {/* Help Button */}
+        <div className="flex items-center px-3 md:px-8 border-l border-[#E7ECF3] bg-white">
+          <button
+            type="button"
+            className="flex items-center gap-1 md:gap-2 text-[#5A6776] transition hover:text-[#2D3D4D]"
+          >
+            <MessageCircleQuestion className="h-4 w-4 md:h-5 md:w-5" />
+            <span className="text-sm font-semibold">Help</span>
+            <span className="hidden text-xs text-[#7E8996] md:inline font-normal">2:40</span>
+          </button>
+        </div>
       </div>
     </div>
   );
