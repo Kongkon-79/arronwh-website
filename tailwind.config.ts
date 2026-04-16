@@ -68,7 +68,7 @@ const config: Config = {
         screens: {
           sm: "100%",
           md: "100%",
-          lg: "1270px",
+          lg: "1470px",
         },
       },
       keyframes: {
