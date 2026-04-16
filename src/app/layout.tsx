@@ -8,6 +8,7 @@ import NextTopLoader from "nextjs-toploader";
 import { Outfit } from "next/font/google";
 import Navbar from "@/components/shared/Navbar/Navbar";
 import Footer from "@/components/shared/Footer/Footer";
+import SmoothScrollProvider from "@/components/providers/SmoothScrollProvider";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -29,6 +30,7 @@ export default function RootLayout({
     <html lang="en" className={outfit.variable}>
       <body>
         <NextTopLoader color="#FFDE59" height={3} showSpinner={false} />
+        <SmoothScrollProvider>
         <AuthProvider>
           <AppProvider>
             <Navbar />
@@ -37,6 +39,7 @@ export default function RootLayout({
             <Toaster />
           </AppProvider>
         </AuthProvider>
+        </SmoothScrollProvider>
       </body>
     </html>
   );

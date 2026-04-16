@@ -1,7 +1,7 @@
-import SystemSelectionContainer from "./_components/system-selection-container";
+import BoilerProductsPage from "./_components/BoilerProductsPage";
 
 const SystemSelectionPage = () => {
-  return <SystemSelectionContainer />;
+  return <BoilerProductsPage />;
 };
 
 export default SystemSelectionPage;
