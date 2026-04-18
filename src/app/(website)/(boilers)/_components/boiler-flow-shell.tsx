@@ -8,15 +8,15 @@ type BoilerFlowShellProps = {
 
 const BoilerFlowShell = ({ children, activeStep }: BoilerFlowShellProps) => {
   return (
-    <section className="bg-[#ECEEF1] py-6 md:py-10">
+    <section className="bg-[#F0F3F6] pb-6 md:pb-10">
       <div className="container space-y-3 md:space-y-4">
         {activeStep ? (
-          <div className="">
+          <div className=" border-2 border-red-500">
             <BoilerRouteStepper activeStep={activeStep} />
           </div>
         ) : null}
 
-        <div className="rounded-[12px] border border-[#D9E1EB] bg-white shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
+        <div className="">
           {children}
         </div>
       </div>
