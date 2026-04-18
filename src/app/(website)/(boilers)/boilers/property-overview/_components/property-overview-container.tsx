@@ -83,6 +83,7 @@ const PropertyOverviewContainer = () => {
   const optionCardWidthClass = useMemo(() => {
     const optionCount = step?.options.length ?? 0;
     if (optionCount <= 2) return "w-[360px]";
+    if (optionCount <= 3) return "w-[400px]";
     if (optionCount <= 4) return "w-[260px]";
     return "w-[260px]";
   }, [step]);
@@ -366,6 +367,7 @@ const PropertyOverviewContainer = () => {
                 const selected = answers[step.id] === option.value;
                 const Icon = option.icon;
                 const optionImage = option.image;
+                const isFuelTypeCard = step.id === "fuelType";
 
                 return (
                   <button
@@ -373,13 +375,17 @@ const PropertyOverviewContainer = () => {
                     key={option.value}
                     onClick={() => handleOptionSelect(option.value)}
                     className={cn(
-                      "group relative h-[365px] rounded-[8px] bg-white px-3 py-3 text-[#2D3D4D] transition ",
+                      "group relative h-[365px] rounded-[12px] bg-white px-3 py-3 text-[#2D3D4D] transition ",
                       optionCardWidthClass,
-                      selected
-                        ? "border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
-                        : "border-[2px] border-[#666666] hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.85)]",
+                      isFuelTypeCard
+                        ? selected
+                          ? "border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
+                          : "border-[2px] border-[#AEB7C2] hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.2)]"
+                        : selected
+                          ? "border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
+                          : "border-[2px] border-[#666666] hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.85)]",
                     )}
-                    >
+                  >
                     <div className="flex h-full flex-col items-center justify-center gap-3 pb-3">
                       {optionImage ? (
                         <Image
@@ -387,7 +393,10 @@ const PropertyOverviewContainer = () => {
                           alt={option.label}
                           width={220}
                           height={220}
-                          className="h-[170px] w-auto object-contain"
+                          className={cn(
+                            "w-auto object-contain transition-all duration-200",
+                            isFuelTypeCard ? "h-[64px]" : "h-[170px]",
+                          )}
                         />
                       ) : Icon ? (
                         <Icon className="h-10 w-10 text-[#8A97A7]" />
@@ -396,22 +405,41 @@ const PropertyOverviewContainer = () => {
                         className={cn(
                           "text-center text-lg md:text-xl leading-normal font-semibold transition-colors duration-200",
                           selected ? "text-primary" : "text-[#2D3D4D]",
-                          !selected && "group-hover:text-[#E0B800]",
+                          !selected &&
+                            (isFuelTypeCard
+                              ? "group-hover:text-primary"
+                              : "group-hover:text-[#E0B800]"),
                         )}
                       >
                         {option.label}
                       </span>
+                      {isFuelTypeCard ? (
+                        <p
+                          className={cn(
+                            "max-w-[260px] text-center text-[14px] leading-[1.45] text-[#465466] transition-all duration-200",
+                            selected || !option.hoverDescription
+                              ? "max-h-0 opacity-0"
+                              : "max-h-0 opacity-0 group-hover:mt-2 group-hover:max-h-[140px] group-hover:opacity-100",
+                          )}
+                        >
+                          {option.hoverDescription}
+                        </p>
+                      ) : null}
                     </div>
 
                     <div
                       className={cn(
                         "absolute bottom-0 left-0 flex h-14 w-full items-center justify-center rounded-b-[8px] text-base md:text-lg font-medium leading-normal transition-colors duration-200",
-                        selected
-                          ? "bg-primary text-[#2D3D4D]"
-                          : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]",
+                        isFuelTypeCard
+                          ? selected
+                            ? "bg-primary text-[#2D3D4D]"
+                            : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]"
+                          : selected
+                            ? "bg-primary text-[#2D3D4D]"
+                            : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]",
                       )}
                     >
-                      Selected
+                      {selected ? "Selected" : "Select"}
                     </div>
                   </button>
                 );
