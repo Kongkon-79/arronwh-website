@@ -1,7 +1,7 @@
-import CustomerDetailsContainer from "./_components/customer-details-container";
+import BoilerQuote from "./_components/BoilerQuote";
 
 const CustomerDetailsPage = () => {
-  return <CustomerDetailsContainer />;
+  return <BoilerQuote />;
 };
 
 export default CustomerDetailsPage;

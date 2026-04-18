@@ -2,9 +2,17 @@
 
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import type { ApiProduct } from "../../_hooks/useProducts";
+import { CheckCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { ApiExtra } from "../../_hooks/useExtras";
 
-export function ExtraCard({ item }: { item: ApiProduct }) {
+interface ExtraCardProps {
+  item: ApiExtra;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}
+
+export function ExtraCard({ item, isSelected, onSelect }: ExtraCardProps) {
   const stripHtml = (html: string) => {
     if (typeof window !== "undefined") {
       const doc = new DOMParser().parseFromString(html, "text/html");
@@ -13,11 +21,13 @@ export function ExtraCard({ item }: { item: ApiProduct }) {
     return html.replace(/<[^>]*>/g, "");
   };
 
+  const imageSrc = item.images?.[0] ?? "/product.png";
+
   return (
     <div className="rounded-[6px] bg-white p-4 shadow-sm sm:p-5">
       <div className="flex min-h-[220px] items-center justify-center rounded-[8px] bg-[#FBFCFD]">
         <Image
-          src={item.images[0]}
+          src={imageSrc}
           alt={item.title}
           width={240}
           height={220}
@@ -31,17 +41,29 @@ export function ExtraCard({ item }: { item: ApiProduct }) {
         </h3>
 
         <p className="mt-3 min-h-[78px] text-[14px] sm:text-[15px] leading-7 text-[#2D3D4D]">
-          {stripHtml(item.shortDescription)}
+          {stripHtml(item.description)}
         </p>
 
         <p className="mt-3 text-[26px] sm:text-[28px] font-bold text-[#2D3D4D]">
-          +£{item.payablePrice}
+          +£{item.price}
         </p>
 
         <Button
-          className="mt-6 h-[46px] w-full rounded-[6px] text-[15px] sm:text-[16px] font-medium bg-[#00A56F] text-white hover:bg-[#009562]"
+          onClick={() => onSelect(item._id)}
+          className={cn(
+            "mt-6 h-[46px] w-full rounded-[6px] text-[15px] sm:text-[16px] font-medium gap-2",
+            isSelected
+              ? "bg-[#2D3D4D] text-white hover:bg-[#2D3D4D]"
+              : "bg-[#00A56F] text-white hover:bg-[#009562]"
+          )}
         >
-          Add to basket
+          {isSelected ? (
+            <>
+              Added <CheckCircle className="h-5 w-5" />
+            </>
+          ) : (
+            "Add to basket"
+          )}
         </Button>
       </div>
     </div>

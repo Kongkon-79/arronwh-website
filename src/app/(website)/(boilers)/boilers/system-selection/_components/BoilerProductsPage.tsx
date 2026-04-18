@@ -172,12 +172,7 @@ export default function BoilerProductsPage() {
 
   return (
     <BoilerFlowShell activeStep={2}>
-      <div className="h-[6px] w-full bg-[#E5EAF1]">
-        <div
-          className="h-full bg-primary transition-all duration-300"
-          style={{ width: "50%" }}
-        />
-      </div>
+   
       <div className="bg-[#EEF2F5] px-3 py-4 sm:px-4 lg:px-6">
         <div className="mx-auto max-w-[1440px]">
           {/* Top Filter */}

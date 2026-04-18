@@ -1,35 +1,207 @@
 "use client";
 
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
 import { Button } from "@/components/ui/button";
+import { useMutation } from "@tanstack/react-query";
 import { BadgePercent, Mail } from "lucide-react";
+import { toast } from "sonner";
 import { ExtraCard, ExtraCardSkeleton } from "./_components/ExtraCard";
-import { useProducts } from "../_hooks/useProducts";
+import { useExtras } from "../_hooks/useExtras";
 import { useProductById } from "../_hooks/useProductById";
+import { useQuoteById } from "../_hooks/useQuoteById";
+
+type UpdateExtraResponse = {
+  success?: boolean;
+  status?: boolean;
+  message?: string;
+};
+
+function resolveQuoteEndpoint(): string {
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return `${process.env.NEXT_PUBLIC_API_BASE_URL}/quote`;
+  }
+  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/quote`;
+  }
+  return "/quote";
+}
+
+async function updateQuoteExtra({
+  quoteId,
+  extraId,
+}: {
+  quoteId: string;
+  extraId: string;
+}): Promise<UpdateExtraResponse> {
+  const response = await fetch(`${resolveQuoteEndpoint()}/${encodeURIComponent(quoteId)}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      extra: extraId,
+    }),
+  });
+
+  const result = (await response.json().catch(() => null)) as UpdateExtraResponse | null;
+  const hasExplicitFailure = result?.success === false || result?.status === false;
+
+  if (!response.ok || hasExplicitFailure) {
+    throw new Error(result?.message || "Failed to update extra.");
+  }
+
+  return result ?? {};
+}
 
 function formatMoney(value: number): string {
   if (value % 1 === 0) return `$${value.toLocaleString("en-US")}`;
   return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-function ExtrasPageContent() {
-  const searchParams = useSearchParams();
-  const productId = searchParams.get("productId");
+function formatControllerPrice(price: number): string {
+  if (price <= 0) return "Included";
+  return `$${price % 1 === 0 ? price.toFixed(0) : price.toFixed(2)}`;
+}
 
-  const { data: products = [], isLoading: productsLoading } = useProducts();
-  const { data: product, isLoading: productLoading } = useProductById(productId);
+function ExtrasPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const productIdFromQuery = searchParams.get("productId");
+  const quoteId = searchParams.get("quoteId");
+  const { mutateAsync: mutateExtra, isPending: isUpdatingExtra } = useMutation({
+    mutationKey: ["update-quote-extra"],
+    mutationFn: updateQuoteExtra,
+  });
+
+  const { data: extras = [], isLoading: extrasLoading } = useExtras();
+  const { data: quote, isLoading: quoteLoading } = useQuoteById(quoteId);
+
+  const quoteProduct =
+    quote?.productId && typeof quote.productId !== "string" ? quote.productId : null;
+  const quoteProductId =
+    typeof quote?.productId === "string" ? quote.productId : quote?.productId?._id ?? null;
+  const resolvedProductId = productIdFromQuery ?? quoteProductId;
+  const { data: fallbackProduct, isLoading: fallbackProductLoading } = useProductById(
+    quoteProduct ? null : resolvedProductId
+  );
+
+  const product = quoteProduct ?? fallbackProduct ?? null;
+  const productLoading = quoteLoading || (!quoteProduct && fallbackProductLoading);
+
+  const selectedController =
+    quote?.controller && typeof quote.controller !== "string" ? quote.controller : null;
+  const selectedControllerPrice = selectedController && selectedController.price && selectedController.price > 0
+    ? selectedController.price
+    : 0;
+  const preselectedExtraId =
+    typeof quote?.extra === "string" ? quote.extra : quote?.extra?._id ?? null;
+  const preselectedExtra =
+    quote?.extra && typeof quote.extra !== "string" ? quote.extra : null;
+
+  const [selectedExtraId, setSelectedExtraId] = useState<string | null>(null);
+  const hasHydratedInitialExtra = useRef(false);
+
+  useEffect(() => {
+    if (hasHydratedInitialExtra.current || quoteLoading) {
+      return;
+    }
+
+    hasHydratedInitialExtra.current = true;
+    if (preselectedExtraId) {
+      setSelectedExtraId(preselectedExtraId);
+    }
+  }, [preselectedExtraId, quoteLoading]);
+
+  const selectedExtraFromList = extras.find((item) => item._id === selectedExtraId) ?? null;
+  const selectedExtra =
+    selectedExtraFromList ||
+    (selectedExtraId && preselectedExtra && preselectedExtraId === selectedExtraId
+      ? preselectedExtra
+      : null);
+
+  const selectedExtraPrice =
+    selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0
+      ? selectedExtra.price
+      : 0;
+
+  const payTodayTotal = product
+    ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    : 0;
+  const originalTotal = product
+    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    : 0;
+
+  function handleSelectExtra(id: string) {
+    setSelectedExtraId((prev) => (prev === id ? null : id));
+  }
+
+  const handleNextCheckout = async () => {
+    if (!selectedExtraId) {
+      toast.error("Please select an extra before continuing.");
+      return;
+    }
+
+    if (!quoteId) {
+      toast.error("Quote ID not found. Please start again.");
+      return;
+    }
+
+    try {
+      await mutateExtra({
+        quoteId,
+        extraId: selectedExtraId,
+      });
+
+      if (!resolvedProductId) {
+        toast.error("Product ID not found. Please start again.");
+        return;
+      }
+
+      const params = new URLSearchParams();
+      params.set("quoteId", quoteId);
+      params.set("productId", resolvedProductId);
+      router.push(`/boilers/customer-details?${params.toString()}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update extra.");
+    }
+  };
 
   const quoteItems = product
     ? [
-        { label: product.boilerAbility || product.title, value: formatMoney(product.price), highlight: false },
-        { label: "View details", value: "", highlight: true },
-        ...product.boilerFeatures.map((f) => ({
-          label: f.title,
-          value: f.value,
+        {
+          label: product.boilerAbility || product.title,
+          value: formatMoney(product.price ?? 0),
           highlight: false,
-        })),
-        ...product.boilerIncludedData
+        },
+        { label: "View details", value: "", highlight: true },
+        ...(selectedController
+          ? [
+              {
+                label: selectedController.title,
+                value: formatControllerPrice(selectedController.price ?? 0),
+                highlight: false,
+              },
+            ]
+          : []),
+        ...(selectedExtra
+          ? [
+              {
+                label: selectedExtra.title,
+                value: formatControllerPrice(selectedExtraPrice),
+                highlight: false,
+              },
+            ]
+          : []),
+        ...(product.boilerFeatures ?? [])
+          .map((f) => ({
+            label: f.title ?? "",
+            value: f.value ?? "",
+            highlight: false,
+          }))
+          .filter((f) => f.label && f.value),
+        ...(product.boilerIncludedData ?? "")
           .split("\n")
           .filter(Boolean)
           .map((line) => ({ label: line.trim(), value: "Included", highlight: false })),
@@ -37,8 +209,10 @@ function ExtrasPageContent() {
     : [];
 
   return (
-    <div className="min-h-screen bg-[#EEF2F5] px-3 py-5 sm:px-4 lg:px-6">
-      <div className="mx-auto max-w-[1440px]">
+    <BoilerFlowShell activeStep={2}>
+   
+      <div className="min-h-screen bg-[#EEF2F5] px-3 py-5 sm:px-4 lg:px-6">
+        <div className="mx-auto max-w-[1440px]">
         {/* Header */}
         <div className="mb-6 text-center">
           <h1 className="text-[24px] sm:text-[30px] lg:text-[34px] font-bold leading-tight text-[#2D3D4D]">
@@ -65,12 +239,17 @@ function ExtrasPageContent() {
               </p>
 
               <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
-                {productsLoading
+                {extrasLoading
                   ? Array.from({ length: 4 }).map((_, i) => (
                       <ExtraCardSkeleton key={i} />
                     ))
-                  : products.map((item) => (
-                      <ExtraCard key={item._id} item={item} />
+                  : extras.map((item) => (
+                      <ExtraCard
+                        key={item._id}
+                        item={item}
+                        isSelected={selectedExtraId === item._id}
+                        onSelect={handleSelectExtra}
+                      />
                     ))}
               </div>
             </section>
@@ -123,11 +302,11 @@ function ExtrasPageContent() {
                 <div className="rounded-[8px] bg-[#F0F3F6] p-3 sm:p-4">
                   <p className="text-[12px] sm:text-[16px] text-[#2D3D4D]">Pay today</p>
                   <p className="mt-2 text-[24px] sm:text-[18px] font-bold leading-none text-[#2D3D4D]">
-                    {formatMoney(product.payablePrice)}
+                    {formatMoney(payTodayTotal)}
                   </p>
-                  {product.price > product.payablePrice && (
+                  {originalTotal > payTodayTotal && (
                     <p className="mt-2 text-[11px] sm:text-[14px] font-medium text-[#00A56F] line-through">
-                      was {formatMoney(product.price)}
+                      was {formatMoney(originalTotal)}
                     </p>
                   )}
                 </div>
@@ -135,7 +314,7 @@ function ExtrasPageContent() {
                 <div className="rounded-[8px] bg-[#F0F3F6] p-3 sm:p-4">
                   <p className="text-[12px] sm:text-[16px] text-[#2D3D4D]">Monthly Cost</p>
                   <p className="mt-2 text-[24px] sm:text-[18px] font-bold leading-none text-[#2D3D4D]">
-                    {formatMoney(product.monthlyPrice)}/mo
+                    {formatMoney(product.monthlyPrice ?? 0)}/mo
                   </p>
                 </div>
               </div>
@@ -146,12 +325,16 @@ function ExtrasPageContent() {
                   {product.boilerAbility || product.title}
                 </span>
                 <span className="ml-2 shrink-0 text-[14px] sm:text-[15px] font-semibold text-[#00A56F]">
-                  -${product.discountPrice}
+                  -${product.discountPrice ?? 0}
                 </span>
               </div>
 
-              <Button className="mt-4 h-[48px] w-full rounded-[6px] bg-[#00A56F] text-[15px] sm:text-[16px] font-medium text-white hover:bg-[#009562]">
-                Next Checkout
+              <Button
+                disabled={isUpdatingExtra}
+                onClick={handleNextCheckout}
+                className="mt-4 h-[48px] w-full rounded-[6px] bg-[#00A56F] text-[15px] sm:text-[16px] font-medium text-white hover:bg-[#009562]"
+              >
+                {isUpdatingExtra ? "Saving..." : "Next Checkout"}
               </Button>
 
               <Button
@@ -190,8 +373,9 @@ function ExtrasPageContent() {
             </div>
           ) : null}
         </div>
+        </div>
       </div>
-    </div>
+    </BoilerFlowShell>
   );
 }
 
