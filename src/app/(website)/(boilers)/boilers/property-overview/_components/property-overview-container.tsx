@@ -243,7 +243,12 @@ const PropertyOverviewContainer = () => {
       const response = await submitQuote(quizAnswers);
       if (response?.success) {
         toast.success(response.message || "Quote created successfully");
-        router.push("/boilers/system-selection");
+        const quoteId = response?.data?._id;
+        router.push(
+          quoteId
+            ? `/boilers/system-selection?quoteId=${encodeURIComponent(quoteId)}`
+            : "/boilers/system-selection",
+        );
       } else {
         toast.error("Failed to submit postcode details.");
       }
