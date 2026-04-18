@@ -5,10 +5,12 @@ import HowItWorks from './_components/how-it-works'
 import Reviews from './_components/reviews'
 import TheBoxtPrice from './_components/the-boxt-price'
 import Faq from './_components/faq'
+import Navbar from '@/components/shared/Navbar/Navbar'
 
 const HomePage = () => {
   return (
     <div>
+      <Navbar />
       <HeroSection/>
       <OurPartners/>
       <ExploreOurHeating/>
