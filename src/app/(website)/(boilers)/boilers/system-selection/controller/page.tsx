@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Suspense, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { BadgePercent, CheckCircle, Mail } from "lucide-react";
 import { ControllerCard } from "./_components/ControllerCard";
@@ -23,6 +23,7 @@ function formatMoney(value: number): string {
 }
 
 function ChooseControlsPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get("productId");
 
@@ -196,7 +197,10 @@ function ChooseControlsPage() {
               </div>
 
               {/* Action buttons */}
-              <Button className="mt-4 h-[48px] w-full rounded-[6px] bg-[#00A56F] text-[15px] sm:text-[16px] font-medium text-white hover:bg-[#009562]">
+              <Button
+                className="mt-4 h-[48px] w-full rounded-[6px] bg-[#00A56F] text-[15px] sm:text-[16px] font-medium text-white hover:bg-[#009562]"
+                onClick={() => router.push(`/boilers/system-selection/extras?productId=${productId}`)}
+              >
                 Next Extras
               </Button>
 
