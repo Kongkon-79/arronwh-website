@@ -272,32 +272,32 @@ const PropertyOverviewContainer = () => {
 
   return (
     <BoilerFlowShell>
-      <div className="h-[6px] w-full rounded-t-[12px] bg-[#E5EAF1] ">
+      <div className="h-4 w-full bg-white">
         <div
-          className="h-full rounded-t-[12px] bg-primary transition-all duration-300"
+          className="h-full bg-primary transition-all duration-300"
           style={{ width: progressWidth }}
         />
       </div>
 
-      <div className="border-b border-[#E8EDF3] px-4 py-3 md:px-6 ">
-        <div className="overflow-hidden rounded-[999px] border border-[#DDE4EE] bg-white">
-          <div className="grid h-[48px] grid-cols-[auto_1fr_auto] items-stretch">
+      <div className="mt-4 md:mt-6 lg:mt-8 mb-2 md:mb-3 lg:mb-4">
+        <div className="overflow-hidden rounded-[999px] ">
+          <div className="bg-white h-16 rounded-full grid grid-cols-[auto_1fr_auto] items-stretch pl-0 pr-1">
             <div
-              className="flex items-center gap-2 border-r border-[#E7ECF3] bg-primary px-2"
+              className="flex items-center gap-2 border-r border-[#E7ECF3] bg-primary "
             >
               <button
                 type="button"
                 onClick={handlePrev}
-                className="rounded-full border border-[#2D3D4D] p-2.5 transition hover:bg-black/5"
+                className="rounded-full border border-[#2D3D4D] p-3 transition hover:bg-black/5 "
               >
-                <ArrowLeft className="h-5 w-5 text-[#2D3D4D]" />
+                <ArrowLeft className="h-8 w-8 text-[#2D3D4D]" />
               </button>
               <Image
                 src="/assets/images/multi_step_logo.png"
                 alt="Multi Step Logo"
                 width={332}
                 height={332}
-                className="h-[36px] w-[136px] object-contain"
+                className="h-[36px] w-[126px] object-contain"
               />
             </div>
 
@@ -306,14 +306,14 @@ const PropertyOverviewContainer = () => {
                 <div
                   key={item.id}
                   className={cn(
-                    "flex items-center justify-center border-r border-[#E7ECF3] px-2 text-center text-[10px] font-semibold",
+                    "flex items-center justify-center border-r border-[#E7ECF3] px-2 text-center text-sm md:text-base font-medium leading-normal",
                     item.id === 1 && activeTopStep === 1
                       ? "rounded-r-[999px] border-r-0 bg-primary text-[#2D3D4D]"
                       : item.id === activeTopStep
                         ? "bg-primary text-[#2D3D4D]"
                         : item.id < activeTopStep
                           ? "bg-[#FFF8DA] text-[#2D3D4D]"
-                          : "text-[#6F7D8D]",
+                          : "text-[#2D3D4D]",
                     idx === topSteps.length - 1 && "border-r-0",
                     item.id === 1 && activeTopStep > 1 && "bg-[#FFF8DA] text-[#2D3D4D]",
                   )}
@@ -325,18 +325,18 @@ const PropertyOverviewContainer = () => {
 
             <button
               type="button"
-              className="inline-flex items-center gap-1 border-l border-[#E7ECF3] px-3 text-[12px] font-medium text-[#6A7788] transition hover:bg-[#F8FAFC]"
+              className="inline-flex items-center gap-1 border-l border-[#E7ECF3] px-3 text-lg md:text-xl font-normal text-[#2D3D4D] leading-normal transition hover:bg-[#F8FAFC]"
             >
-              <MessageCircleQuestion className="h-3.5 w-3.5" />
+              <MessageCircleQuestion className="h-6 w-6" />
               Help
             </button>
           </div>
         </div>
       </div>
 
-      <div className="bg-[#F0F3F6] px-4 py-6 md:px-6 ">
-        <div className="rounded-[10px] border border-[#E6EBF2] bg-[#F7F9FB] px-4 py-6 md:px-10 md:py-8">
-          <h2 className="mx-auto max-w-[760px] text-center text-[22px] font-semibold leading-[1.35] text-[#2D3D4D]">
+      <div className="px-4 py-6 md:px-0">
+        <div className="rounded-[10px] bg-white p-5 md:p-6 lg:p-7 xl:p-8">
+          <h2 className="mx-auto max-w-[760px] text-center text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold leading-normal text-[#2D3D4D]">
             {headingText}
           </h2>
           {isPostcodeStep ? (
