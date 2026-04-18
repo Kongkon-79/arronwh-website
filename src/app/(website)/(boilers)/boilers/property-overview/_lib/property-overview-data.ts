@@ -5,10 +5,7 @@ import {
   Building2,
   Check,
   CircleHelp,
-  Droplets,
-  Flame,
   House,
-  Pipette,
   Radio,
   ShowerHead,
   TreePine,
@@ -20,12 +17,17 @@ import {
 
 import HomeownerImage from "../../../../../../../public/assets/images/boilers/homeowner.svg";
 import LandlordImage from "../../../../../../../public/assets/images/boilers/landlord.svg";
+import GasImage from "../../../../../../../public/assets/images/boilers/gas.svg";
+import LpgImage from "../../../../../../../public/assets/images/boilers/lpg.svg";
+import OilImage from "../../../../../../../public/assets/images/boilers/oil.svg";
+
 
 export type Option = {
   label: string;
   value: string;
   icon?: ComponentType<{ className?: string }>;
   image?: StaticImageData | string;
+  hoverDescription?: string;
 };
 
 export type ChoiceStep = {
@@ -59,9 +61,26 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "What kind of fuel does your boiler use?",
     cols: "md:grid-cols-3",
     options: [
-      { label: "Gas", value: "Gas", icon: Flame },
-      { label: "LPG", value: "LPG", icon: Droplets },
-      { label: "Oil", value: "Oil", icon: Pipette },
+      {
+        label: "Gas",
+        value: "Gas",
+        image: GasImage,
+        hoverDescription: "If you have a gas meter, your boiler uses gas.",
+      },
+      {
+        label: "LPG",
+        value: "LPG",
+        image: LpgImage,
+        hoverDescription:
+          "LPG stands for Liquid Petroleum Gas. It's a gas stored in a tank outside. It's not the same as oil, which unfortunately we don't provide.",
+      },
+      {
+        label: "Oil",
+        value: "Oil",
+        image: OilImage,
+        hoverDescription:
+          "Oil boilers work by using a stored supply of oil in an external tank. These are more common in rural areas.",
+      },
     ],
   },
   {
