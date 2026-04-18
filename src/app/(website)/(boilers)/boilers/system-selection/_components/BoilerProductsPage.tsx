@@ -1,5 +1,6 @@
 "use client";
 
+import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
 import { ChevronDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ProductCard, ProductItem } from "./ProductCard";
@@ -170,35 +171,43 @@ export default function BoilerProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#EEF2F5] px-3 py-4 sm:px-4 lg:px-6">
-      <div className="mx-auto max-w-[1440px]">
-        {/* Top Filter */}
-        <div className="mb-4 flex justify-end">
-          <div className="flex overflow-hidden rounded-full border border-[#D9E0E7] bg-white shadow-sm">
-            <button className="flex items-center gap-2 px-4 py-2 text-[12px] sm:text-[13px] font-medium text-[#2D3D4D]">
-              {selectedFilter}
-              <ChevronDown className="h-4 w-4" />
-            </button>
-            <button className="border-l border-[#E5E7EB] px-4 py-2 text-[12px] sm:text-[13px] font-medium text-[#2D3D4D]">
-              Start again
-            </button>
+    <BoilerFlowShell activeStep={2}>
+      <div className="h-[6px] w-full bg-[#E5EAF1]">
+        <div
+          className="h-full bg-primary transition-all duration-300"
+          style={{ width: "50%" }}
+        />
+      </div>
+      <div className="bg-[#EEF2F5] px-3 py-4 sm:px-4 lg:px-6">
+        <div className="mx-auto max-w-[1440px]">
+          {/* Top Filter */}
+          <div className="mb-4 flex justify-end">
+            <div className="flex overflow-hidden rounded-full border border-[#D9E0E7] bg-white shadow-sm">
+              <button className="flex items-center gap-2 px-4 py-2 text-[12px] sm:text-[13px] font-medium text-[#2D3D4D]">
+                {selectedFilter}
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              <button className="border-l border-[#E5E7EB] px-4 py-2 text-[12px] sm:text-[13px] font-medium text-[#2D3D4D]">
+                Start again
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-5">
+            {isError ? (
+              <div className="rounded-[8px] border border-[#E5E7EB] bg-white p-5 text-[15px] text-[#2D3D4D]">
+                {error instanceof Error ? error.message : "Failed to load products."}
+              </div>
+            ) : products.length ? (
+              products.map((product) => <ProductCard key={product.id} product={product} />)
+            ) : (
+              <div className="rounded-[8px] border border-[#E5E7EB] bg-white p-5 text-[15px] text-[#2D3D4D]">
+                No products available right now.
+              </div>
+            )}
           </div>
         </div>
-
-        <div className="space-y-5">
-          {isError ? (
-            <div className="rounded-[8px] border border-[#E5E7EB] bg-white p-5 text-[15px] text-[#2D3D4D]">
-              {error instanceof Error ? error.message : "Failed to load products."}
-            </div>
-          ) : products.length ? (
-            products.map((product) => <ProductCard key={product.id} product={product} />)
-          ) : (
-            <div className="rounded-[8px] border border-[#E5E7EB] bg-white p-5 text-[15px] text-[#2D3D4D]">
-              No products available right now.
-            </div>
-          )}
-        </div>
       </div>
-    </div>
+    </BoilerFlowShell>
   );
 }

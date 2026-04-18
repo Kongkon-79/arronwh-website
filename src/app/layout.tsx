@@ -6,7 +6,7 @@ import AppProvider from "@/components/providers/AppProvider";
 import NextTopLoader from "nextjs-toploader";
 
 import { Outfit } from "next/font/google";
-import Navbar from "@/components/shared/Navbar/Navbar";
+// import Navbar from "@/components/shared/Navbar/Navbar";
 import Footer from "@/components/shared/Footer/Footer";
 import SmoothScrollProvider from "@/components/providers/SmoothScrollProvider";
 
@@ -33,7 +33,7 @@ export default function RootLayout({
         <SmoothScrollProvider>
         <AuthProvider>
           <AppProvider>
-            <Navbar />
+            {/* <Navbar /> */}
             {children}
             <Footer />
             <Toaster />
