@@ -17,6 +17,11 @@ function formatControllerPrice(price: number): string {
   return `$${price % 1 === 0 ? price.toFixed(0) : price.toFixed(2)}`;
 }
 
+function formatMoney(value: number): string {
+  if (value % 1 === 0) return `$${value.toLocaleString("en-US")}`;
+  return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 function ChooseControlsPage() {
   const searchParams = useSearchParams();
   const productId = searchParams.get("productId");
@@ -31,17 +36,24 @@ function ChooseControlsPage() {
   }
 
   const selectedController = controllers?.find((c) => c._id === selectedControllerId) ?? null;
-
-  function getControllerPriceLabel(price: number): string {
-    if (price <= 0) return "Included";
-    return `$${price % 1 === 0 ? price.toFixed(0) : price.toFixed(2)}`;
-  }
+  const selectedControllerPrice = selectedController && selectedController.price > 0 ? selectedController.price : 0;
+  const payTodayTotal = product ? product.payablePrice + selectedControllerPrice : 0;
+  const originalTotal = product ? product.price + selectedControllerPrice : 0;
 
   // Build dynamic quote items from API data
   const quoteItems = product
     ? [
-        { label: product.boilerAbility || product.title, value: `$${product.price}`, highlight: false },
+        { label: product.boilerAbility || product.title, value: formatMoney(product.price), highlight: false },
         { label: "View details", value: "", highlight: true },
+        ...(selectedController
+          ? [
+              {
+                label: `${selectedController.title}`,
+                value: formatControllerPrice(selectedController.price),
+                highlight: false,
+              },
+            ]
+          : []),
         ...product.boilerFeatures.map((f) => ({
           label: f.title,
           value: f.value,
@@ -51,9 +63,6 @@ function ChooseControlsPage() {
           .split("\n")
           .filter(Boolean)
           .map((line) => ({ label: line.trim(), value: "Included", highlight: false })),
-        ...(selectedController
-          ? [{ label: selectedController.title, value: getControllerPriceLabel(selectedController.price), highlight: false }]
-          : []),
       ]
     : [];
 
@@ -160,17 +169,17 @@ function ChooseControlsPage() {
                 <div className="rounded-[8px] bg-[#F0F3F6] p-3 sm:p-4">
                   <p className="text-[12px] sm:text-[16px] text-[#2D3D4D]">Pay today</p>
                   <p className="mt-2 text-[24px] sm:text-[18px] font-bold leading-none text-[#2D3D4D]">
-                    ${product.payablePrice.toLocaleString()}
+                    {formatMoney(payTodayTotal)}
                   </p>
                   <p className="mt-2 text-[11px] sm:text-[14px] font-medium text-[#00A56F] line-through">
-                    was ${product.price.toLocaleString()}
+                    was {formatMoney(originalTotal)}
                   </p>
                 </div>
 
                 <div className="rounded-[8px] bg-[#F0F3F6] p-3 sm:p-4">
                   <p className="text-[12px] sm:text-[16px] text-[#2D3D4D]">Monthly Cost</p>
                   <p className="mt-2 text-[24px] sm:text-[18px] font-bold leading-none text-[#2D3D4D]">
-                    ${product.monthlyPrice}/mo
+                    {formatMoney(product.monthlyPrice)}/mo
                   </p>
                 </div>
               </div>
@@ -204,20 +213,20 @@ function ChooseControlsPage() {
                 {quoteItems.map((item, index) => (
                   <div
                     key={`${item.label}-${index}`}
-                    className="flex items-start justify-between gap-4 border-b border-dotted border-[#A7B1BB] py-3 last:border-b-0"
+                    className="flex min-w-0 items-start justify-between gap-3 border-b border-dotted border-[#A7B1BB] py-3 last:border-b-0"
                   >
                     <div
                       className={
                         item.highlight
-                          ? "text-[14px] sm:text-[15px] font-medium text-[#F5C842] underline cursor-pointer"
-                          : "text-[14px] sm:text-[15px] text-[#2D3D4D]"
+                          ? "min-w-0 flex-1 break-words text-[14px] sm:text-[15px] font-medium text-[#F5C842] underline cursor-pointer"
+                          : "min-w-0 flex-1 break-words text-[14px] sm:text-[15px] text-[#2D3D4D]"
                       }
                     >
                       {item.label}
                     </div>
 
                     {item.value ? (
-                      <div className="shrink-0 text-[14px] sm:text-[15px] font-semibold text-[#2D3D4D]">
+                      <div className="max-w-[46%] text-right break-words text-[14px] sm:text-[15px] font-semibold text-[#2D3D4D]">
                         {item.value}
                       </div>
                     ) : null}
