@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import type { StaticImageData } from "next/image";
 import {
   Bath,
   Building2,
@@ -7,7 +8,6 @@ import {
   Droplets,
   Flame,
   House,
-  Landmark,
   Pipette,
   Radio,
   ShowerHead,
@@ -18,10 +18,14 @@ import {
   X,
 } from "lucide-react";
 
+import HomeownerImage from "../../../../../../../public/assets/images/boilers/homeowner.svg";
+import LandlordImage from "../../../../../../../public/assets/images/boilers/landlord.svg";
+
 export type Option = {
   label: string;
   value: string;
   icon?: ComponentType<{ className?: string }>;
+  image?: StaticImageData | string;
 };
 
 export type ChoiceStep = {
@@ -46,8 +50,8 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "Are you a homeowner or landlord?",
     cols: "md:grid-cols-2",
     options: [
-      { label: "Homeowner", value: "Homeowner", icon: House },
-      { label: "Landlord", value: "Landlord", icon: Landmark },
+      { label: "Homeowner", value: "Homeowner", image: HomeownerImage },
+      { label: "Landlord", value: "Landlord", image: LandlordImage },
     ],
   },
   {

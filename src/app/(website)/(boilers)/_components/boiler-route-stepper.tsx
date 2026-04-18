@@ -24,12 +24,12 @@ const BoilerRouteStepper = ({ activeStep }: BoilerRouteStepperProps) => {
   const prevStep = routeSteps.find((s) => s.id === activeStep - 1);
 
   return (
-    <div className="overflow-hidden rounded-full border border-[#DDE4EE] bg-white shadow-sm">
-      <div className="flex h-[56px] items-stretch md:h-[64px]">
+    <div className="overflow-hidden rounded-full border border-[#DDE4EE] bg-white shadow-sm ">
+      <div className="flex h-[56px] items-stretch md:h-[64px] ">
         {/* Left Section: Back Button + Logo */}
         <div 
           className={cn(
-            "flex items-center gap-2 border-r border-[#E7ECF3] px-3 md:gap-4 md:px-6 transition-colors duration-300 bg-primary"
+            "flex items-center gap-2 border-r border-[#E7ECF3] px-3 md:gap-4 md:px-6 transition-colors duration-300 bg-primary "
           )}
         >
           <button 
@@ -81,7 +81,7 @@ const BoilerRouteStepper = ({ activeStep }: BoilerRouteStepperProps) => {
           >
             <MessageCircleQuestion className="h-4 w-4 md:h-5 md:w-5" />
             <span className="text-sm font-semibold">Help</span>
-            <span className="hidden text-xs text-[#7E8996] md:inline font-normal">2:40</span>
+            {/* <span className="hidden text-xs text-[#7E8996] md:inline font-normal">2:40</span> */}
           </button>
         </div>
       </div>
