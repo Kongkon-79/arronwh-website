@@ -2,7 +2,7 @@
 
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, ChevronLeft, MessageCircleQuestion } from "lucide-react";
+import { ArrowLeft, MessageCircleQuestion } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -270,6 +270,18 @@ const PropertyOverviewContainer = () => {
     prevStep();
   };
 
+  const handleOptionSelect = (value: string) => {
+    if (!step) return;
+    setAnswer(step.id, value);
+
+    if (currentStep >= maxStep) {
+      setIsPostcodeStep(true);
+      return;
+    }
+
+    nextStep(maxStep);
+  };
+
   return (
     <BoilerFlowShell>
       <div className="h-4 w-full bg-white">
@@ -334,8 +346,8 @@ const PropertyOverviewContainer = () => {
         </div>
       </div>
 
-      <div className="px-4 py-6 md:px-0">
-        <div className="rounded-[10px] bg-white p-5 md:p-6 lg:p-7 xl:p-8">
+      <div className="px-4 py-6  md:px-0">
+        <div className="rounded-[10px] bg-white px-5 md:px-6 lg:px-7 xl:px-8 py-7 md:py-9 lg:py-10 xl:py-12">
           <h2 className="mx-auto max-w-[760px] text-center text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold leading-normal text-[#2D3D4D]">
             {headingText}
           </h2>
@@ -353,26 +365,38 @@ const PropertyOverviewContainer = () => {
               {step.options.map((option) => {
                 const selected = answers[step.id] === option.value;
                 const Icon = option.icon;
+                const optionImage = option.image;
 
                 return (
                   <button
                     type="button"
                     key={option.value}
-                    onClick={() => setAnswer(step.id, option.value)}
+                    onClick={() => handleOptionSelect(option.value)}
                     className={cn(
-                      "group relative h-[365px] rounded-[8px] border bg-white px-3 py-3 text-[#2D3D4D] transition ",
+                      "group relative h-[365px] rounded-[8px] bg-white px-3 py-3 text-[#2D3D4D] transition ",
                       optionCardWidthClass,
                       selected
-                        ? "border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
-                        : "border-[#929BAB] hover:border-primary/70",
+                        ? "border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
+                        : "border-[2px] border-[#666666] hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.85)]",
                     )}
-                  >
+                    >
                     <div className="flex h-full flex-col items-center justify-center gap-3 pb-3">
-                      {Icon && <Icon className="h-10 w-10 text-[#8A97A7]" />}
+                      {optionImage ? (
+                        <Image
+                          src={optionImage}
+                          alt={option.label}
+                          width={220}
+                          height={220}
+                          className="h-[170px] w-auto object-contain"
+                        />
+                      ) : Icon ? (
+                        <Icon className="h-10 w-10 text-[#8A97A7]" />
+                      ) : null}
                       <span
                         className={cn(
-                          "text-center text-[14px] font-semibold",
-                          selected ? "text-[#E0B800]" : "text-[#2D3D4D]",
+                          "text-center text-lg md:text-xl leading-normal font-semibold transition-colors duration-200",
+                          selected ? "text-primary" : "text-[#2D3D4D]",
+                          !selected && "group-hover:text-[#E0B800]",
                         )}
                       >
                         {option.label}
@@ -381,8 +405,10 @@ const PropertyOverviewContainer = () => {
 
                     <div
                       className={cn(
-                        "absolute bottom-0 left-0 flex h-7 w-full items-center justify-center rounded-b-[8px] text-[10px] font-semibold",
-                        selected ? "bg-primary text-[#2D3D4D]" : "bg-transparent text-transparent",
+                        "absolute bottom-0 left-0 flex h-14 w-full items-center justify-center rounded-b-[8px] text-base md:text-lg font-medium leading-normal transition-colors duration-200",
+                        selected
+                          ? "bg-primary text-[#2D3D4D]"
+                          : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]",
                       )}
                     >
                       Selected
@@ -492,29 +518,20 @@ const PropertyOverviewContainer = () => {
               {submitError ? (
                 <p className="text-xs text-red-500">{submitError}</p>
               ) : null}
+
+              <div className="pt-2 text-right">
+                <button
+                  type="button"
+                  onClick={() => void handleNext()}
+                  disabled={!canMoveNext || isSubmitting}
+                  className="inline-flex h-8 items-center rounded-[6px] bg-primary px-5 text-[10px] font-semibold text-[#2D3D4D] transition hover:bg-[#F3CF43] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSubmitting ? "Submitting..." : "Continue"}
+                </button>
+              </div>
             </div>
           )}
         </div>
-      </div>
-
-      <div className="flex items-center justify-between border-t border-[#E8EDF3] bg-[#EEF2F6] px-4 py-3 md:px-6">
-        <button
-          type="button"
-          onClick={handlePrev}
-          className="inline-flex h-7 items-center gap-1 rounded-[4px] border border-[#DCE3EC] bg-white px-3 text-[9px] font-medium text-[#5A6878] transition hover:border-primary"
-        >
-          <ChevronLeft className="h-3 w-3" />
-          Back
-        </button>
-
-        <button
-          type="button"
-          onClick={() => void handleNext()}
-          disabled={!canMoveNext}
-          className="inline-flex h-7 items-center rounded-[6px] bg-primary px-4 text-[9px] font-semibold text-[#2D3D4D] transition hover:bg-[#F3CF43] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isSubmitting ? "Submitting..." : "Continue"}
-        </button>
       </div>
     </BoilerFlowShell>
   );
