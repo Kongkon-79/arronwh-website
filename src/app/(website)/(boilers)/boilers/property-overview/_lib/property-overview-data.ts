@@ -28,6 +28,26 @@ import Yes from "../../../../../../../public/assets/images/boilers/yes.svg";
 import No from "../../../../../../../public/assets/images/boilers/no.svg";
 import YesWallMounted from "../../../../../../../public/assets/images/boilers/wall-mounted.svg";
 import NoFloorStanding from "../../../../../../../public/assets/images/boilers/free-standing.svg";
+import UpToTen from "../../../../../../../public/assets/images/boilers/up-to-ten.svg";
+import TenToTwenty from "../../../../../../../public/assets/images/boilers/ten-twenty.svg";
+import TwentyToTwentyFive from "../../../../../../../public/assets/images/boilers/twenty-twenty-five.svg";
+import TwentyFivePlus from "../../../../../../../public/assets/images/boilers/twenty-five-plus.svg";
+import UpToOne from "../../../../../../../public/assets/images/boilers/up-to-one.svg";
+import OneToFive from "../../../../../../../public/assets/images/boilers/one-five.svg";
+import SixToTen from "../../../../../../../public/assets/images/boilers/six-ten.svg";
+import TenPlus from "../../../../../../../public/assets/images/boilers/ten-plus.svg";
+import Fast from "../../../../../../../public/assets/images/boilers/fast.svg";
+import Average from "../../../../../../../public/assets/images/boilers/average.svg";
+import Slow from "../../../../../../../public/assets/images/boilers/slow.svg";
+import UtilityRoom from "../../../../../../../public/assets/images/boilers/utility-room.svg";
+import Kitchen from "../../../../../../../public/assets/images/boilers/kitchen.svg";
+import Garage from "../../../../../../../public/assets/images/boilers/garage.svg";
+import AiringCupboard from "../../../../../../../public/assets/images/boilers/cupboard.svg";
+import Detached from "../../../../../../../public/assets/images/boilers/detached.svg";
+import SemiDetached from "../../../../../../../public/assets/images/boilers/semi-detached.svg";
+import Terraced from "../../../../../../../public/assets/images/boilers/terrace.svg";
+import Flat from "../../../../../../../public/assets/images/boilers/flat.svg";
+import Bungalow from "../../../../../../../public/assets/images/boilers/bungalow.svg";
 
 
 export type Option = {
@@ -155,18 +175,6 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     ],
   },
   {
-    id: "boilerAge",
-    question: "Roughly how old is your boiler?",
-    cols: "md:grid-cols-5",
-    options: [
-      { label: "Up to 10 years", value: "Up to 10 years" },
-      { label: "10-20 years", value: "10-20 years" },
-      { label: "20-25 years", value: "20-25 years" },
-      { label: "25+ years", value: "25+ years" },
-      { label: "I don't know", value: "I don't know" },
-    ],
-  },
-  {
     id: "mountedOnWall",
     question: "Is your boiler mounted on the wall?",
     cols: "md:grid-cols-2",
@@ -176,24 +184,87 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     ],
   },
   {
+    id: "boilerAge",
+    question: "Roughly how old is your boiler?",
+    cols: "md:grid-cols-5",
+    options: [
+      { label: "Up to 10 years", value: "Up to 10 years", image: UpToTen },
+      { label: "10-20 years", value: "10-20 years", image: TenToTwenty },
+      {
+        label: "20-25 years",
+        value: "20-25 years",
+        image: TwentyToTwentyFive,
+      },
+      { label: "25+ years", value: "25+ years", image: TwentyFivePlus },
+      { label: "I don't know", value: "I don't know", image: Other },
+    ],
+  },
+  
+  {
     id: "stayDuration",
     question: "How long do you see yourself in your current home?",
     cols: "md:grid-cols-5",
     options: [
-      { label: "Up to 5 years", value: "Up to 5 years" },
-      { label: "5-8 years", value: "5-8 years" },
-      { label: "8-10 years", value: "8-10 years" },
-      { label: "10+ years", value: "10+ years" },
-      { label: "I don't know", value: "I don't know" },
+      { label: "Up to 1 years", value: "Up to 1 years", image: UpToOne },
+      { label: "1-5 years", value: "1-5 years", image: OneToFive },
+      { label: "6-10 years", value: "6-10 years", image: SixToTen },
+      { label: "10+ years", value: "10+ years", image: TenPlus },
+      { label: "I don't know", value: "I don't know", image: Other },
+    ],
+  },
+  {
+    id: "waterFlowRate",
+    question: "How quickly does your water come out of your cold tap?",
+    cols: "md:grid-cols-3",
+    options: [
+      {
+        label: "Fast",
+        value: "Fast",
+        image: Fast,
+        hoverDescription: "Fills a pint glass in under 5 seconds.",
+      },
+      {
+        label: "Average",
+        value: "Average",
+        image: Average,
+        hoverDescription: "Fills a pint glass in less than 10 seconds.",
+      },
+      {
+        label: "Slow",
+        value: "Slow",
+        image: Slow,
+        hoverDescription: "Takes more than 10 seconds to fill a pint glass.",
+      },
+    ],
+  },
+  {
+    id: "currentBoilerLocation",
+    question: "Where's your current boiler?",
+    cols: "md:grid-cols-4",
+    options: [
+      { label: "Utility room", value: "Utility room", image: UtilityRoom },
+      { label: "Kitchen", value: "Kitchen", image: Kitchen },
+      { label: "Garage", value: "Garage", image: Garage },
+      { label: "Airing cupboard", value: "Airing cupboard", image: AiringCupboard },
+      { label: "Other", value: "Other", image: Other },
     ],
   },
   {
     id: "differentPlace",
     question: "Do you want your new boiler in a different place?",
-    cols: "md:grid-cols-2",
+    cols: "md:grid-cols-3",
     options: [
-      { label: "No", value: "No", icon: X },
-      { label: "Yes", value: "Yes", icon: Check },
+      { label: "No", value: "No", image: No },
+      {
+        label: "Move to airing cupboard",
+        value: "Move to airing cupboard",
+        image: AiringCupboard,
+      },
+      {
+        label: "Move somewhere else",
+        value: "Move somewhere else",
+        image: Other,
+      },
     ],
   },
   {
@@ -201,11 +272,11 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "Which of these best describes your home?",
     cols: "md:grid-cols-5",
     options: [
-      { label: "Detached", value: "Detached" },
-      { label: "Semi Detached", value: "Semi Detached" },
-      { label: "Terraced", value: "Terraced" },
-      { label: "Flat", value: "Flat" },
-      { label: "Bungalow", value: "Bungalow" },
+      { label: "Detached", value: "Detached", image: Detached },
+      { label: "Semi Detached", value: "Semi Detached", image: SemiDetached },
+      { label: "Terraced", value: "Terraced", image: Terraced },
+      { label: "Flat", value: "Flat", image: Flat },
+      { label: "Bungalow", value: "Bungalow", image: Bungalow },
     ],
   },
   {
