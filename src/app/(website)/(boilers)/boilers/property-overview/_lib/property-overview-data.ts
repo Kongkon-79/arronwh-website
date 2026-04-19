@@ -4,14 +4,10 @@ import {
   Bath,
   Building2,
   Check,
-  CircleHelp,
   House,
-  Radio,
   ShowerHead,
-  TreePine,
   Waves,
   Wind,
-  Wrench,
   X,
 } from "lucide-react";
 
@@ -20,6 +16,18 @@ import LandlordImage from "../../../../../../../public/assets/images/boilers/lan
 import GasImage from "../../../../../../../public/assets/images/boilers/gas.svg";
 import LpgImage from "../../../../../../../public/assets/images/boilers/lpg.svg";
 import OilImage from "../../../../../../../public/assets/images/boilers/oil.svg";
+import CombiImage from "../../../../../../../public/assets/images/boilers/combi.svg";
+import StandardImage from "../../../../../../../public/assets/images/boilers/standard.svg";
+import SystemImage from "../../../../../../../public/assets/images/boilers/system.svg";
+import BackBoilerImage from "../../../../../../../public/assets/images/boilers/back-boiler.svg";
+import NotWorking from "../../../../../../../public/assets/images/boilers/not-working.svg";
+import OldInefficient from "../../../../../../../public/assets/images/boilers/old-inefficient.svg";
+import DoesNotMeetNeeds from "../../../../../../../public/assets/images/boilers/doesnt-fit.svg";
+import Other from "../../../../../../../public/assets/images/boilers/question-mark.svg";
+import Yes from "../../../../../../../public/assets/images/boilers/yes.svg";
+import No from "../../../../../../../public/assets/images/boilers/no.svg";
+import YesWallMounted from "../../../../../../../public/assets/images/boilers/wall-mounted.svg";
+import NoFloorStanding from "../../../../../../../public/assets/images/boilers/free-standing.svg";
 
 
 export type Option = {
@@ -88,10 +96,43 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "Currently, what type of boiler do you have?",
     cols: "md:grid-cols-4",
     options: [
-      { label: "Combi", value: "Combi", icon: Waves },
-      { label: "Standard", value: "Standard", icon: Building2 },
-      { label: "System", value: "System", icon: Radio },
-      { label: "Back Boiler", value: "Back Boiler", icon: Wrench },
+      {
+        label: "Combi",
+        value: "Combi",
+        image: CombiImage,
+        hoverDescription:
+          "Combi boilers heat water directly from the mains when you turn on a tap. So you get hot water instantly - without a cylinder or a tank in the loft.",
+      },
+      {
+        label: "Standard",
+        value: "Standard",
+        image: StandardImage,
+        hoverDescription:
+          "If you have a hot water storage cylinder as well as a cold water tank in the loft, your boiler is likely to be Standard. These are also called Regular, Traditional or Conventional boilers.",
+      },
+      {
+        label: "System",
+        value: "System",
+        image: SystemImage,
+        hoverDescription:
+          "If you have a hot water storage cylinder but no cold water tank in the loft, you're likely to have a System boiler. You can also choose this option if you have a Potterton Powermax.",
+      },
+      {
+        label: "Back Boiler",
+        value: "Back Boiler",
+        image: BackBoilerImage,
+        hoverDescription:
+          "A Back Boiler Unit (BBU) is a boiler built-in behind a gas fireplace.",
+      },
+    ],
+  },
+  {
+    id: "convertToCombi",
+    question: "Do you want to convert to a Combi boiler?",
+    cols: "md:grid-cols-2",
+    options: [
+      { label: "Yes", value: "Yes", image: Yes },
+      { label: "No", value: "No", image: No },
     ],
   },
   {
@@ -99,18 +140,18 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "How would you describe your current boiler?",
     cols: "md:grid-cols-4",
     options: [
-      { label: "Not working", value: "Not working", icon: X },
+      { label: "Not working", value: "Not working", image: NotWorking },
       {
-        label: "Old and inefficient",
-        value: "Old and inefficient",
-        icon: TreePine,
+        label: "Old & inefficient",
+        value: "Old & inefficient",
+        image: OldInefficient,
       },
       {
-        label: "Does not meet needs",
-        value: "Does not meet needs",
-        icon: CircleHelp,
+        label: "Doesn't fit with our plans",
+        value: "Doesn't fit with our plans",
+        image: DoesNotMeetNeeds,
       },
-      { label: "Other", value: "Other", icon: CircleHelp },
+      { label: "Other", value: "Other", image: Other },
     ],
   },
   {
@@ -130,8 +171,8 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "Is your boiler mounted on the wall?",
     cols: "md:grid-cols-2",
     options: [
-      { label: "Yes", value: "Yes", icon: Check },
-      { label: "No", value: "No", icon: X },
+      { label: "Yes it is wall mounted", value: "Yes it is wall mounted", image: YesWallMounted },
+      { label: "No it is floor standing", value: "No it is floor standing", image: NoFloorStanding },
     ],
   },
   {
