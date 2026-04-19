@@ -1,7 +1,7 @@
 "use client";
 
-import type { ElementType } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState, type ElementType } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ type IncludedItem = {
 };
 
 const includeIcons: ElementType[] = [Package, Trash2, BadgeDollarSign];
+const DEFAULT_VISIBLE_INCLUDE_ITEMS = 6;
 
 const accordions = [
   { icon: CalendarDays, label: "When should we Survey?" },
@@ -128,9 +129,9 @@ function InstallItem({ item, showImage }: { item: IncludedItem; showImage: boole
   const Icon = item.icon;
 
   return (
-    <div className="grid grid-cols-[48px_1fr_auto] items-start gap-3">
+    <div className="grid grid-cols-[48px_1fr_auto] items-center gap-3">
       {showImage ? (
-        <div className="h-12 w-12 overflow-hidden rounded-[6px] bg-white">
+        <div className="h-12 w-12 overflow-hidden">
           <Image
             src={item.image ?? "/product.png"}
             alt={item.title}
@@ -140,8 +141,8 @@ function InstallItem({ item, showImage }: { item: IncludedItem; showImage: boole
           />
         </div>
       ) : (
-        <div className="flex h-6 w-6 items-center justify-center rounded-md text-[#64748B]">
-          <Icon className="h-4 w-4" />
+        <div className="flex h-12 w-12 items-center text-[#64748B]">
+          <Icon className="h-6 w-6" />
         </div>
       )}
 
@@ -178,8 +179,6 @@ function AccordionRow({ icon: Icon, label }: { icon: ElementType; label: string 
 
 function SummaryCard({
   product,
-  controller,
-  extra,
   payTodayTotal,
   originalTotal,
 }: {
@@ -207,13 +206,13 @@ function SummaryCard({
         <div className="rounded-[6px] bg-[#F0F3F6] p-2.5">
           <p className="text-[18px] text-[#64748B]">Monthly Cost</p>
           <p className="mt-1 text-[18px] font-bold leading-none text-[#2D3D4D]">
-            {formatMoney(product.monthlyPrice)}/mo
+            {formatMoney(payTodayTotal / 12)}/mo
           </p>
         </div>
       </div>
 
       <div className="mt-3 flex min-h-[34px] items-center justify-center rounded-[6px] bg-[#F0F3F6] px-2 text-center">
-        <BadgePercent className="mr-2 h-3.5 w-3.5 shrink-0 text-[#64748B]" />
+        <BadgePercent className="mr-2 h-5 w-5 shrink-0 text-[#64748B]" />
         <span className="text-[16px] font-semibold text-[#2D3D4D]">
           {product.boilerAbility || product.title} Discount
         </span>
@@ -224,28 +223,23 @@ function SummaryCard({
         <h4 className="text-[18px] font-semibold text-[#2D3D4D]">Order Summary</h4>
         <div className="mt-2 space-y-2 rounded-[6px] bg-[#F0F3F6] p-2.5">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-[6px] bg-white">
-              <ShieldCheck className="h-4 w-4 text-[#64748B]" />
+            <div className="h-[48px] w-[48px] overflow-hidden">
+              <Image
+                src={product.images?.[0] ?? "/product.png"}
+                alt={product.boilerAbility || product.title}
+                width={48}
+                height={48}
+                className="h-[48px] w-[48px] object-contain"
+              />
             </div>
             <div>
               <p className="text-[16px] font-semibold text-[#2D3D4D]">{product.boilerAbility || product.title}</p>
               {getWarrantyText(product) ? (
-                <p className="text-[14px] text-[#64748B]">{getWarrantyText(product)}</p>
+                <p className="text-[16px] text-[#2D3D4D]">{getWarrantyText(product)}</p>
               ) : null}
             </div>
           </div>
-
-          {controller ? (
-            <div className="border-t border-[#D6DEE8] pt-2 text-[14px] text-[#2D3D4D]">
-              {controller.title} - <span className="font-semibold">{formatAddonPrice(controller.price ?? 0)}</span>
-            </div>
-          ) : null}
-
-          {extra ? (
-            <div className="border-t border-[#D6DEE8] pt-2 text-[14px] text-[#2D3D4D]">
-              {extra.title} - <span className="font-semibold">{formatAddonPrice(extra.price ?? 0)}</span>
-            </div>
-          ) : null}
+   
         </div>
       </div>
     </div>
@@ -254,7 +248,7 @@ function SummaryCard({
 
 function BoilerQuoteSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
       <section className="space-y-4">
         <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4 animate-pulse">
           <div className="mx-auto h-7 w-72 rounded bg-[#F0F3F6]" />
@@ -303,7 +297,9 @@ function BoilerQuoteSkeleton() {
 }
 
 export default function BoilerQuote() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const [showAllIncludedItems, setShowAllIncludedItems] = useState(false);
   const quoteId = searchParams.get("quoteId");
   const productIdFromQuery = searchParams.get("productId");
 
@@ -311,6 +307,9 @@ export default function BoilerQuote() {
   const quoteProductId =
     typeof quote?.productId === "string" ? quote.productId : quote?.productId?._id ?? null;
   const resolvedProductId = productIdFromQuery ?? quoteProductId;
+  useEffect(() => {
+    setShowAllIncludedItems(false);
+  }, [resolvedProductId, quoteId]);
 
   const { data: product, isLoading: productLoading } = useProductById(resolvedProductId);
 
@@ -335,7 +334,24 @@ export default function BoilerQuote() {
     : 0;
 
   const includedItems = product ? buildIncludedItems(product, selectedController, selectedExtra) : [];
+  const hasMoreIncludedItems = includedItems.length > DEFAULT_VISIBLE_INCLUDE_ITEMS;
+  const visibleIncludedItems = showAllIncludedItems
+    ? includedItems
+    : includedItems.slice(0, DEFAULT_VISIBLE_INCLUDE_ITEMS);
   const isLoading = (quoteId ? quoteLoading : false) || (resolvedProductId ? productLoading : false);
+
+  const handleNext = () => {
+    const params = new URLSearchParams();
+    if (resolvedProductId) {
+      params.set("productId", resolvedProductId);
+    }
+    if (quoteId) {
+      params.set("quoteId", quoteId);
+    }
+
+    const query = params.toString();
+    router.push(query ? `/boilers/installation-booking?${query}` : "/boilers/installation-booking");
+  };
 
   return (
     <BoilerFlowShell activeStep={3}>
@@ -348,7 +364,7 @@ export default function BoilerQuote() {
               Product details not found. Please go back and select your boiler again.
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
               <section className="space-y-4">
                 <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4">
                   <div className="text-center">
@@ -369,7 +385,7 @@ export default function BoilerQuote() {
 
                   <div className="mt-3 rounded-[8px] bg-[#F0F3F6] p-4">
                     <div className="space-y-6">
-                      {includedItems.map((item, index) => (
+                      {visibleIncludedItems.map((item, index) => (
                         <InstallItem
                           key={`${item.title}-${item.price}`}
                           item={item}
@@ -381,14 +397,29 @@ export default function BoilerQuote() {
 
                   <button
                     type="button"
+                    onClick={() => {
+                      if (hasMoreIncludedItems) {
+                        setShowAllIncludedItems((prev) => !prev);
+                      }
+                    }}
                     className="mt-6 flex w-full items-center justify-center gap-1.5 rounded-[4px] px-3 py-2 text-[18px] font-medium text-[#FFDE59]"
                   >
-                    <span className="text-sm leading-none">+</span>
-                    <span>Show everything included in your installation</span>
+                    <span className="text-sm leading-none">
+                      {hasMoreIncludedItems && showAllIncludedItems ? "-" : "+"}
+                    </span>
+                    <span>
+                      {hasMoreIncludedItems && showAllIncludedItems
+                        ? "Show less"
+                        : "Show everything included in your installation"}
+                    </span>
                   </button>
 
                   <div className="mt-2 space-y-6">
-                    <Button className="h-[48px] w-full rounded-[4px] bg-[#00A56F] text-[18px] font-medium text-white hover:bg-[#00A56F]">
+                    <Button
+                      type="button"
+                      onClick={handleNext}
+                      className="h-[48px] w-full rounded-[4px] bg-[#00A56F] text-[18px] font-medium text-white hover:bg-[#00A56F]"
+                    >
                       Next
                     </Button>
                     <Button

@@ -50,7 +50,6 @@ const monthNames = [
 type CalendarDateCell = {
   day: number;
   blocked?: boolean;
-  discount?: string;
 };
 
 type InstallSurveyDateData = {
@@ -66,7 +65,7 @@ type InstallSurveyDateApiResponse = {
   data?: InstallSurveyDateData;
 };
 
-type UpdateSurveyDateResponse = {
+type UpdateInstallDateResponse = {
   success?: boolean;
   status?: boolean;
   message?: string;
@@ -97,26 +96,26 @@ async function fetchInstallSurveyData(): Promise<InstallSurveyDateData> {
   };
 }
 
-async function updateQuoteSurveyDate({
+async function updateQuoteInstallDate({
   quoteId,
-  surveyDate,
+  installDate,
 }: {
   quoteId: string;
-  surveyDate: string;
-}): Promise<UpdateSurveyDateResponse> {
+  installDate: string;
+}): Promise<UpdateInstallDateResponse> {
   const response = await fetch(`${resolveQuoteEndpoint()}/${encodeURIComponent(quoteId)}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ surveyDate }),
+    body: JSON.stringify({ installDate }),
   });
 
-  const result = (await response.json().catch(() => null)) as UpdateSurveyDateResponse | null;
+  const result = (await response.json().catch(() => null)) as UpdateInstallDateResponse | null;
   const hasExplicitFailure = result?.success === false || result?.status === false;
 
   if (!response.ok || hasExplicitFailure) {
-    throw new Error(result?.message || "Failed to update survey date.");
+    throw new Error(result?.message || "Failed to update install date.");
   }
 
   return result ?? {};
@@ -179,12 +178,6 @@ function buildCalendarRows(
 
   return rows;
 }
-
-const accordions = [
-  { icon: CalendarDays, label: "When should we install?" },
-  { icon: MapPin, label: "Where are we visiting?" },
-  { icon: CreditCard, label: "How would you like to pay?" },
-];
 
 function formatMoney(value: number): string {
   if (value % 1 === 0) return `$${value.toLocaleString("en-US")}`;
@@ -285,13 +278,11 @@ function PriceSummary({
 function CalendarCell({
   day,
   blocked,
-  discount,
   isSelected,
   onSelect,
 }: {
   day?: number;
   blocked?: boolean;
-  discount?: string;
   isSelected?: boolean;
   onSelect?: (day: number) => void;
 }) {
@@ -311,7 +302,7 @@ function CalendarCell({
       }}
       disabled={isBlocked}
       aria-pressed={isBlocked ? undefined : isSelected}
-      className={`group flex h-[52px] w-full flex-col items-center justify-center rounded-[6px] text-center transition sm:h-[54px] ${
+      className={`flex h-[52px] w-full flex-col items-center justify-center rounded-[6px] text-center transition sm:h-[54px] ${
         isBlocked
           ? "cursor-not-allowed bg-[#f6a9a8] text-[#364254]"
           : isSelected
@@ -320,29 +311,20 @@ function CalendarCell({
       }`}
     >
       <span className="text-[13px] font-medium leading-none">{day}</span>
-      {discount ? (
-        <span
-          className={`mt-1 text-[11px] font-semibold ${
-            isSelected ? "text-white" : "text-[#00b26f] group-hover:text-white"
-          }`}
-        >
-          {discount}
-        </span>
-      ) : null}
     </button>
   );
 }
 
-function SurveySection({
+function InstallSection({
   blockedDateKeys,
   isBookingDatesLoading,
-  isSubmittingSurveyDate,
-  onSubmitSurveyDate,
+  isSubmittingInstallDate,
+  onSubmitInstallDate,
 }: {
   blockedDateKeys: ReadonlySet<string>;
   isBookingDatesLoading: boolean;
-  isSubmittingSurveyDate: boolean;
-  onSubmitSurveyDate: (surveyDate: string | null) => void;
+  isSubmittingInstallDate: boolean;
+  onSubmitInstallDate: (installDate: string | null) => void;
 }) {
   const [selectedDay, setSelectedDay] = React.useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = React.useState(() => new Date().getMonth());
@@ -389,17 +371,17 @@ function SurveySection({
     <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4">
       <div className="flex items-center justify-center gap-3 text-center">
         <CalendarDays className="h-4 w-4 text-[#2f3b4a]" />
-        <h2 className="text-[16px] font-semibold text-[#2D3D4D] sm:text-[18px]">When should we Survey?</h2>
+        <h2 className="text-[16px] font-semibold text-[#2D3D4D] sm:text-[18px]">When should we install?</h2>
       </div>
 
       <p className="mt-3 text-center text-[13px] text-[#2D3D4D] sm:text-[16px]">
-        Your Survey will take 1 day and your engineer will arrive between 7.30am-9.30am.
+        Your installation will take 1 day and your engineer will arrive between 7.30am-9.30am.
       </p>
 
       <div className="mt-4 rounded-[12px] bg-[#f0f2f4] px-3 py-4 sm:px-5 sm:py-5">
         <p className="text-center text-[13px] font-medium text-[#374151]">
           {isBookingDatesLoading
-            ? "Loading already booked dates..."
+            ? "Loading installation dates..."
             : "Already booked dates are marked in red. Available dates can be selected."}
         </p>
 
@@ -486,7 +468,6 @@ function SurveySection({
                   key={idx}
                   day={cell?.day}
                   blocked={cell?.blocked}
-                  discount={cell?.discount}
                   isSelected={selectedDay === cell?.day}
                   onSelect={setSelectedDay}
                 />
@@ -498,17 +479,17 @@ function SurveySection({
 
       <button
         type="button"
-        onClick={() => onSubmitSurveyDate(selectedDate)}
-        disabled={isSubmittingSurveyDate}
+        onClick={() => onSubmitInstallDate(selectedDate)}
+        disabled={isSubmittingInstallDate}
         className="mt-4 h-[48px] w-full rounded-[4px] bg-[#00A56F] text-[18px] font-medium text-white transition hover:bg-[#00A56F]"
       >
-        {isSubmittingSurveyDate ? "Saving..." : "Next"}
+        {isSubmittingInstallDate ? "Saving..." : "Next"}
       </button>
 
       <p className="mt-3 text-center text-[12px] text-[#384555] sm:text-[16px]">
         Don&apos;t see the date you&apos;re after? call us on{' '}
         <span className="font-medium text-[#d3a323] underline underline-offset-2">112233445566</span>{' '}
-        and well see if we can install sooner.
+        and we&apos;ll see if we can install sooner.
       </p>
     </div>
   );
@@ -534,14 +515,19 @@ function AccordionRow({
   );
 }
 
-export default function InstallationBookingContainer() {
+const bottomAccordions = [
+  { icon: MapPin, label: "Where are we visiting?" },
+  { icon: CreditCard, label: "How would you like to pay?" },
+];
+
+export default function InstallContainer() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const quoteId = searchParams.get("quoteId");
   const productIdFromQuery = searchParams.get("productId");
-  const { mutateAsync: mutateSurveyDate, isPending: isUpdatingSurveyDate } = useMutation({
-    mutationKey: ["update-quote-survey-date"],
-    mutationFn: updateQuoteSurveyDate,
+  const { mutateAsync: mutateInstallDate, isPending: isUpdatingInstallDate } = useMutation({
+    mutationKey: ["update-quote-install-date"],
+    mutationFn: updateQuoteInstallDate,
   });
   const {
     data: installSurveyData,
@@ -579,20 +565,14 @@ export default function InstallationBookingContainer() {
     ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
     : 0;
 
-  const blockedDateKeys = React.useMemo(() => {
+  const blockedInstallDateKeys = React.useMemo(() => {
     const keys = new Set<string>();
-    const allBookedDates = [
-      ...(installSurveyData?.surveyDate ?? []),
-      ...(installSurveyData?.installDate ?? []),
-    ];
-
-    allBookedDates.forEach((isoDate) => {
+    (installSurveyData?.installDate ?? []).forEach((isoDate) => {
       const key = getDateKeyFromIso(isoDate);
       if (key) {
         keys.add(key);
       }
     });
-
     return keys;
   }, [installSurveyData]);
 
@@ -601,9 +581,9 @@ export default function InstallationBookingContainer() {
     (resolvedProductId ? productLoading : false) ||
     installSurveyDataLoading;
 
-  const handleSubmitSurveyDate = async (surveyDate: string | null) => {
-    if (!surveyDate) {
-      toast.error("Please select an available survey date.");
+  const handleSubmitInstallDate = async (installDate: string | null) => {
+    if (!installDate) {
+      toast.error("Please select an available install date.");
       return;
     }
 
@@ -613,9 +593,9 @@ export default function InstallationBookingContainer() {
     }
 
     try {
-      await mutateSurveyDate({
+      await mutateInstallDate({
         quoteId,
-        surveyDate,
+        installDate,
       });
 
       const params = new URLSearchParams(searchParams.toString());
@@ -627,11 +607,11 @@ export default function InstallationBookingContainer() {
       const query = params.toString();
       router.push(
         query
-          ? `/boilers/installation-booking/install?${query}`
-          : "/boilers/installation-booking/install"
+          ? `/boilers/installation-booking/address?${query}`
+          : "/boilers/installation-booking/address"
       );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to save survey date.");
+      toast.error(error instanceof Error ? error.message : "Failed to save install date.");
     }
   };
 
@@ -640,7 +620,7 @@ export default function InstallationBookingContainer() {
       <div className="py-12">
         <div className="mx-auto container">
           {isLoading ? (
-            <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">Loading installation booking...</div>
+            <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">Loading installation page...</div>
           ) : !product ? (
             <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">
               Product details not found. Please go back and select your boiler again.
@@ -649,15 +629,18 @@ export default function InstallationBookingContainer() {
             <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
               <section className="space-y-4">
                 <TopBanner payTodayTotal={payTodayTotal} />
-                <SurveySection
-                  blockedDateKeys={blockedDateKeys}
+
+                <AccordionRow icon={CalendarDays} label="When should we Survey?" />
+
+                <InstallSection
+                  blockedDateKeys={blockedInstallDateKeys}
                   isBookingDatesLoading={installSurveyDataLoading}
-                  isSubmittingSurveyDate={isUpdatingSurveyDate}
-                  onSubmitSurveyDate={handleSubmitSurveyDate}
+                  isSubmittingInstallDate={isUpdatingInstallDate}
+                  onSubmitInstallDate={handleSubmitInstallDate}
                 />
 
                 <div className="space-y-4">
-                  {accordions.map((item) => (
+                  {bottomAccordions.map((item) => (
                     <AccordionRow key={item.label} icon={item.icon} label={item.label} />
                   ))}
                 </div>

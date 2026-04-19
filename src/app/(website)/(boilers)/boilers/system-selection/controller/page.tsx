@@ -112,8 +112,9 @@ function ChooseControlsPage() {
 
   const selectedController = controllers?.find((c) => c._id === selectedControllerId) ?? null;
   const selectedControllerPrice = selectedController && selectedController.price > 0 ? selectedController.price : 0;
-  const payTodayTotal = product ? product.payablePrice + selectedControllerPrice : 0;
-  const originalTotal = product ? product.price + selectedControllerPrice : 0;
+  const payTodayTotal = product ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice : 0;
+  const originalTotal = product ? (product.price ?? 0) + selectedControllerPrice : 0;
+  const monthlyCost = payTodayTotal / 12;
 
   // Build dynamic quote items from API data
   const quoteItems = product
@@ -172,7 +173,7 @@ function ChooseControlsPage() {
   return (
     <BoilerFlowShell activeStep={2}>
     
-      <div className="bg-[#EEF2F5] px-3 py-5 sm:px-4 lg:px-6">
+      <div className="bg-[#EEF2F5] px-3 py-5 sm:px-4 lg:px-0">
         <div className="mx-auto container">
           {/* Header */}
           <div className="mb-5 text-center">
@@ -186,7 +187,7 @@ function ChooseControlsPage() {
           </div>
 
           {/* Main layout */}
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
             {/* ── Left Content ── */}
             <div className="space-y-5">
               {/* Featured bundle — controllers[0] */}
@@ -284,7 +285,7 @@ function ChooseControlsPage() {
                   <div className="rounded-[8px] bg-[#F0F3F6] p-3 sm:p-4">
                     <p className="text-[12px] sm:text-[16px] text-[#2D3D4D]">Monthly Cost</p>
                     <p className="mt-2 text-[24px] sm:text-[18px] font-bold leading-none text-[#2D3D4D]">
-                      {formatMoney(product.monthlyPrice)}/mo
+                      {formatMoney(monthlyCost)}/mo
                     </p>
                   </div>
                 </div>
