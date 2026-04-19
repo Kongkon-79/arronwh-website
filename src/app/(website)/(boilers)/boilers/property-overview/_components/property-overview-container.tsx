@@ -2,7 +2,7 @@
 
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, MessageCircleQuestion } from "lucide-react";
+import { ArrowLeft, Info, MessageCircleQuestion } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -30,10 +30,13 @@ const PropertyOverviewContainer = () => {
     setPersonalInfo,
     nextStep,
     prevStep,
+    goToStep,
     clearSubmissionState,
     submitQuote,
   } = usePropertyOverviewStore();
   const [isPostcodeStep, setIsPostcodeStep] = useState(false);
+  const [isOtherRoomPrompt, setIsOtherRoomPrompt] = useState(false);
+  const [otherRoomName, setOtherRoomName] = useState("");
 
   const step = propertyChoiceSteps[currentStep];
   const maxStep = propertyChoiceSteps.length - 1;
@@ -66,9 +69,12 @@ const PropertyOverviewContainer = () => {
         personalInfo.postcode.trim(),
       );
     }
+    if (step?.id === "currentBoilerLocation" && isOtherRoomPrompt) {
+      return Boolean(otherRoomName.trim());
+    }
     if (!step) return false;
     return Boolean(answers[step.id]);
-  }, [answers, isPostcodeStep, personalInfo, step]);
+  }, [answers, isOtherRoomPrompt, isPostcodeStep, otherRoomName, personalInfo, step]);
 
   const quizAnswers = useMemo(
     () =>
@@ -81,10 +87,12 @@ const PropertyOverviewContainer = () => {
     [answers],
   );
   const optionCardWidthClass = useMemo(() => {
+    if (step?.id === "convertToCombi") return "w-[320px]";
+    if (step?.id === "currentBoilerLocation") return "w-[320px]";
     const optionCount = step?.options.length ?? 0;
     if (optionCount <= 2) return "w-[360px]";
     if (optionCount <= 3) return "w-[400px]";
-    if (optionCount <= 4) return "w-[260px]";
+    if (optionCount <= 4) return "w-[325px]";
     return "w-[260px]";
   }, [step]);
   const headingText = useMemo(() => {
@@ -121,6 +129,13 @@ const PropertyOverviewContainer = () => {
             have?
           </>
         );
+      case "convertToCombi":
+        return (
+          <>
+            Do you want to <span className="text-primary">convert</span> to a Combi
+            boiler?
+          </>
+        );
       case "boilerCondition":
         return (
           <>
@@ -145,6 +160,19 @@ const PropertyOverviewContainer = () => {
           <>
             How long do you see yourself in your{" "}
             <span className="text-primary">current home</span>?
+          </>
+        );
+      case "waterFlowRate":
+        return (
+          <>
+            How <span className="text-primary">quickly</span> does your water come
+            out of your cold tap?
+          </>
+        );
+      case "currentBoilerLocation":
+        return (
+          <>
+            Where&apos;s your <span className="text-primary">current boiler</span>?
           </>
         );
       case "differentPlace":
@@ -264,16 +292,120 @@ const PropertyOverviewContainer = () => {
       setIsPostcodeStep(false);
       return;
     }
+    if (step?.id === "currentBoilerLocation" && isOtherRoomPrompt) {
+      setIsOtherRoomPrompt(false);
+      return;
+    }
     if (currentStep === 0) {
       router.push("/");
       return;
     }
+    if (step?.id === "boilerCondition" && answers.boilerType === "Combi") {
+      const boilerTypeStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "boilerType",
+      );
+      if (boilerTypeStepIndex >= 0) {
+        goToStep(boilerTypeStepIndex);
+        return;
+      }
+    }
+    if (step?.id === "mountedOnWall" && answers.boilerCondition) {
+      const boilerConditionStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "boilerCondition",
+      );
+      if (boilerConditionStepIndex >= 0) {
+        goToStep(boilerConditionStepIndex);
+        return;
+      }
+    }
+    if (step?.id === "boilerAge" && answers.mountedOnWall) {
+      const mountedOnWallStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "mountedOnWall",
+      );
+      if (mountedOnWallStepIndex >= 0) {
+        goToStep(mountedOnWallStepIndex);
+        return;
+      }
+    }
     prevStep();
+  };
+
+  const handleOtherRoomSubmit = () => {
+    const roomName = otherRoomName.trim();
+    if (!roomName) return;
+    setAnswer("otherRoomName", roomName);
+    setIsOtherRoomPrompt(false);
+    const differentPlaceStepIndex = propertyChoiceSteps.findIndex(
+      (item) => item.id === "differentPlace",
+    );
+    if (differentPlaceStepIndex >= 0) {
+      goToStep(differentPlaceStepIndex);
+    }
   };
 
   const handleOptionSelect = (value: string) => {
     if (!step) return;
     setAnswer(step.id, value);
+
+    if (step.id === "fuelType" && value === "Oil") {
+      router.push("/boilers/callout/oil");
+      return;
+    }
+    if (step.id === "waterFlowRate" && value === "Slow") {
+      router.push("/boilers/callout");
+      return;
+    }
+    if (step.id === "boilerType" && value === "Combi") {
+      const boilerConditionStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "boilerCondition",
+      );
+      if (boilerConditionStepIndex >= 0) {
+        goToStep(boilerConditionStepIndex);
+        return;
+      }
+    }
+    if (step.id === "convertToCombi") {
+      const boilerConditionStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "boilerCondition",
+      );
+      if (boilerConditionStepIndex >= 0) {
+        goToStep(boilerConditionStepIndex);
+        return;
+      }
+    }
+    if (step.id === "boilerCondition") {
+      const mountedOnWallStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "mountedOnWall",
+      );
+      if (mountedOnWallStepIndex >= 0) {
+        goToStep(mountedOnWallStepIndex);
+        return;
+      }
+    }
+    if (step.id === "mountedOnWall") {
+      const boilerAgeStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "boilerAge",
+      );
+      if (boilerAgeStepIndex >= 0) {
+        goToStep(boilerAgeStepIndex);
+        return;
+      }
+    }
+    if (step.id === "currentBoilerLocation") {
+      if (value === "Other") {
+        setIsOtherRoomPrompt(true);
+        return;
+      } else {
+        setIsOtherRoomPrompt(false);
+        const differentPlaceStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "differentPlace",
+        );
+        if (differentPlaceStepIndex >= 0) {
+          goToStep(differentPlaceStepIndex);
+          return;
+        }
+      }
+    }
 
     if (currentStep >= maxStep) {
       setIsPostcodeStep(true);
@@ -349,7 +481,7 @@ const PropertyOverviewContainer = () => {
 
       <div className="px-4 py-6  md:px-0">
         <div className="rounded-[10px] bg-white px-5 md:px-6 lg:px-7 xl:px-8 py-7 md:py-9 lg:py-10 xl:py-12">
-          <h2 className="mx-auto max-w-[760px] text-center text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold leading-normal text-[#2D3D4D]">
+          <h2 className="mx-auto max-w-[850px] text-center text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold leading-normal text-[#2D3D4D]">
             {headingText}
           </h2>
           {isPostcodeStep ? (
@@ -357,9 +489,37 @@ const PropertyOverviewContainer = () => {
               We need this information to show the dates available for installation
               (order by 3pm for next working day installation)
             </p>
+          ) : step?.id === "convertToCombi" ? (
+            <p className="mx-auto mt-3 max-w-[900px] text-center text-[16px] md:text-[20px] leading-[1.45] text-[#2D3D4D]">
+              We&apos;ll remove and safely dispose of your hot water cylinder together
+              with re-configuring your current pipework to allow a combi boiler to be
+              installed. All this will be included in your fixed price.
+            </p>
           ) : null}
 
-          {!isPostcodeStep ? (
+          {!isPostcodeStep && step?.id === "currentBoilerLocation" && isOtherRoomPrompt ? (
+            <div className="mx-auto mt-7 w-full max-w-[760px]">
+              <label className="block text-[26px] font-medium text-[#5A6675]">
+                Room name
+              </label>
+              <input
+                value={otherRoomName}
+                onChange={(e) => setOtherRoomName(e.target.value)}
+                placeholder="e.g. loft or attic"
+                className="mt-2 h-[68px] w-full border-b border-[#8E99A8] bg-[#DEE3E8] px-4 text-[30px] text-[#2D3D4D] placeholder:text-[#A4ADB8] focus:outline-none"
+              />
+              <div className="mt-8 flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleOtherRoomSubmit}
+                  disabled={!otherRoomName.trim()}
+                  className="inline-flex h-[58px] min-w-[120px] items-center justify-center rounded-[2px] bg-[#D9D7D7] px-6 text-[32px] font-medium text-[#6D7785] transition hover:bg-[#cfcdcd] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Ok
+                </button>
+              </div>
+            </div>
+          ) : !isPostcodeStep ? (
             <div
               className="mt-7 flex  flex-wrap items-stretch justify-center gap-4  "
             >
@@ -367,6 +527,10 @@ const PropertyOverviewContainer = () => {
                 const selected = answers[step.id] === option.value;
                 const Icon = option.icon;
                 const optionImage = option.image;
+                const isHoverDescriptionCard =
+                  step.id === "fuelType" || step.id === "boilerType";
+                const isConvertStep = step.id === "convertToCombi";
+                const isWaterFlowStep = step.id === "waterFlowRate";
                 const isFuelTypeCard = step.id === "fuelType";
 
                 return (
@@ -375,9 +539,18 @@ const PropertyOverviewContainer = () => {
                     key={option.value}
                     onClick={() => handleOptionSelect(option.value)}
                     className={cn(
-                      "group relative h-[365px] rounded-[12px] bg-white px-3 py-3 text-[#2D3D4D] transition ",
+                      "group relative rounded-[12px] bg-white px-3 py-3 text-[#2D3D4D] transition ",
+                      isConvertStep || isWaterFlowStep ? "h-[340px]" : "h-[375px]",
                       optionCardWidthClass,
-                      isFuelTypeCard
+                      isConvertStep
+                        ? selected
+                          ? "border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
+                          : "border-[2px] border-[#AEB7C2] hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.2)]"
+                        : isWaterFlowStep
+                          ? selected
+                            ? "border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
+                            : "border-[2px] border-[#AEB7C2] hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.2)]"
+                        : isHoverDescriptionCard
                         ? selected
                           ? "border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
                           : "border-[2px] border-[#AEB7C2] hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.2)]"
@@ -386,7 +559,7 @@ const PropertyOverviewContainer = () => {
                           : "border-[2px] border-[#666666] hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.85)]",
                     )}
                   >
-                    <div className="flex h-full flex-col items-center justify-center gap-3 pb-3">
+                    <div className="flex h-full flex-col items-center justify-center gap-2 pb-3">
                       {optionImage ? (
                         <Image
                           src={optionImage}
@@ -395,25 +568,44 @@ const PropertyOverviewContainer = () => {
                           height={220}
                           className={cn(
                             "w-auto object-contain transition-all duration-200",
-                            isFuelTypeCard ? "h-[64px]" : "h-[170px]",
+                            isFuelTypeCard ? "h-[100px]" : "h-[100px]",
                           )}
                         />
                       ) : Icon ? (
-                        <Icon className="h-10 w-10 text-[#8A97A7]" />
+                        <Icon
+                          className={cn(
+                            isConvertStep || isWaterFlowStep ? "h-24 w-24" : "h-10 w-10",
+                            isConvertStep || isWaterFlowStep
+                              ? "text-[#2D3D4D]"
+                              : "text-[#8A97A7]",
+                          )}
+                        />
                       ) : null}
                       <span
                         className={cn(
                           "text-center text-lg md:text-xl leading-normal font-semibold transition-colors duration-200",
-                          selected ? "text-primary" : "text-[#2D3D4D]",
+                          isConvertStep || isWaterFlowStep
+                            ? selected
+                              ? isWaterFlowStep
+                                ? "text-primary"
+                                : "text-primary"
+                              : "text-[#2D3D4D]"
+                            : selected
+                              ? "text-primary"
+                              : "text-[#2D3D4D]",
                           !selected &&
-                            (isFuelTypeCard
+                            (isConvertStep
                               ? "group-hover:text-primary"
-                              : "group-hover:text-[#E0B800]"),
+                              : isWaterFlowStep
+                                ? "group-hover:text-primary"
+                              : isHoverDescriptionCard
+                                ? "group-hover:text-primary"
+                                : "group-hover:text-[#E0B800]"),
                         )}
                       >
                         {option.label}
                       </span>
-                      {isFuelTypeCard ? (
+                      {isHoverDescriptionCard || isWaterFlowStep ? (
                         <p
                           className={cn(
                             "max-w-[260px] text-center text-[14px] leading-[1.45] text-[#465466] transition-all duration-200",
@@ -426,14 +618,46 @@ const PropertyOverviewContainer = () => {
                         </p>
                       ) : null}
                     </div>
+                    {isHoverDescriptionCard ? (
+                      <div
+                        className={cn(
+                          "pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 text-[#2D3D4D] transition-opacity duration-200",
+                          selected
+                            ? "opacity-0"
+                            : "opacity-100 group-hover:opacity-0",
+                        )}
+                      >
+                        <Info  className="h-8 w-8" strokeWidth={1.5} />
+                      </div>
+                    ) : null}
+                    {isWaterFlowStep ? (
+                      <div
+                        className={cn(
+                          "pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 text-[#2D3D4D] transition-opacity duration-200",
+                          selected
+                            ? "opacity-0"
+                            : "opacity-100 group-hover:opacity-0",
+                        )}
+                      >
+                        <Info className="h-8 w-8" strokeWidth={1.5} />
+                      </div>
+                    ) : null}
 
                     <div
                       className={cn(
                         "absolute bottom-0 left-0 flex h-14 w-full items-center justify-center rounded-b-[8px] text-base md:text-lg font-medium leading-normal transition-colors duration-200",
-                        isFuelTypeCard
+                        isConvertStep
                           ? selected
                             ? "bg-primary text-[#2D3D4D]"
                             : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]"
+                          : isWaterFlowStep
+                            ? selected
+                              ? "bg-primary text-[#2D3D4D]"
+                              : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]"
+                          : isHoverDescriptionCard
+                            ? selected
+                              ? "bg-primary text-[#2D3D4D]"
+                              : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]"
                           : selected
                             ? "bg-primary text-[#2D3D4D]"
                             : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]",
