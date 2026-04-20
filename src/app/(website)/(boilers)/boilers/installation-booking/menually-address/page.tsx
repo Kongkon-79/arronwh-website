@@ -679,7 +679,7 @@ function FooterDisclaimer() {
   );
 }
 
-export default function BoilerAddressDetailsClone() {
+function BoilerAddressDetailsCloneContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const quoteId = searchParams.get("quoteId");
@@ -867,5 +867,13 @@ export default function BoilerAddressDetailsClone() {
         </div>
       </div>
     </BoilerFlowShell>
+  );
+}
+
+export default function BoilerAddressDetailsClone() {
+  return (
+    <React.Suspense fallback={null}>
+      <BoilerAddressDetailsCloneContent />
+    </React.Suspense>
   );
 }

@@ -619,7 +619,7 @@ function FooterDisclaimer() {
   );
 }
 
-export default function BoilerAddressPage() {
+function BoilerAddressPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const quoteId = searchParams.get("quoteId");
@@ -740,5 +740,13 @@ export default function BoilerAddressPage() {
         </div>
       </div>
     </BoilerFlowShell>
+  );
+}
+
+export default function BoilerAddressPage() {
+  return (
+    <React.Suspense fallback={null}>
+      <BoilerAddressPageContent />
+    </React.Suspense>
   );
 }
