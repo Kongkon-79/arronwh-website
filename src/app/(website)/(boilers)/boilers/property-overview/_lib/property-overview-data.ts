@@ -4,14 +4,10 @@ import {
   Bath,
   Building2,
   Check,
-  CircleHelp,
   House,
-  Radio,
   ShowerHead,
-  TreePine,
   Waves,
   Wind,
-  Wrench,
   X,
 } from "lucide-react";
 
@@ -20,6 +16,38 @@ import LandlordImage from "../../../../../../../public/assets/images/boilers/lan
 import GasImage from "../../../../../../../public/assets/images/boilers/gas.svg";
 import LpgImage from "../../../../../../../public/assets/images/boilers/lpg.svg";
 import OilImage from "../../../../../../../public/assets/images/boilers/oil.svg";
+import CombiImage from "../../../../../../../public/assets/images/boilers/combi.svg";
+import StandardImage from "../../../../../../../public/assets/images/boilers/standard.svg";
+import SystemImage from "../../../../../../../public/assets/images/boilers/system.svg";
+import BackBoilerImage from "../../../../../../../public/assets/images/boilers/back-boiler.svg";
+import NotWorking from "../../../../../../../public/assets/images/boilers/not-working.svg";
+import OldInefficient from "../../../../../../../public/assets/images/boilers/old-inefficient.svg";
+import DoesNotMeetNeeds from "../../../../../../../public/assets/images/boilers/doesnt-fit.svg";
+import Other from "../../../../../../../public/assets/images/boilers/question-mark.svg";
+import Yes from "../../../../../../../public/assets/images/boilers/yes.svg";
+import No from "../../../../../../../public/assets/images/boilers/no.svg";
+import YesWallMounted from "../../../../../../../public/assets/images/boilers/wall-mounted.svg";
+import NoFloorStanding from "../../../../../../../public/assets/images/boilers/free-standing.svg";
+import UpToTen from "../../../../../../../public/assets/images/boilers/up-to-ten.svg";
+import TenToTwenty from "../../../../../../../public/assets/images/boilers/ten-twenty.svg";
+import TwentyToTwentyFive from "../../../../../../../public/assets/images/boilers/twenty-twenty-five.svg";
+import TwentyFivePlus from "../../../../../../../public/assets/images/boilers/twenty-five-plus.svg";
+import UpToOne from "../../../../../../../public/assets/images/boilers/up-to-one.svg";
+import OneToFive from "../../../../../../../public/assets/images/boilers/one-five.svg";
+import SixToTen from "../../../../../../../public/assets/images/boilers/six-ten.svg";
+import TenPlus from "../../../../../../../public/assets/images/boilers/ten-plus.svg";
+import Fast from "../../../../../../../public/assets/images/boilers/fast.svg";
+import Average from "../../../../../../../public/assets/images/boilers/average.svg";
+import Slow from "../../../../../../../public/assets/images/boilers/slow.svg";
+import UtilityRoom from "../../../../../../../public/assets/images/boilers/utility-room.svg";
+import Kitchen from "../../../../../../../public/assets/images/boilers/kitchen.svg";
+import Garage from "../../../../../../../public/assets/images/boilers/garage.svg";
+import AiringCupboard from "../../../../../../../public/assets/images/boilers/cupboard.svg";
+import Detached from "../../../../../../../public/assets/images/boilers/detached.svg";
+import SemiDetached from "../../../../../../../public/assets/images/boilers/semi-detached.svg";
+import Terraced from "../../../../../../../public/assets/images/boilers/terrace.svg";
+import Flat from "../../../../../../../public/assets/images/boilers/flat.svg";
+import Bungalow from "../../../../../../../public/assets/images/boilers/bungalow.svg";
 
 
 export type Option = {
@@ -88,10 +116,43 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "Currently, what type of boiler do you have?",
     cols: "md:grid-cols-4",
     options: [
-      { label: "Combi", value: "Combi", icon: Waves },
-      { label: "Standard", value: "Standard", icon: Building2 },
-      { label: "System", value: "System", icon: Radio },
-      { label: "Back Boiler", value: "Back Boiler", icon: Wrench },
+      {
+        label: "Combi",
+        value: "Combi",
+        image: CombiImage,
+        hoverDescription:
+          "Combi boilers heat water directly from the mains when you turn on a tap. So you get hot water instantly - without a cylinder or a tank in the loft.",
+      },
+      {
+        label: "Standard",
+        value: "Standard",
+        image: StandardImage,
+        hoverDescription:
+          "If you have a hot water storage cylinder as well as a cold water tank in the loft, your boiler is likely to be Standard. These are also called Regular, Traditional or Conventional boilers.",
+      },
+      {
+        label: "System",
+        value: "System",
+        image: SystemImage,
+        hoverDescription:
+          "If you have a hot water storage cylinder but no cold water tank in the loft, you're likely to have a System boiler. You can also choose this option if you have a Potterton Powermax.",
+      },
+      {
+        label: "Back Boiler",
+        value: "Back Boiler",
+        image: BackBoilerImage,
+        hoverDescription:
+          "A Back Boiler Unit (BBU) is a boiler built-in behind a gas fireplace.",
+      },
+    ],
+  },
+  {
+    id: "convertToCombi",
+    question: "Do you want to convert to a Combi boiler?",
+    cols: "md:grid-cols-2",
+    options: [
+      { label: "Yes", value: "Yes", image: Yes },
+      { label: "No", value: "No", image: No },
     ],
   },
   {
@@ -99,30 +160,18 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "How would you describe your current boiler?",
     cols: "md:grid-cols-4",
     options: [
-      { label: "Not working", value: "Not working", icon: X },
+      { label: "Not working", value: "Not working", image: NotWorking },
       {
-        label: "Old and inefficient",
-        value: "Old and inefficient",
-        icon: TreePine,
+        label: "Old & inefficient",
+        value: "Old & inefficient",
+        image: OldInefficient,
       },
       {
-        label: "Does not meet needs",
-        value: "Does not meet needs",
-        icon: CircleHelp,
+        label: "Doesn't fit with our plans",
+        value: "Doesn't fit with our plans",
+        image: DoesNotMeetNeeds,
       },
-      { label: "Other", value: "Other", icon: CircleHelp },
-    ],
-  },
-  {
-    id: "boilerAge",
-    question: "Roughly how old is your boiler?",
-    cols: "md:grid-cols-5",
-    options: [
-      { label: "Up to 10 years", value: "Up to 10 years" },
-      { label: "10-20 years", value: "10-20 years" },
-      { label: "20-25 years", value: "20-25 years" },
-      { label: "25+ years", value: "25+ years" },
-      { label: "I don't know", value: "I don't know" },
+      { label: "Other", value: "Other", image: Other },
     ],
   },
   {
@@ -130,29 +179,92 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "Is your boiler mounted on the wall?",
     cols: "md:grid-cols-2",
     options: [
-      { label: "Yes", value: "Yes", icon: Check },
-      { label: "No", value: "No", icon: X },
+      { label: "Yes it is wall mounted", value: "Yes it is wall mounted", image: YesWallMounted },
+      { label: "No it is floor standing", value: "No it is floor standing", image: NoFloorStanding },
     ],
   },
+  {
+    id: "boilerAge",
+    question: "Roughly how old is your boiler?",
+    cols: "md:grid-cols-5",
+    options: [
+      { label: "Up to 10 years", value: "Up to 10 years", image: UpToTen },
+      { label: "10-20 years", value: "10-20 years", image: TenToTwenty },
+      {
+        label: "20-25 years",
+        value: "20-25 years",
+        image: TwentyToTwentyFive,
+      },
+      { label: "25+ years", value: "25+ years", image: TwentyFivePlus },
+      { label: "I don't know", value: "I don't know", image: Other },
+    ],
+  },
+  
   {
     id: "stayDuration",
     question: "How long do you see yourself in your current home?",
     cols: "md:grid-cols-5",
     options: [
-      { label: "Up to 5 years", value: "Up to 5 years" },
-      { label: "5-8 years", value: "5-8 years" },
-      { label: "8-10 years", value: "8-10 years" },
-      { label: "10+ years", value: "10+ years" },
-      { label: "I don't know", value: "I don't know" },
+      { label: "Up to 1 years", value: "Up to 1 years", image: UpToOne },
+      { label: "1-5 years", value: "1-5 years", image: OneToFive },
+      { label: "6-10 years", value: "6-10 years", image: SixToTen },
+      { label: "10+ years", value: "10+ years", image: TenPlus },
+      { label: "I don't know", value: "I don't know", image: Other },
+    ],
+  },
+  {
+    id: "waterFlowRate",
+    question: "How quickly does your water come out of your cold tap?",
+    cols: "md:grid-cols-3",
+    options: [
+      {
+        label: "Fast",
+        value: "Fast",
+        image: Fast,
+        hoverDescription: "Fills a pint glass in under 5 seconds.",
+      },
+      {
+        label: "Average",
+        value: "Average",
+        image: Average,
+        hoverDescription: "Fills a pint glass in less than 10 seconds.",
+      },
+      {
+        label: "Slow",
+        value: "Slow",
+        image: Slow,
+        hoverDescription: "Takes more than 10 seconds to fill a pint glass.",
+      },
+    ],
+  },
+  {
+    id: "currentBoilerLocation",
+    question: "Where's your current boiler?",
+    cols: "md:grid-cols-4",
+    options: [
+      { label: "Utility room", value: "Utility room", image: UtilityRoom },
+      { label: "Kitchen", value: "Kitchen", image: Kitchen },
+      { label: "Garage", value: "Garage", image: Garage },
+      { label: "Airing cupboard", value: "Airing cupboard", image: AiringCupboard },
+      { label: "Other", value: "Other", image: Other },
     ],
   },
   {
     id: "differentPlace",
     question: "Do you want your new boiler in a different place?",
-    cols: "md:grid-cols-2",
+    cols: "md:grid-cols-3",
     options: [
-      { label: "No", value: "No", icon: X },
-      { label: "Yes", value: "Yes", icon: Check },
+      { label: "No", value: "No", image: No },
+      {
+        label: "Move to airing cupboard",
+        value: "Move to airing cupboard",
+        image: AiringCupboard,
+      },
+      {
+        label: "Move somewhere else",
+        value: "Move somewhere else",
+        image: Other,
+      },
     ],
   },
   {
@@ -160,11 +272,11 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "Which of these best describes your home?",
     cols: "md:grid-cols-5",
     options: [
-      { label: "Detached", value: "Detached" },
-      { label: "Semi Detached", value: "Semi Detached" },
-      { label: "Terraced", value: "Terraced" },
-      { label: "Flat", value: "Flat" },
-      { label: "Bungalow", value: "Bungalow" },
+      { label: "Detached", value: "Detached", image: Detached },
+      { label: "Semi Detached", value: "Semi Detached", image: SemiDetached },
+      { label: "Terraced", value: "Terraced", image: Terraced },
+      { label: "Flat", value: "Flat", image: Flat },
+      { label: "Bungalow", value: "Bungalow", image: Bungalow },
     ],
   },
   {
