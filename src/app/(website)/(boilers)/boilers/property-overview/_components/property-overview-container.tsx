@@ -101,13 +101,13 @@ const PropertyOverviewContainer = () => {
     return step.options;
   }, [answers.currentBoilerLocation, step]);
   const optionCardWidthClass = useMemo(() => {
-    if (step?.id === "convertToCombi") return "w-[320px]";
-    if (step?.id === "currentBoilerLocation") return "w-[320px]";
+    if (step?.id === "convertToCombi") return "w-[300px]";
+    if (step?.id === "currentBoilerLocation") return "w-[300px]";
     const optionCount = stepOptions.length;
-    if (optionCount <= 2) return "w-[360px]";
-    if (optionCount <= 3) return "w-[400px]";
-    if (optionCount <= 4) return "w-[325px]";
-    return "w-[260px]";
+    if (optionCount <= 2) return "w-[300px]";
+    if (optionCount <= 3) return "w-[300px]";
+    if (optionCount <= 4) return "w-[300px]";
+    return "w-[300px]";
   }, [step, stepOptions.length]);
   const headingText = useMemo(() => {
     if (isPostcodeStep) {
@@ -561,15 +561,15 @@ const PropertyOverviewContainer = () => {
                     className={cn(
                       "group relative rounded-[12px] bg-white px-3 py-3 text-[#2D3D4D] transition ",
                       isConvertStep || isWaterFlowStep
-                          ? "h-[340px]"
-                          : "h-[375px]",
+                          ? "h-[400px]"
+                          : "h-[400px]",
                       optionCardWidthClass,
                       selected
                           ? "border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
                           : "border-[2px] border-[#AEB7C2] hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.2)]"
                     )}
                   >
-                    <div className="flex h-full flex-col items-center justify-center gap-2 pb-3">
+                    <div className="flex h-full flex-col items-center justify-start gap-2 pb-3 ">
                       {optionImage ? (
                         <Image
                           src={optionImage}
@@ -577,8 +577,8 @@ const PropertyOverviewContainer = () => {
                           width={220}
                           height={220}
                           className={cn(
-                            "w-auto object-contain transition-all duration-200",
-                            isFuelTypeCard ? "h-[100px]" : "h-[100px]",
+                            "w-auto object-contain transition-all duration-200 ",
+                            isFuelTypeCard ? "h-[150px]" : "h-[150px]",
                           )}
                         />
                       ) : Icon ? (
