@@ -1,15 +1,6 @@
 import type { ComponentType } from "react";
 import type { StaticImageData } from "next/image";
-import {
-  Bath,
-  Building2,
-  Check,
-  House,
-  ShowerHead,
-  Waves,
-  Wind,
-  X,
-} from "lucide-react";
+
 
 import HomeownerImage from "../../../../../../../public/assets/images/boilers/homeowner.svg";
 import LandlordImage from "../../../../../../../public/assets/images/boilers/landlord.svg";
@@ -48,7 +39,28 @@ import SemiDetached from "../../../../../../../public/assets/images/boilers/semi
 import Terraced from "../../../../../../../public/assets/images/boilers/terrace.svg";
 import Flat from "../../../../../../../public/assets/images/boilers/flat.svg";
 import Bungalow from "../../../../../../../public/assets/images/boilers/bungalow.svg";
-
+import One from "../../../../../../../public/assets/images/boilers/one.svg";
+import Two from "../../../../../../../public/assets/images/boilers/two.svg";
+import Three from "../../../../../../../public/assets/images/boilers/three.svg";
+import Four from "../../../../../../../public/assets/images/boilers/four.svg";
+import Five from "../../../../../../../public/assets/images/boilers/five.svg";
+import SixPlus from "../../../../../../../public/assets/images/boilers/six-plus.svg";
+import Zero from "../../../../../../../public/assets/images/boilers/zero.svg";
+import ThreePlus from "../../../../../../../public/assets/images/boilers/three-plus.svg";
+import TwoPlus from "../../../../../../../public/assets/images/boilers/two-plus.svg";
+import ZeroFive from "../../../../../../../public/assets/images/boilers/zero-five.svg";
+import SixNine from "../../../../../../../public/assets/images/boilers/six-nine.svg";
+import TenThirteen from "../../../../../../../public/assets/images/boilers/ten-thirteen.svg";
+import FourteenSixteen from "../../../../../../../public/assets/images/boilers/fourteen-sixteen.svg";
+import SeventeenPlus from "../../../../../../../public/assets/images/boilers/seventeen-plus.svg";
+import TRVYes from "../../../../../../../public/assets/images/boilers/trv-yes.svg";
+import TRVNo from "../../../../../../../public/assets/images/boilers/trv-no.svg";
+import Roof from "../../../../../../../public/assets/images/boilers/roof.svg";
+import Wall from "../../../../../../../public/assets/images/boilers/wall.svg";
+import SlopedRoof from "../../../../../../../public/assets/images/boilers/sloped-roof.svg";
+import FlatRoof from "../../../../../../../public/assets/images/boilers/flat-roof-flue.svg";
+import HighestThird from "../../../../../../../public/assets/images/boilers/highest-third.svg";
+import LowestThird from "../../../../../../../public/assets/images/boilers/lowest-third.svg";
 
 export type Option = {
   label: string;
@@ -199,7 +211,7 @@ export const propertyChoiceSteps: ChoiceStep[] = [
       { label: "I don't know", value: "I don't know", image: Other },
     ],
   },
-  
+
   {
     id: "stayDuration",
     question: "How long do you see yourself in your current home?",
@@ -284,12 +296,12 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "How many bedrooms do you have?",
     cols: "md:grid-cols-6",
     options: [
-      { label: "1", value: "1" },
-      { label: "2", value: "2" },
-      { label: "3", value: "3" },
-      { label: "4", value: "4" },
-      { label: "5", value: "5" },
-      { label: "6+", value: "6+" },
+      { label: "1 bedroom", value: "1 bedroom", image: One },
+      { label: "2 bedrooms", value: "2 bedrooms", image: Two },
+      { label: "3 bedrooms", value: "3 bedrooms", image: Three },
+      { label: "4 bedrooms", value: "4 bedrooms", image: Four },
+      { label: "5 bedrooms", value: "5 bedrooms", image: Five },
+      { label: "6+ bedrooms", value: "6+ bedrooms", image: SixPlus },
     ],
   },
   {
@@ -297,10 +309,10 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "How many bathtubs do you have, or plan to have in the future?",
     cols: "md:grid-cols-4",
     options: [
-      { label: "0", value: "0", icon: Bath },
-      { label: "1", value: "1", icon: Bath },
-      { label: "2", value: "2", icon: Bath },
-      { label: "3+", value: "3+", icon: Bath },
+      { label: "0 bathtubs", value: "0 bathtubs", image: Zero },
+      { label: "1 bathtub", value: "1 bathtub", image: One },
+      { label: "2 bathtubs", value: "2 bathtubs", image: Two },
+      { label: "3+ bathtubs", value: "3+ bathtubs", image: ThreePlus },
     ],
   },
   {
@@ -309,9 +321,9 @@ export const propertyChoiceSteps: ChoiceStep[] = [
       "How many separate showers do you have, or plan to have in the future?",
     cols: "md:grid-cols-3",
     options: [
-      { label: "0", value: "0", icon: ShowerHead },
-      { label: "1", value: "1", icon: ShowerHead },
-      { label: "2+", value: "2+", icon: ShowerHead },
+      { label: "0 showers", value: "0 showers", image: Zero },
+      { label: "1 shower", value: "1 shower", image: One },
+      { label: "2+ showers", value: "2+ showers", image: TwoPlus },
     ],
   },
   {
@@ -319,11 +331,11 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "How many radiators do you have?",
     cols: "md:grid-cols-5",
     options: [
-      { label: "0-5", value: "0-5", icon: Waves },
-      { label: "6-9", value: "6-9", icon: Waves },
-      { label: "10-13", value: "10-13", icon: Waves },
-      { label: "14-16", value: "14-16", icon: Waves },
-      { label: "17+", value: "17+", icon: Waves },
+      { label: "0-5 radiators", value: "0-5 radiators", image: ZeroFive },
+      { label: "6-9 radiators", value: "6-9 radiators", image: SixNine },
+      { label: "10-13 radiators", value: "10-13 radiators", image: TenThirteen },
+      { label: "14-16 radiators", value: "14-16 radiators", image: FourteenSixteen },
+      { label: "17+ radiators", value: "17+ radiators", image: SeventeenPlus },
     ],
   },
   {
@@ -331,8 +343,8 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "Do you have Thermostatic Radiator Valves on all your radiators?",
     cols: "md:grid-cols-2",
     options: [
-      { label: "No", value: "No", icon: X },
-      { label: "Yes", value: "Yes", icon: Check },
+      { label: "Yes", value: "Yes", image: TRVYes },
+      { label: "No", value: "No", image: TRVNo },
     ],
   },
   {
@@ -340,8 +352,8 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "Do you have a water meter?",
     cols: "md:grid-cols-2",
     options: [
-      { label: "No", value: "No", icon: X },
-      { label: "Yes", value: "Yes", icon: Check },
+      { label: "Yes", value: "Yes", image: Yes },
+      { label: "No", value: "No", image: No },
     ],
   },
   {
@@ -349,8 +361,8 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "Where does your flue come out?",
     cols: "md:grid-cols-2",
     options: [
-      { label: "Roof", value: "Roof", icon: House },
-      { label: "Wall", value: "Wall", icon: Building2 },
+      { label: "Roof", value: "Roof", image: Roof },
+      { label: "Wall", value: "Wall", image: Wall },
     ],
   },
   {
@@ -358,8 +370,8 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "Is your flue in a sloped roof or a flat roof?",
     cols: "md:grid-cols-2",
     options: [
-      { label: "Sloped", value: "Sloped", icon: House },
-      { label: "Flat", value: "Flat", icon: Building2 },
+      { label: "Sloped", value: "Sloped", image: SlopedRoof },
+      { label: "Flat", value: "Flat", image: FlatRoof },
     ],
   },
   {
@@ -367,8 +379,8 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "Where on the roof is it positioned?",
     cols: "md:grid-cols-2",
     options: [
-      { label: "Higher than ridge", value: "Higher than ridge", icon: Wind },
-      { label: "Lower than ridge", value: "Lower than ridge", icon: Wind },
+      { label: "Highest two-thirds", value: "Highest two-thirds", image: HighestThird },
+      { label: "Lowest third", value: "Lowest third", image: LowestThird },
     ],
   },
 ];

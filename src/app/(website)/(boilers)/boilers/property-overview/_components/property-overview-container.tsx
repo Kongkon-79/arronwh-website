@@ -86,15 +86,28 @@ const PropertyOverviewContainer = () => {
         .filter((item) => item.answer),
     [answers],
   );
+  const stepOptions = useMemo(() => {
+    if (!step) return [];
+    if (
+      step.id === "differentPlace" &&
+      answers.currentBoilerLocation === "Airing cupboard"
+    ) {
+      return step.options.filter(
+        (option) => option.value !== "Move to airing cupboard",
+      );
+    }
+
+    return step.options;
+  }, [answers.currentBoilerLocation, step]);
   const optionCardWidthClass = useMemo(() => {
     if (step?.id === "convertToCombi") return "w-[320px]";
     if (step?.id === "currentBoilerLocation") return "w-[320px]";
-    const optionCount = step?.options.length ?? 0;
+    const optionCount = stepOptions.length;
     if (optionCount <= 2) return "w-[360px]";
     if (optionCount <= 3) return "w-[400px]";
     if (optionCount <= 4) return "w-[325px]";
     return "w-[260px]";
-  }, [step]);
+  }, [step, stepOptions.length]);
   const headingText = useMemo(() => {
     if (isPostcodeStep) {
       return (
@@ -237,8 +250,8 @@ const PropertyOverviewContainer = () => {
       case "roofType":
         return (
           <>
-            Is your flue in a <span className="text-primary">sloped</span> roof or a{" "}
-            <span className="text-primary">flat</span> roof?
+            Is your flue in a <span className="text-primary">sloped roof</span> or a{" "}
+            <span className="text-primary">flat roof</span> ?
           </>
         );
       case "roofPosition":
@@ -397,6 +410,12 @@ const PropertyOverviewContainer = () => {
         return;
       } else {
         setIsOtherRoomPrompt(false);
+        if (
+          value === "Airing cupboard" &&
+          answers.differentPlace === "Move to airing cupboard"
+        ) {
+          setAnswer("differentPlace", "");
+        }
         const differentPlaceStepIndex = propertyChoiceSteps.findIndex(
           (item) => item.id === "differentPlace",
         );
@@ -523,7 +542,7 @@ const PropertyOverviewContainer = () => {
             <div
               className="mt-7 flex  flex-wrap items-stretch justify-center gap-4  "
             >
-              {step.options.map((option) => {
+              {stepOptions.map((option) => {
                 const selected = answers[step.id] === option.value;
                 const Icon = option.icon;
                 const optionImage = option.image;
@@ -540,23 +559,13 @@ const PropertyOverviewContainer = () => {
                     onClick={() => handleOptionSelect(option.value)}
                     className={cn(
                       "group relative rounded-[12px] bg-white px-3 py-3 text-[#2D3D4D] transition ",
-                      isConvertStep || isWaterFlowStep ? "h-[340px]" : "h-[375px]",
+                      isConvertStep || isWaterFlowStep
+                          ? "h-[340px]"
+                          : "h-[375px]",
                       optionCardWidthClass,
-                      isConvertStep
-                        ? selected
+                      selected
                           ? "border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
                           : "border-[2px] border-[#AEB7C2] hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.2)]"
-                        : isWaterFlowStep
-                          ? selected
-                            ? "border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
-                            : "border-[2px] border-[#AEB7C2] hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.2)]"
-                        : isHoverDescriptionCard
-                        ? selected
-                          ? "border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
-                          : "border-[2px] border-[#AEB7C2] hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.2)]"
-                        : selected
-                          ? "border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
-                          : "border-[2px] border-[#666666] hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.85)]",
                     )}
                   >
                     <div className="flex h-full flex-col items-center justify-center gap-2 pb-3">
@@ -584,23 +593,8 @@ const PropertyOverviewContainer = () => {
                       <span
                         className={cn(
                           "text-center text-lg md:text-xl leading-normal font-semibold transition-colors duration-200",
-                          isConvertStep || isWaterFlowStep
-                            ? selected
-                              ? isWaterFlowStep
-                                ? "text-primary"
-                                : "text-primary"
-                              : "text-[#2D3D4D]"
-                            : selected
-                              ? "text-primary"
-                              : "text-[#2D3D4D]",
-                          !selected &&
-                            (isConvertStep
-                              ? "group-hover:text-primary"
-                              : isWaterFlowStep
-                                ? "group-hover:text-primary"
-                              : isHoverDescriptionCard
-                                ? "group-hover:text-primary"
-                                : "group-hover:text-[#E0B800]"),
+                          selected ? "text-primary" : "text-[#2D3D4D]",
+                          !selected && "group-hover:text-primary"
                         )}
                       >
                         {option.label}
@@ -646,21 +640,9 @@ const PropertyOverviewContainer = () => {
                     <div
                       className={cn(
                         "absolute bottom-0 left-0 flex h-14 w-full items-center justify-center rounded-b-[8px] text-base md:text-lg font-medium leading-normal transition-colors duration-200",
-                        isConvertStep
-                          ? selected
-                            ? "bg-primary text-[#2D3D4D]"
-                            : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]"
-                          : isWaterFlowStep
-                            ? selected
-                              ? "bg-primary text-[#2D3D4D]"
-                              : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]"
-                          : isHoverDescriptionCard
-                            ? selected
-                              ? "bg-primary text-[#2D3D4D]"
-                              : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]"
-                          : selected
-                            ? "bg-primary text-[#2D3D4D]"
-                            : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]",
+                        selected
+                          ? "bg-primary text-[#2D3D4D]"
+                          : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]"
                       )}
                     >
                       {selected ? "Selected" : "Select"}
