@@ -1,7 +1,12 @@
-import CustomerDetailsContainer from "./_components/customer-details-container";
+import { Suspense } from "react";
+import BoilerQuote from "./_components/BoilerQuote";
 
 const CustomerDetailsPage = () => {
-  return <CustomerDetailsContainer />;
+  return (
+    <Suspense fallback={null}>
+      <BoilerQuote />
+    </Suspense>
+  );
 };
 
 export default CustomerDetailsPage;
