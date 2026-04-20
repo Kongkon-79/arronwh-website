@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { propertyChoiceSteps } from "../_lib/property-overview-data";
 import { usePropertyOverviewStore } from "../_store/use-property-overview-store";
 import Image from "next/image";
+import PersonalInfoForm from "./personal-info-form";
 
 const topSteps = [
   { id: 1, title: "1. Property Overview" },
@@ -436,16 +437,16 @@ const PropertyOverviewContainer = () => {
 
   return (
     <BoilerFlowShell>
-      <div className="h-4 w-full bg-white">
+      <div className="h-3 w-full bg-white">
         <div
           className="h-full bg-primary transition-all duration-300"
           style={{ width: progressWidth }}
         />
       </div>
 
-      <div className="mt-4 md:mt-6 lg:mt-8 mb-2 md:mb-3 lg:mb-4">
+      <div className="mt-3 mb-2 md:mb-3 lg:mb-4">
         <div className="overflow-hidden rounded-[999px] ">
-          <div className="bg-white h-16 rounded-full grid grid-cols-[auto_1fr_auto] items-stretch pl-0 pr-1">
+          <div className="bg-white h-14 rounded-full grid grid-cols-[auto_1fr_auto] items-stretch pl-0 pr-1">
             <div
               className="flex items-center gap-2 border-r border-[#E7ECF3] bg-primary "
             >
@@ -454,7 +455,7 @@ const PropertyOverviewContainer = () => {
                 onClick={handlePrev}
                 className="rounded-full border border-[#2D3D4D] p-3 transition hover:bg-black/5 "
               >
-                <ArrowLeft className="h-8 w-8 text-[#2D3D4D]" />
+                <ArrowLeft className="h-7 w-7 text-[#2D3D4D]" />
               </button>
               <Image
                 src="/assets/images/multi_step_logo.png"
@@ -504,7 +505,7 @@ const PropertyOverviewContainer = () => {
             {headingText}
           </h2>
           {isPostcodeStep ? (
-            <p className="mx-auto mt-3 max-w-[640px] text-center text-[10px] leading-[1.45] text-[#5F6C7B]">
+            <p className="mx-auto mt-3 max-w-[640px] text-center text-sm md:text-base leading-[1.45] text-[#5F6C7B]">
               We need this information to show the dates available for installation
               (order by 3pm for next working day installation)
             </p>
@@ -652,118 +653,14 @@ const PropertyOverviewContainer = () => {
               })}
             </div>
           ) : (
-            <div className="mx-auto mt-6 max-w-[900px] space-y-4">
-              <div className="grid gap-3 md:grid-cols-3">
-                <label className="space-y-1">
-                  <span className="block text-[11px] font-medium text-[#3F4B5C]">
-                    Title
-                  </span>
-                  <select
-                    value={personalInfo.title}
-                    onChange={(e) => setPersonalInfo("title", e.target.value)}
-                    className="h-8 w-full rounded-[2px] border border-[#D8DEE8] bg-[#E9EEF3] px-2 text-[10px] text-[#2D3D4D] focus:outline-none"
-                  >
-                    <option value="">Choose</option>
-                    <option value="Mr">Mr</option>
-                    <option value="Mrs">Mrs</option>
-                    <option value="Ms">Ms</option>
-                    <option value="Dr">Dr</option>
-                  </select>
-                </label>
-                <label className="space-y-1">
-                  <span className="block text-[11px] font-medium text-[#3F4B5C]">
-                    First Name
-                  </span>
-                  <input
-                    value={personalInfo.fastName}
-                    onChange={(e) => setPersonalInfo("fastName", e.target.value)}
-                    className="h-8 w-full rounded-[2px] border border-[#D8DEE8] bg-[#E9EEF3] px-2 text-[10px] text-[#2D3D4D] focus:outline-none"
-                  />
-                </label>
-                <label className="space-y-1">
-                  <span className="block text-[11px] font-medium text-[#3F4B5C]">
-                    Sure Name
-                  </span>
-                  <input
-                    value={personalInfo.sureName}
-                    onChange={(e) => setPersonalInfo("sureName", e.target.value)}
-                    className="h-8 w-full rounded-[2px] border border-[#D8DEE8] bg-[#E9EEF3] px-2 text-[10px] text-[#2D3D4D] focus:outline-none"
-                  />
-                </label>
-              </div>
-
-              <label className="space-y-1">
-                <span className="block text-[11px] font-medium text-[#3F4B5C]">
-                  Email
-                </span>
-                <input
-                  value={personalInfo.email}
-                  onChange={(e) => setPersonalInfo("email", e.target.value)}
-                  className="h-8 w-full rounded-[2px] border border-[#D8DEE8] bg-[#E9EEF3] px-2 text-[10px] text-[#2D3D4D] focus:outline-none"
-                />
-              </label>
-
-              <label className="space-y-1">
-                <span className="block text-[11px] font-medium text-[#3F4B5C]">
-                  Enter your postcode
-                </span>
-                <input
-                  value={personalInfo.postcode}
-                  onChange={(e) => setPersonalInfo("postcode", e.target.value)}
-                  placeholder="e.g. SW1A 1AA"
-                  className="h-8 w-full rounded-[2px] border border-[#D8DEE8] bg-[#E9EEF3] px-2 text-[10px] text-[#2D3D4D] placeholder:text-[#7D8A98] focus:outline-none"
-                />
-              </label>
-
-              <label className="space-y-1">
-                <span className="block text-[11px] font-medium text-[#3F4B5C]">
-                  Mobile Number ( optional )
-                </span>
-                <div className="flex h-8 items-center rounded-[8px] border border-[#D8DEE8] bg-[#E9EEF3] px-1.5">
-                  <div className="inline-flex h-6 items-center gap-1 rounded-[5px] border border-[#D6DDE7] bg-white px-2 text-[10px]">
-                    <span>UK</span>
-                    <span className="text-[#677586]">+44</span>
-                  </div>
-                  <input
-                    value={personalInfo.mobleNumber}
-                    onChange={(e) => setPersonalInfo("mobleNumber", e.target.value)}
-                    placeholder="e.g. 07700 900000"
-                    className="h-full w-full bg-transparent px-2 text-[10px] text-[#2D3D4D] placeholder:text-[#7D8A98] focus:outline-none"
-                  />
-                </div>
-              </label>
-
-              <label className="flex items-start gap-2 pt-2 text-[9px] leading-[1.4] text-[#4C5969]">
-                <input type="checkbox" className="mt-0.5 h-3 w-3" />
-                <span>
-                  I&apos;m happy to receive an email with my installation quote from YOLO
-                  HEAT.
-                  <br />
-                  YOLO HEAT can also contact me if there are installation discounts
-                  available in the next 30 days.
-                </span>
-              </label>
-
-              <p className="pt-1 text-[9px] text-[#4C5969]">
-                For more information on how we use your details please see our{" "}
-                <span className="text-primary">privacy policy.</span>
-              </p>
-
-              {submitError ? (
-                <p className="text-xs text-red-500">{submitError}</p>
-              ) : null}
-
-              <div className="pt-2 text-right">
-                <button
-                  type="button"
-                  onClick={() => void handleNext()}
-                  disabled={!canMoveNext || isSubmitting}
-                  className="inline-flex h-8 items-center rounded-[6px] bg-primary px-5 text-[10px] font-semibold text-[#2D3D4D] transition hover:bg-[#F3CF43] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSubmitting ? "Submitting..." : "Continue"}
-                </button>
-              </div>
-            </div>
+            <PersonalInfoForm
+              personalInfo={personalInfo}
+              setPersonalInfo={setPersonalInfo}
+              onSubmit={() => void handleNext()}
+              isSubmitting={isSubmitting}
+              submitError={submitError}
+              canMoveNext={canMoveNext}
+            />
           )}
         </div>
       </div>
