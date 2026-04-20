@@ -261,6 +261,46 @@ const PropertyOverviewContainer = () => {
             Where on the roof is it <span className="text-primary">positioned</span>?
           </>
         );
+      case "flueWallDistance":
+        return (
+          <>
+            How far is your current boiler from an <span className="text-primary">outside wall</span>?
+          </>
+        );
+      case "flueShape":
+        return (
+          <>
+            Is your current flue <span className="text-primary">square</span> or{" "}
+            <span className="text-primary">round</span>?
+          </>
+        );
+      case "flueGroundDistance":
+        return (
+          <>
+            How close to the <span className="text-primary">ground</span> is your flue?
+          </>
+        );
+      case "fluePropertyDistance":
+        return (
+          <>
+            How close to <span className="text-primary">another property</span> is your
+            flue?
+          </>
+        );
+      case "flueUnderStructure":
+        return (
+          <>
+            Is the flue under a <span className="text-primary">carport, balcony</span>{" "}
+            or other structure?
+          </>
+        );
+      case "flueDoorWindowDistance":
+        return (
+          <>
+            Is the flue 30cm or more from a{" "}
+            <span className="text-primary">door or window</span>?
+          </>
+        );
       default:
         return step.question;
     }
@@ -276,7 +316,7 @@ const PropertyOverviewContainer = () => {
       return;
     }
 
-    if (currentStep >= maxStep) {
+    if (currentStep >= maxStep || isPostcodeStep) {
       if (!isPostcodeStep) {
         setIsPostcodeStep(true);
         return;
@@ -427,6 +467,48 @@ const PropertyOverviewContainer = () => {
       }
     }
 
+    if (step.id === "flueOut") {
+      if (value === "Roof") {
+        const roofTypeStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "roofType",
+        );
+        if (roofTypeStepIndex >= 0) {
+          goToStep(roofTypeStepIndex);
+          return;
+        }
+      } else if (value === "Wall") {
+        const flueWallDistanceStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "flueWallDistance",
+        );
+        if (flueWallDistanceStepIndex >= 0) {
+          goToStep(flueWallDistanceStepIndex);
+          return;
+        }
+      }
+    }
+
+    if (step.id === "roofType") {
+      if (value === "Sloped") {
+        const roofPositionStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "roofPosition",
+        );
+        if (roofPositionStepIndex >= 0) {
+          goToStep(roofPositionStepIndex);
+          return;
+        }
+      }
+
+      if (value === "Flat") {
+        setIsPostcodeStep(true);
+        return;
+      }
+    }
+
+    if (step.id === "roofPosition" || step.id === "flueDoorWindowDistance") {
+      setIsPostcodeStep(true);
+      return;
+    }
+
     if (currentStep >= maxStep) {
       setIsPostcodeStep(true);
       return;
@@ -504,10 +586,40 @@ const PropertyOverviewContainer = () => {
           <h2 className="mx-auto max-w-[850px] text-center text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold leading-normal text-[#2D3D4D]">
             {headingText}
           </h2>
+          {!isPostcodeStep && step?.id === "flueGroundDistance" ? (
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-full bg-[#EEF2F6] px-5 py-2 text-lg font-medium text-[#2D3D4D]"
+              >
+                <MessageCircleQuestion className="h-5 w-5" />
+                How to find out
+              </button>
+            </div>
+          ) : null}
           {isPostcodeStep ? (
             <p className="mx-auto mt-3 max-w-[640px] text-center text-sm md:text-base leading-[1.45] text-[#5F6C7B]">
               We need this information to show the dates available for installation
               (order by 3pm for next working day installation)
+            </p>
+          ) : step?.id === "fluePropertyDistance" ? (
+            <p className="mx-auto mt-3 max-w-[860px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
+              That&apos;s between your flue and the boundary of someone else&apos;s
+              land, even if it&apos;s just the garden fence.
+            </p>
+          ) : step?.id === "flueUnderStructure" ? (
+            <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
+              A carport is a shelter for your car made from a roof supported on
+              posts. These can also be called lean-tos.
+            </p>
+          ) : step?.id === "flueDoorWindowDistance" ? (
+            <p className="mx-auto mt-3 max-w-[860px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
+              This includes any opening in the wall, like a vent.
+            </p>
+          ) : step?.id === "flueWallDistance" ? (
+            <p className="mx-auto mt-3 max-w-[760px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
+              This is so we can ensure we provide the correct length of flue for
+              your new boiler.
             </p>
           ) : step?.id === "convertToCombi" ? (
             <p className="mx-auto mt-3 max-w-[900px] text-center text-[16px] md:text-[20px] leading-[1.45] text-[#2D3D4D]">
