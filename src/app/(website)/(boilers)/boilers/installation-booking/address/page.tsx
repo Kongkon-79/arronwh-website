@@ -19,7 +19,6 @@ import {
   MapPin,
   ShieldCheck,
 } from "lucide-react";
-import { toast } from "sonner";
 
 type PostcodeLocation = {
   area: string;
@@ -345,6 +344,36 @@ function extractPostcodeLocationLabel(quote: ApiQuote | null | undefined): strin
   ]);
 }
 
+function extractInstallAddressLabel(quote: ApiQuote | null | undefined): string {
+  if (!quote) return "";
+
+  const quoteRecord = quote as unknown as Record<string, unknown>;
+  const personalInfoRaw = quoteRecord.personalInfo;
+  const personalInfo =
+    personalInfoRaw && typeof personalInfoRaw === "object"
+      ? (personalInfoRaw as Record<string, unknown>)
+      : null;
+
+  const candidates = [
+    quoteRecord.installAddress,
+    quoteRecord.installationAddress,
+    personalInfo?.installAddress,
+    personalInfo?.address,
+    personalInfo?.fullAddress,
+    quoteRecord.address,
+    quoteRecord.location,
+    personalInfo?.location,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  return "";
+}
+
 function formatMoney(value: number): string {
   if (value % 1 === 0) return `$${value.toLocaleString("en-US")}`;
   return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -382,11 +411,13 @@ function PriceSummary({
   payTodayTotal,
   originalTotal,
   installDateLabel,
+  installedAtLabel,
 }: {
   product: ApiProductFull;
   payTodayTotal: number;
   originalTotal: number;
   installDateLabel: string;
+  installedAtLabel: string;
 }) {
   return (
     <aside className="h-fit rounded-[8px] bg-white p-3 shadow-sm xl:sticky xl:top-5">
@@ -441,6 +472,13 @@ function PriceSummary({
           <div className="flex items-center justify-between pt-1">
             <span className="text-[18px] text-[#2D3D4D]">Install date</span>
             <span className="text-[18px] font-semibold text-[#2D3D4D]">{installDateLabel}</span>
+          </div>
+
+          <div className="flex items-start justify-between gap-3 pt-1">
+            <span className="text-[18px] text-[#2D3D4D]">Installed at</span>
+            <span className="text-right text-[18px] font-semibold text-[#2D3D4D]">
+              {installedAtLabel}
+            </span>
           </div>
         </div>
       </div>
@@ -642,6 +680,19 @@ function BoilerAddressPageContent() {
   const quoteProductId =
     typeof quote?.productId === "string" ? quote.productId : quote?.productId?._id ?? null;
   const resolvedProductId = productIdFromQuery ?? quoteProductId;
+  const paymentMethodUrl = React.useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (resolvedProductId) {
+      params.set("productId", resolvedProductId);
+    }
+    if (quoteId) {
+      params.set("quoteId", quoteId);
+    }
+    const query = params.toString();
+    return query
+      ? `/boilers/installation-booking/payment-method?${query}`
+      : "/boilers/installation-booking/payment-method";
+  }, [quoteId, resolvedProductId, searchParams]);
 
   const { data: product, isLoading: productLoading } = useProductById(resolvedProductId);
 
@@ -674,15 +725,15 @@ function BoilerAddressPageContent() {
   const postcode = extractPostcode(quote);
   const addressOptions = extractAddressOptions(quote);
   const initialLocationLabel = extractPostcodeLocationLabel(quote);
+  const installedAtLabel =
+    extractInstallAddressLabel(quote) || addressOptions[0] || initialLocationLabel || "Not selected";
   const handleSubmitInstallAddress = React.useCallback(
     async (installAddress: string | null) => {
       if (!installAddress) {
-        toast.error("Please select an installation address.");
         return;
       }
 
       if (!quoteId) {
-        toast.error("Quote ID not found. Please start again.");
         return;
       }
 
@@ -691,12 +742,12 @@ function BoilerAddressPageContent() {
           quoteId,
           installAddress,
         });
-        toast.success("Installation address saved successfully.");
+        router.push(paymentMethodUrl);
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Failed to save installation address.");
+        console.error("Failed to save installation address.", error);
       }
     },
-    [mutateInstallAddress, quoteId]
+    [mutateInstallAddress, paymentMethodUrl, quoteId, router]
   );
 
   return (
@@ -733,6 +784,7 @@ function BoilerAddressPageContent() {
                   payTodayTotal={payTodayTotal}
                   originalTotal={originalTotal}
                   installDateLabel={installDateLabel}
+                  installedAtLabel={installedAtLabel}
                 />
               </div>
             </div>

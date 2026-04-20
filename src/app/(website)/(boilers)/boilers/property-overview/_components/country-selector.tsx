@@ -5,6 +5,7 @@ import { ChevronDown, Search, Check } from "lucide-react";
 import * as Popover from "@radix-ui/react-popover";
 import { cn } from "@/lib/utils";
 import { countries } from "../_lib/countries";
+import Image from "next/image";
 
 interface CountrySelectorProps {
   selectedCountry: typeof countries[0];
@@ -94,9 +95,11 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
             className="flex h-10 items-center gap-2 rounded-[6px] bg-white px-3 shadow-sm transition-all hover:bg-gray-50 focus:outline-none"
           >
             <div className="flex h-6 w-8 items-center justify-center overflow-hidden rounded-sm border border-gray-100">
-              <img
+              <Image
                 src={`https://flagcdn.com/w40/${selectedCountry.code.toLowerCase()}.png`}
                 alt={selectedCountry.name}
+                width={1000}
+                height={1000}
                 className="h-full w-full object-cover"
               />
             </div>
@@ -150,7 +153,9 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
                       )}
                     >
                       <div className="flex h-5 w-7 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-gray-100">
-                        <img
+                        <Image
+                          width={1000}
+                          height={1000}
                           src={`https://flagcdn.com/w40/${country.code.toLowerCase()}.png`}
                           alt={country.name}
                           className="h-full w-full object-cover"
