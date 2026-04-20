@@ -1,10 +1,9 @@
 "use client";
 
 import React from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { toast } from "sonner";
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
 import { useProductById, type ApiProductFull } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useProductById";
 import {
@@ -23,12 +22,18 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-type UpdateQuoteManualAddressPayload = {
+type UpdateQuoteManualAddressPersonalInfo = {
   title: string;
   fastName: string;
   sureName: string;
   email: string;
   mobleNumber: string;
+  address: string;
+  isRentalProperty: boolean;
+};
+
+type UpdateQuoteManualAddressPayload = {
+  personalInfo: UpdateQuoteManualAddressPersonalInfo;
   installAddress: string;
 };
 
@@ -332,6 +337,24 @@ function extractLocationLabel(quote: ApiQuote | null | undefined): string {
   ]);
 }
 
+function extractInstallAddressLabel(quote: ApiQuote | null | undefined): string {
+  if (!quote) return "";
+
+  const quoteRecord = quote as unknown as Record<string, unknown>;
+  const personalInfo = asRecord(quoteRecord.personalInfo);
+
+  return firstNonEmptyString(
+    quoteRecord.installAddress,
+    quoteRecord.installationAddress,
+    personalInfo?.installAddress,
+    personalInfo?.address,
+    personalInfo?.fullAddress,
+    quoteRecord.address,
+    quoteRecord.location,
+    personalInfo?.location
+  );
+}
+
 function extractFormDefaults(quote: ApiQuote | null | undefined): ManualAddressForm {
   if (!quote) {
     return {
@@ -402,11 +425,13 @@ function PriceSummary({
   payTodayTotal,
   originalTotal,
   installDateLabel,
+  installedAtLabel,
 }: {
   product: ApiProductFull;
   payTodayTotal: number;
   originalTotal: number;
   installDateLabel: string;
+  installedAtLabel: string;
 }) {
   return (
     <aside className="h-fit rounded-[8px] bg-white p-3 shadow-sm xl:sticky xl:top-5">
@@ -455,6 +480,13 @@ function PriceSummary({
           <div className="flex items-center justify-between pt-1">
             <span className="text-[18px] text-[#2D3D4D]">Install date</span>
             <span className="text-[18px] font-semibold text-[#2D3D4D]">{installDateLabel}</span>
+          </div>
+
+          <div className="flex items-start justify-between gap-3 pt-1">
+            <span className="text-[18px] text-[#2D3D4D]">Installed at</span>
+            <span className="text-right text-[18px] font-semibold text-[#2D3D4D]">
+              {installedAtLabel}
+            </span>
           </div>
         </div>
       </div>
@@ -681,6 +713,7 @@ function FooterDisclaimer() {
 
 function BoilerAddressDetailsCloneContent() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const quoteId = searchParams.get("quoteId");
   const productIdFromQuery = searchParams.get("productId");
@@ -766,6 +799,19 @@ function BoilerAddressDetailsCloneContent() {
     const query = searchParams.toString();
     return query ? `/boilers/installation-booking/address?${query}` : "/boilers/installation-booking/address";
   }, [searchParams]);
+  const paymentMethodUrl = React.useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (resolvedProductId) {
+      params.set("productId", resolvedProductId);
+    }
+    if (quoteId) {
+      params.set("quoteId", quoteId);
+    }
+    const query = params.toString();
+    return query
+      ? `/boilers/installation-booking/payment-method?${query}`
+      : "/boilers/installation-booking/payment-method";
+  }, [quoteId, resolvedProductId, searchParams]);
 
   const handleFieldChange = React.useCallback((key: keyof ManualAddressForm, value: string) => {
     setForm((previous) => ({
@@ -792,13 +838,31 @@ function BoilerAddressDetailsCloneContent() {
 
   const handleSubmitManualAddress = React.useCallback(async () => {
     if (!quoteId) {
-      toast.error("Quote ID not found. Please start again.");
       return;
     }
 
     const installAddress = (form.address || selectedAddress).trim();
     if (!installAddress) {
-      toast.error("Please enter your installation address.");
+      return;
+    }
+
+    const personalInfo = {
+      title: form.title.trim(),
+      fastName: form.firstName.trim(),
+      sureName: form.sureName.trim(),
+      email: form.email.trim(),
+      mobleNumber: form.mobileNumber.trim(),
+      address: installAddress,
+      isRentalProperty: form.rentalProperty === "yes",
+    };
+
+    if (
+      !personalInfo.title ||
+      !personalInfo.fastName ||
+      !personalInfo.sureName ||
+      !personalInfo.email ||
+      !personalInfo.mobleNumber
+    ) {
       return;
     }
 
@@ -806,21 +870,20 @@ function BoilerAddressDetailsCloneContent() {
       await mutateManualAddress({
         quoteId,
         payload: {
-          title: form.title,
-          fastName: form.firstName,
-          sureName: form.sureName,
-          email: form.email,
-          mobleNumber: form.mobileNumber,
+          personalInfo,
           installAddress,
         },
       });
-      toast.success("Your details have been saved.");
+      await queryClient.invalidateQueries({ queryKey: ["quote", quoteId] });
+      router.push(paymentMethodUrl);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to save your details.");
+      console.error("Failed to save manual address details.", error);
     }
-  }, [form, mutateManualAddress, quoteId, selectedAddress]);
+  }, [form, mutateManualAddress, paymentMethodUrl, queryClient, quoteId, router, selectedAddress]);
 
   const isLoading = (quoteId ? quoteLoading : false) || (resolvedProductId ? productLoading : false);
+  const installedAtLabel =
+    extractInstallAddressLabel(quote) || form.address.trim() || selectedAddress || "Not selected";
 
   return (
     <BoilerFlowShell activeStep={4}>
@@ -860,6 +923,7 @@ function BoilerAddressDetailsCloneContent() {
                   payTodayTotal={payTodayTotal}
                   originalTotal={originalTotal}
                   installDateLabel={installDateLabel}
+                  installedAtLabel={installedAtLabel}
                 />
               </div>
             </div>
