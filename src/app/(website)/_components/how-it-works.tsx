@@ -68,7 +68,7 @@ const HowItWorks = () => {
 
                     <div className="relative mt-7">
                       {index !== workSteps.length - 1 && (
-                        <div className="absolute left-1/2 top-4 hidden h-[1px] w-[calc(100%+2rem)] border-t border border-primary lg:block" />
+                        <div className="absolute left-1/2 top-4 hidden h-[1px] w-[calc(100%+5rem)] border-t border border-primary lg:block" />
                       )}
 
                       <div className="relative z-10 mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-primary text-base md:text-lg font-bold text-white">
