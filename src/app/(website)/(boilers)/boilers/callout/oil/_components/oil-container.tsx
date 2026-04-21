@@ -35,11 +35,11 @@ const OilContainer = () => {
   };
 
   return (
-    <section className="min-h-screen bg-[#ECEDEF] px-3 py-4 md:px-6 md:py-5">
+    <section className="min-h-screen bg-[#ECEDEF] px-3 py-1 md:px-6 md:py-2">
       <div className="mx-auto w-full">
 
-        <div className="mt-4 overflow-hidden rounded-[999px] shadow-[0_8px_18px_rgba(16,24,40,0.12)]">
-          <div className="grid h-16 grid-cols-[auto_1fr] bg-primary">
+        <div className="overflow-hidden rounded-[999px] shadow-[0_8px_18px_rgba(16,24,40,0.12)]">
+          <div className="grid h-14 grid-cols-[auto_1fr] bg-primary">
             <div className="flex items-center gap-2 border-r border-[#E7ECF3] bg-primary pl-0 pr-4">
               <button
                 type="button"
@@ -47,7 +47,7 @@ const OilContainer = () => {
                 className="rounded-full border border-[#2D3D4D] p-3 transition hover:bg-black/5"
                 aria-label="Go back"
               >
-                <ArrowLeft className="h-8 w-8 text-[#2D3D4D]" />
+                <ArrowLeft className="h-7 w-7 text-[#2D3D4D]" />
               </button>
               <Image
                 src="/assets/images/multi_step_logo.png"
@@ -76,7 +76,7 @@ const OilContainer = () => {
             <button
               type="button"
               onClick={handleResetAnswers}
-              className="inline-flex h-[50px] min-w-[176px] items-center justify-center rounded-[10px] bg-[#00A86B] px-6 text-[20px] font-medium text-white transition hover:bg-[#009460]"
+              className="inline-flex h-[50px] min-w-[190px] items-center justify-center bg-[#00a56f] px-6 text-[20px] font-medium text-white transition hover:bg-[#009460]"
             >
               Reset answers
             </button>

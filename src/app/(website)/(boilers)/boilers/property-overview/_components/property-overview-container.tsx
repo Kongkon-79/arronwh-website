@@ -196,10 +196,29 @@ const PropertyOverviewContainer = () => {
             <span className="text-primary">different place</span>?
           </>
         );
+      case "newBoilerLocation":
+        return (
+          <>
+            Where do you want your <span className="text-primary">new boiler</span>?
+          </>
+        );
       case "homeType":
         return (
           <>
             Which of these best describes <span className="text-primary">your home</span>?
+          </>
+        );
+      case "flatOnSecondFloor":
+        return (
+          <>
+            Is your <span className="text-[#F25B5B]">flat</span> on or above the second floor?
+          </>
+        );
+      case "accessEquipmentCharges":
+        return (
+          <>
+            <span className="text-[#F25B5B]">Do you accept</span> that there may be extra
+            charges for access equipment?
           </>
         );
       case "bedrooms":
@@ -350,6 +369,21 @@ const PropertyOverviewContainer = () => {
       setIsOtherRoomPrompt(false);
       return;
     }
+    if (
+      step?.id === "currentBoilerLocation" &&
+      answers.differentPlace === "Yes" &&
+      answers.newBoilerLocation &&
+      answers.newBoilerLocation !== "Airing cupboard" &&
+      answers.newBoilerLocation !== "Somewhere else"
+    ) {
+      const newBoilerLocationStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "newBoilerLocation",
+      );
+      if (newBoilerLocationStepIndex >= 0) {
+        goToStep(newBoilerLocationStepIndex);
+        return;
+      }
+    }
     if (currentStep === 0) {
       router.push("/");
       return;
@@ -381,6 +415,37 @@ const PropertyOverviewContainer = () => {
         return;
       }
     }
+    if (step?.id === "homeType" && answers.differentPlace && answers.differentPlace !== "Yes") {
+      const differentPlaceStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "differentPlace",
+      );
+      if (differentPlaceStepIndex >= 0) {
+        goToStep(differentPlaceStepIndex);
+        return;
+      }
+    }
+    if (step?.id === "bedrooms" && answers.homeType && answers.homeType !== "Flat") {
+      const homeTypeStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "homeType",
+      );
+      if (homeTypeStepIndex >= 0) {
+        goToStep(homeTypeStepIndex);
+        return;
+      }
+    }
+    if (
+      step?.id === "bedrooms" &&
+      answers.homeType === "Flat" &&
+      answers.flatOnSecondFloor === "No"
+    ) {
+      const flatOnSecondFloorStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "flatOnSecondFloor",
+      );
+      if (flatOnSecondFloorStepIndex >= 0) {
+        goToStep(flatOnSecondFloorStepIndex);
+        return;
+      }
+    }
     prevStep();
   };
 
@@ -389,6 +454,22 @@ const PropertyOverviewContainer = () => {
     if (!roomName) return;
     setAnswer("otherRoomName", roomName);
     setIsOtherRoomPrompt(false);
+    const shouldRouteToHomeTypeAfterCurrentLocation =
+      answers.differentPlace === "Yes" &&
+      answers.newBoilerLocation &&
+      answers.newBoilerLocation !== "Airing cupboard" &&
+      answers.newBoilerLocation !== "Somewhere else";
+
+    if (shouldRouteToHomeTypeAfterCurrentLocation) {
+      const homeTypeStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "homeType",
+      );
+      if (homeTypeStepIndex >= 0) {
+        goToStep(homeTypeStepIndex);
+        return;
+      }
+    }
+
     const differentPlaceStepIndex = propertyChoiceSteps.findIndex(
       (item) => item.id === "differentPlace",
     );
@@ -419,6 +500,10 @@ const PropertyOverviewContainer = () => {
       }
     }
     if (step.id === "convertToCombi") {
+      if (value === "No" && answers.boilerType === "Back Boiler") {
+        router.push("/boilers/callout");
+        return;
+      }
       const boilerConditionStepIndex = propertyChoiceSteps.findIndex(
         (item) => item.id === "boilerCondition",
       );
@@ -457,6 +542,22 @@ const PropertyOverviewContainer = () => {
         ) {
           setAnswer("differentPlace", "");
         }
+        const shouldRouteToHomeTypeAfterCurrentLocation =
+          answers.differentPlace === "Yes" &&
+          answers.newBoilerLocation &&
+          answers.newBoilerLocation !== "Airing cupboard" &&
+          answers.newBoilerLocation !== "Somewhere else";
+
+        if (shouldRouteToHomeTypeAfterCurrentLocation) {
+          const homeTypeStepIndex = propertyChoiceSteps.findIndex(
+            (item) => item.id === "homeType",
+          );
+          if (homeTypeStepIndex >= 0) {
+            goToStep(homeTypeStepIndex);
+            return;
+          }
+        }
+
         const differentPlaceStepIndex = propertyChoiceSteps.findIndex(
           (item) => item.id === "differentPlace",
         );
@@ -464,6 +565,85 @@ const PropertyOverviewContainer = () => {
           goToStep(differentPlaceStepIndex);
           return;
         }
+      }
+    }
+    if (step.id === "differentPlace") {
+      if (value === "Yes") {
+        const newBoilerLocationStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "newBoilerLocation",
+        );
+        if (newBoilerLocationStepIndex >= 0) {
+          goToStep(newBoilerLocationStepIndex);
+          return;
+        }
+      } else {
+        setAnswer("newBoilerLocation", "");
+        const homeTypeStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "homeType",
+        );
+        if (homeTypeStepIndex >= 0) {
+          goToStep(homeTypeStepIndex);
+          return;
+        }
+      }
+    }
+    if (step.id === "homeType" && value !== "Flat") {
+      setAnswer("flatOnSecondFloor", "");
+      setAnswer("accessEquipmentCharges", "");
+      const bedroomsStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "bedrooms",
+      );
+      if (bedroomsStepIndex >= 0) {
+        goToStep(bedroomsStepIndex);
+        return;
+      }
+    }
+    if (step.id === "flatOnSecondFloor") {
+      if (value === "No") {
+        setAnswer("accessEquipmentCharges", "");
+        const bedroomsStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "bedrooms",
+        );
+        if (bedroomsStepIndex >= 0) {
+          goToStep(bedroomsStepIndex);
+          return;
+        }
+      }
+
+      const accessEquipmentStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "accessEquipmentCharges",
+      );
+      if (accessEquipmentStepIndex >= 0) {
+        goToStep(accessEquipmentStepIndex);
+        return;
+      }
+    }
+    if (step.id === "accessEquipmentCharges" && value === "No") {
+      router.push("/boilers/callout");
+      return;
+    }
+    if (step.id === "newBoilerLocation") {
+      if (value === "Somewhere else") {
+        router.push("/boilers/callout");
+        return;
+      }
+
+      if (value === "Airing cupboard") {
+        const homeTypeStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "homeType",
+        );
+        if (homeTypeStepIndex >= 0) {
+          goToStep(homeTypeStepIndex);
+          return;
+        }
+      }
+
+      const currentBoilerLocationStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "currentBoilerLocation",
+      );
+      if (currentBoilerLocationStepIndex >= 0) {
+        goToStep(currentBoilerLocationStepIndex);
+        return;
       }
     }
 
@@ -627,6 +807,18 @@ const PropertyOverviewContainer = () => {
               with re-configuring your current pipework to allow a combi boiler to be
               installed. All this will be included in your fixed price.
             </p>
+          ) : step?.id === "newBoilerLocation" ? (
+            <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
+              Big moves will cost a bit more. For a loft, you&apos;ll need a ladder and a light up there.
+            </p>
+          ) : step?.id === "flatOnSecondFloor" ? (
+            <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
+              If your lowest floor is more than one storey off the ground, answer Yes.
+            </p>
+          ) : step?.id === "accessEquipmentCharges" ? (
+            <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
+              We will ask for photos after you checkout, and advise you if access equipment is required.
+            </p>
           ) : null}
 
           {!isPostcodeStep && step?.id === "currentBoilerLocation" && isOtherRoomPrompt ? (
@@ -664,6 +856,7 @@ const PropertyOverviewContainer = () => {
                 const isConvertStep = step.id === "convertToCombi";
                 const isWaterFlowStep = step.id === "waterFlowRate";
                 const isFuelTypeCard = step.id === "fuelType";
+                const isNewBoilerLocationStep = step.id === "newBoilerLocation";
 
                 return (
                   <button
@@ -671,16 +864,25 @@ const PropertyOverviewContainer = () => {
                     key={option.value}
                     onClick={() => handleOptionSelect(option.value)}
                     className={cn(
-                      "group relative rounded-[12px] bg-white px-3 py-3 text-[#2D3D4D] transition ",
+                      "group relative rounded-[12px] px-3 py-3 text-[#2D3D4D] transition ",
                       isConvertStep || isWaterFlowStep
                           ? "h-[400px]"
                           : "h-[400px]",
                       optionCardWidthClass,
                       selected
-                          ? "border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
-                          : "border-[2px] border-[#AEB7C2] hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.2)]"
+                          ? isNewBoilerLocationStep
+                            ? "bg-white border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
+                            : "bg-white border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
+                          : isNewBoilerLocationStep
+                            ? "border-[2px] border-[#8AA6C2] bg-white hover:border-[#6E90B3]"
+                            : "border-[2px] border-[#AEB7C2] bg-white hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.2)]"
                     )}
                   >
+                    {isNewBoilerLocationStep && option.priceTag ? (
+                      <div className="absolute top-0 right-0 rounded-bl-[10px] rounded-tr-[10px] bg-[#24384B] px-3 py-1 text-sm font-bold text-white">
+                        {option.priceTag}
+                      </div>
+                    ) : null}
                     <div className="flex h-full flex-col items-center justify-start gap-2 pb-3 ">
                       {optionImage ? (
                         <Image
