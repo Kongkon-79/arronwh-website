@@ -12,10 +12,10 @@ const CalloutContainer = () => {
   };
 
   return (
-    <section className="min-h-screen bg-[#ECEDEF] px-2 py-3 md:px-4 md:py-4">
+    <section className="min-h-screen bg-[#ECEDEF] px-2 py-1 md:px-4 md:py-2">
       <div className="mx-auto w-full">
-        <div className="mt-4 overflow-hidden rounded-[999px] shadow-[0_8px_18px_rgba(16,24,40,0.12)]">
-          <div className="grid h-16 grid-cols-[auto_1fr] bg-primary">
+        <div className="overflow-hidden rounded-[999px] shadow-[0_8px_18px_rgba(16,24,40,0.12)]">
+          <div className="grid h-14 grid-cols-[auto_1fr] bg-primary">
             <div className="flex items-center gap-2 border-r border-[#E7ECF3] bg-primary pl-0 pr-4">
               <button
                 type="button"
@@ -23,7 +23,7 @@ const CalloutContainer = () => {
                 className="rounded-full border border-[#2D3D4D] p-3 transition hover:bg-black/5"
                 aria-label="Go back"
               >
-                <ArrowLeft className="h-8 w-8 text-[#2D3D4D]" />
+                <ArrowLeft className="h-7 w-7 text-[#2D3D4D]" />
               </button>
               <Image
                 src="/assets/images/multi_step_logo.png"
@@ -61,7 +61,7 @@ const CalloutContainer = () => {
                 </div>
                 <button
                   type="button"
-                  className="inline-flex h-[58px] min-w-[280px] items-center justify-center gap-3 bg-primary px-6 text-[20px] font-medium text-[#2D3D4D] transition hover:bg-[#f3cf43]"
+                  className="inline-flex h-[58px] min-w-[280px] items-center justify-center gap-3 bg-[#00a56f] px-6 text-[20px] font-medium text-white transition hover:bg-[#009460]"
                 >
                   <PhoneCall className="h-5 w-5" />
                   Request a callback
@@ -81,7 +81,7 @@ const CalloutContainer = () => {
                 </div>
                 <button
                   type="button"
-                  className="inline-flex h-[58px] min-w-[280px] items-center justify-center gap-3 border border-primary bg-transparent px-6 text-[20px] font-medium text-[#2D3D4D] transition hover:bg-primary/20"
+                  className="inline-flex h-[58px] min-w-[280px] items-center justify-center gap-3 border border-[#00a56f] bg-transparent px-6 text-[20px] font-medium text-[#00a56f] transition hover:bg-[#00a56f]/20"
                 >
                   <MessageCircle className="h-5 w-5" />
                   Start a live chat

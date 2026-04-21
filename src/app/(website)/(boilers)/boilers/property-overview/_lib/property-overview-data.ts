@@ -75,6 +75,9 @@ import FlueCarportYes from "../../../../../../../public/assets/images/boilers/fl
 import FlueCarportNo from "../../../../../../../public/assets/images/boilers/flue-carport-no.svg";
 import FlueUnderThirtyCm from "../../../../../../../public/assets/images/boilers/flue-under-thirty-cm.svg";
 import FlueOverThirtyCm from "../../../../../../../public/assets/images/boilers/flue-over-thirty-cm.svg";
+import SameRoom from "../../../../../../../public/assets/images/boilers/same-room.svg";
+import Bedroom from "../../../../../../../public/assets/images/boilers/bedroom.svg";
+import LoftAttic from "../../../../../../../public/assets/images/boilers/loft.svg";
 
 export type Option = {
   label: string;
@@ -82,6 +85,7 @@ export type Option = {
   icon?: ComponentType<{ className?: string }>;
   image?: StaticImageData | string;
   hoverDescription?: string;
+  priceTag?: string;
 };
 
 export type ChoiceStep = {
@@ -281,6 +285,7 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     cols: "md:grid-cols-3",
     options: [
       { label: "No", value: "No", image: No },
+      { label: "Yes", value: "Yes", image: Yes },
       {
         label: "Move to airing cupboard",
         value: "Move to airing cupboard",
@@ -291,6 +296,26 @@ export const propertyChoiceSteps: ChoiceStep[] = [
         value: "Move somewhere else",
         image: Other,
       },
+    ],
+  },
+  {
+    id: "newBoilerLocation",
+    question: "Where do you want your new boiler?",
+    cols: "md:grid-cols-4",
+    options: [
+      { label: "Same room", value: "Same room", image: SameRoom, priceTag: "+£1,100" },
+      { label: "Utility room", value: "Utility room", image: UtilityRoom, priceTag: "+£1,300" },
+      { label: "Kitchen", value: "Kitchen", image: Kitchen, priceTag: "+£1,300" },
+      { label: "Garage", value: "Garage", image: Garage, priceTag: "+£1,300" },
+      {
+        label: "Airing cupboard",
+        value: "Airing cupboard",
+        image: AiringCupboard,
+        priceTag: "+£1,300",
+      },
+      { label: "Bedroom", value: "Bedroom", image: Bedroom, priceTag: "+£1,300" },
+      { label: "Loft or attic", value: "Loft or attic", image: LoftAttic, priceTag: "+£1,500" },
+      { label: "Somewhere else", value: "Somewhere else", image: Other },
     ],
   },
   {
