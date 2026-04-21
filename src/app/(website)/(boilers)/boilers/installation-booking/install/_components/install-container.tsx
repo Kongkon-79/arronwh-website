@@ -50,6 +50,7 @@ const monthNames = [
 type CalendarDateCell = {
   day: number;
   blocked?: boolean;
+  discount?: string;
 };
 
 type InstallSurveyDateData = {
@@ -161,9 +162,14 @@ function buildCalendarRows(
 
   for (let day = 1; day <= daysInMonth; day += 1) {
     const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const isBlocked = blockedDateKeys.has(key);
+    const weekDay = (firstWeekday + day - 1) % 7;
+    const isSaturday = weekDay === 6;
+
     cells.push({
       day,
-      blocked: blockedDateKeys.has(key),
+      blocked: isBlocked,
+      discount: !isBlocked && isSaturday ? `+£${SATURDAY_SURCHARGE}` : undefined,
     });
   }
 
@@ -180,8 +186,23 @@ function buildCalendarRows(
 }
 
 function formatMoney(value: number): string {
-  if (value % 1 === 0) return `$${value.toLocaleString("en-US")}`;
-  return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (value % 1 === 0) return `£${value.toLocaleString("en-US")}`;
+  return `£${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+const SATURDAY_SURCHARGE = 100;
+
+function isSaturdayDateKey(dateKey: string | null): boolean {
+  if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+    return false;
+  }
+
+  const [year, month, day] = dateKey.split("-").map(Number);
+  if (!year || !month || !day) {
+    return false;
+  }
+
+  return new Date(year, month - 1, day).getDay() === 6;
 }
 
 function getWarrantyText(product: ApiProductFull): string | undefined {
@@ -278,11 +299,13 @@ function PriceSummary({
 function CalendarCell({
   day,
   blocked,
+  discount,
   isSelected,
   onSelect,
 }: {
   day?: number;
   blocked?: boolean;
+  discount?: string;
   isSelected?: boolean;
   onSelect?: (day: number) => void;
 }) {
@@ -302,7 +325,7 @@ function CalendarCell({
       }}
       disabled={isBlocked}
       aria-pressed={isBlocked ? undefined : isSelected}
-      className={`flex h-[52px] w-full flex-col items-center justify-center rounded-[6px] text-center transition sm:h-[54px] ${
+      className={`group flex h-[52px] w-full flex-col items-center justify-center rounded-[6px] text-center transition sm:h-[54px] ${
         isBlocked
           ? "cursor-not-allowed bg-[#f6a9a8] text-[#364254]"
           : isSelected
@@ -311,6 +334,15 @@ function CalendarCell({
       }`}
     >
       <span className="text-[13px] font-medium leading-none">{day}</span>
+      {discount ? (
+        <span
+          className={`mt-1 text-[11px] font-semibold ${
+            isSelected ? "text-white" : "text-[#00b26f] group-hover:text-white"
+          }`}
+        >
+          {discount}
+        </span>
+      ) : null}
     </button>
   );
 }
@@ -320,11 +352,13 @@ function InstallSection({
   isBookingDatesLoading,
   isSubmittingInstallDate,
   onSubmitInstallDate,
+  onSelectedDateChange,
 }: {
   blockedDateKeys: ReadonlySet<string>;
   isBookingDatesLoading: boolean;
   isSubmittingInstallDate: boolean;
   onSubmitInstallDate: (installDate: string | null) => void;
+  onSelectedDateChange?: (installDate: string | null) => void;
 }) {
   const [selectedDay, setSelectedDay] = React.useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = React.useState(() => new Date().getMonth());
@@ -367,6 +401,10 @@ function InstallSection({
     ? `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`
     : null;
 
+  React.useEffect(() => {
+    onSelectedDateChange?.(selectedDate);
+  }, [selectedDate, onSelectedDateChange]);
+
   return (
     <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4">
       <div className="flex items-center justify-center gap-3 text-center">
@@ -382,7 +420,7 @@ function InstallSection({
         <p className="text-center text-[13px] font-medium text-[#374151]">
           {isBookingDatesLoading
             ? "Loading installation dates..."
-            : "Already booked dates are marked in red. Available dates can be selected."}
+            : "Already booked dates are marked in red. Saturday selections include +£100."}
         </p>
 
         <div className="mt-2 flex items-center justify-center gap-3 text-[#2f3b4a]">
@@ -468,6 +506,7 @@ function InstallSection({
                   key={idx}
                   day={cell?.day}
                   blocked={cell?.blocked}
+                  discount={cell?.discount}
                   isSelected={selectedDay === cell?.day}
                   onSelect={setSelectedDay}
                 />
@@ -558,12 +597,17 @@ export default function InstallContainer() {
       ? selectedExtra.price
       : 0;
 
-  const payTodayTotal = product
+  const [selectedInstallDate, setSelectedInstallDate] = React.useState<string | null>(null);
+  const selectedDateSurcharge = isSaturdayDateKey(selectedInstallDate) ? SATURDAY_SURCHARGE : 0;
+
+  const payTodayTotalBase = product
     ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
     : 0;
-  const originalTotal = product
+  const originalTotalBase = product
     ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
     : 0;
+  const payTodayTotal = payTodayTotalBase + selectedDateSurcharge;
+  const originalTotal = originalTotalBase + selectedDateSurcharge;
 
   const blockedInstallDateKeys = React.useMemo(() => {
     const keys = new Set<string>();
@@ -637,6 +681,7 @@ export default function InstallContainer() {
                   isBookingDatesLoading={installSurveyDataLoading}
                   isSubmittingInstallDate={isUpdatingInstallDate}
                   onSubmitInstallDate={handleSubmitInstallDate}
+                  onSelectedDateChange={setSelectedInstallDate}
                 />
 
                 <div className="space-y-4">

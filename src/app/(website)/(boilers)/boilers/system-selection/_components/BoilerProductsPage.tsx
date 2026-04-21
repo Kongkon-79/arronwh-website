@@ -52,7 +52,7 @@ const stripHtml = (value?: string) =>
     .trim() ?? "";
 
 const formatMoney = (value?: number) =>
-  typeof value === "number" && Number.isFinite(value) ? `$${value.toLocaleString("en-US")}` : "";
+  typeof value === "number" && Number.isFinite(value) ? `£${value.toLocaleString("en-US")}` : "";
 
 const normalizeImage = (image?: string) => {
   if (!image) return FALLBACK_IMAGE;
@@ -115,7 +115,7 @@ const toProductCardItem = (product: ApiProduct): ProductItem => {
     })
     .filter((feature) => feature.label && feature.value);
 
-  const payToday = formatMoney(product.payablePrice) || formatMoney(product.price) || "$0";
+  const payToday = formatMoney(product.payablePrice) || formatMoney(product.price) || "£0";
   const payTodayOld =
     typeof product.price === "number" &&
     typeof product.payablePrice === "number" &&
@@ -131,7 +131,7 @@ const toProductCardItem = (product: ApiProduct): ProductItem => {
         : typeof product.price === "number" && product.price > 0
           ? product.price / 12
           : 0;
-  const monthlyCost = monthlyPriceNumber > 0 ? `${formatMoney(monthlyPriceNumber)}/mo` : "$0/mo";
+  const monthlyCost = monthlyPriceNumber > 0 ? `${formatMoney(monthlyPriceNumber)}/mo` : "£0/mo";
 
   const discountAmount =
     typeof product.discountPrice === "number" && product.discountPrice > 0
@@ -155,7 +155,7 @@ const toProductCardItem = (product: ApiProduct): ProductItem => {
     monthlyCost,
     monthlyCostOld: "",
     discountTitle: `${title} Discount`,
-    discountValue: discountAmount > 0 ? `-$${discountAmount.toLocaleString("en-US")}` : "$0",
+    discountValue: discountAmount > 0 ? `-£${discountAmount.toLocaleString("en-US")}` : "£0",
     payablePriceValue:
       typeof product.payablePrice === "number"
         ? product.payablePrice

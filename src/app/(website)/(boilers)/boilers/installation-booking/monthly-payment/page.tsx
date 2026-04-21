@@ -156,8 +156,8 @@ function formatInstallDateLabel(isoDate: string | null | undefined): string {
 }
 
 function formatMoney(value: number): string {
-  if (value % 1 === 0) return `$${value.toLocaleString("en-US")}`;
-  return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (value % 1 === 0) return `£${value.toLocaleString("en-US")}`;
+  return `£${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function getWarrantyText(product: ApiProductFull): string | undefined {
@@ -717,7 +717,7 @@ function PaymentSection({
                   ? `${formatMoney(
                       planDetails.find((plan) => plan.id === selectedPlanId)!.monthlyPayment
                     )}/mo`
-                  : "$0.00/mo"}
+                  : "£0.00/mo"}
               </div>
             </div>
 

@@ -85,13 +85,13 @@ async function emailQuote({ quoteId }: { quoteId: string }): Promise<EmailQuoteR
 }
 
 function formatMoney(value: number): string {
-  if (value % 1 === 0) return `$${value.toLocaleString("en-US")}`;
-  return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (value % 1 === 0) return `£${value.toLocaleString("en-US")}`;
+  return `£${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatAddonPrice(price: number): string {
   if (price <= 0) return "Include";
-  return `$${price % 1 === 0 ? price.toFixed(0) : price.toFixed(2)}`;
+  return `£${price % 1 === 0 ? price.toFixed(0) : price.toFixed(2)}`;
 }
 
 function getWarrantyText(product: ApiProductFull): string | undefined {
@@ -433,7 +433,7 @@ export default function BoilerQuote() {
 
                   <div className="mt-3 grid gap-1.5 sm:grid-cols-3">
                     <FeaturePill icon={BadgeCheck} text="Every job audited by our technical team" />
-                    <FeaturePill icon={Gift} text="We'll beat any like-for-like quote or give you $50" />
+                    <FeaturePill icon={Gift} text="We'll beat any like-for-like quote or give you £50" />
                     <FeaturePill icon={Star} text="Were rated Excellent on Trustpilot." />
                   </div>
 

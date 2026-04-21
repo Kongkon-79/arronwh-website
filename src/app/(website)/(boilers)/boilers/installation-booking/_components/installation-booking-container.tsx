@@ -162,9 +162,14 @@ function buildCalendarRows(
 
   for (let day = 1; day <= daysInMonth; day += 1) {
     const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const isBlocked = blockedDateKeys.has(key);
+    const weekDay = (firstWeekday + day - 1) % 7;
+    const isSaturday = weekDay === 6;
+
     cells.push({
       day,
-      blocked: blockedDateKeys.has(key),
+      blocked: isBlocked,
+      discount: !isBlocked && isSaturday ? `+£${SATURDAY_SURCHARGE}` : undefined,
     });
   }
 
@@ -186,9 +191,24 @@ const accordions = [
   { icon: CreditCard, label: "How would you like to pay?" },
 ];
 
+const SATURDAY_SURCHARGE = 100;
+
 function formatMoney(value: number): string {
-  if (value % 1 === 0) return `$${value.toLocaleString("en-US")}`;
-  return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (value % 1 === 0) return `£${value.toLocaleString("en-US")}`;
+  return `£${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function isSaturdayDateKey(dateKey: string | null): boolean {
+  if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+    return false;
+  }
+
+  const [year, month, day] = dateKey.split("-").map(Number);
+  if (!year || !month || !day) {
+    return false;
+  }
+
+  return new Date(year, month - 1, day).getDay() === 6;
 }
 
 function getWarrantyText(product: ApiProductFull): string | undefined {
@@ -338,11 +358,13 @@ function SurveySection({
   isBookingDatesLoading,
   isSubmittingSurveyDate,
   onSubmitSurveyDate,
+  onSelectedDateChange,
 }: {
   blockedDateKeys: ReadonlySet<string>;
   isBookingDatesLoading: boolean;
   isSubmittingSurveyDate: boolean;
   onSubmitSurveyDate: (surveyDate: string | null) => void;
+  onSelectedDateChange?: (surveyDate: string | null) => void;
 }) {
   const [selectedDay, setSelectedDay] = React.useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = React.useState(() => new Date().getMonth());
@@ -385,6 +407,10 @@ function SurveySection({
     ? `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`
     : null;
 
+  React.useEffect(() => {
+    onSelectedDateChange?.(selectedDate);
+  }, [selectedDate, onSelectedDateChange]);
+
   return (
     <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4">
       <div className="flex items-center justify-center gap-3 text-center">
@@ -400,7 +426,7 @@ function SurveySection({
         <p className="text-center text-[13px] font-medium text-[#374151]">
           {isBookingDatesLoading
             ? "Loading already booked dates..."
-            : "Already booked dates are marked in red. Available dates can be selected."}
+            : "Already booked dates are marked in red. Saturday selections include +£100."}
         </p>
 
         <div className="mt-2 flex items-center justify-center gap-3 text-[#2f3b4a]">
@@ -572,12 +598,17 @@ export default function InstallationBookingContainer() {
       ? selectedExtra.price
       : 0;
 
-  const payTodayTotal = product
+  const [selectedSurveyDate, setSelectedSurveyDate] = React.useState<string | null>(null);
+  const selectedDateSurcharge = isSaturdayDateKey(selectedSurveyDate) ? SATURDAY_SURCHARGE : 0;
+
+  const payTodayTotalBase = product
     ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
     : 0;
-  const originalTotal = product
+  const originalTotalBase = product
     ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
     : 0;
+  const payTodayTotal = payTodayTotalBase + selectedDateSurcharge;
+  const originalTotal = originalTotalBase + selectedDateSurcharge;
 
   const blockedDateKeys = React.useMemo(() => {
     const keys = new Set<string>();
@@ -654,6 +685,7 @@ export default function InstallationBookingContainer() {
                   isBookingDatesLoading={installSurveyDataLoading}
                   isSubmittingSurveyDate={isUpdatingSurveyDate}
                   onSubmitSurveyDate={handleSubmitSurveyDate}
+                  onSelectedDateChange={setSelectedSurveyDate}
                 />
 
                 <div className="space-y-4">
