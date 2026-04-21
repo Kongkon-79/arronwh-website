@@ -331,6 +331,24 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     ],
   },
   {
+    id: "flatOnSecondFloor",
+    question: "Is your flat on or above the second floor?",
+    cols: "md:grid-cols-2",
+    options: [
+      { label: "Yes", value: "Yes", image: Yes },
+      { label: "No", value: "No", image: No },
+    ],
+  },
+  {
+    id: "accessEquipmentCharges",
+    question: "Do you accept that there may be extra charges for access equipment?",
+    cols: "md:grid-cols-2",
+    options: [
+      { label: "Yes", value: "Yes", image: Yes },
+      { label: "No", value: "No", image: No },
+    ],
+  },
+  {
     id: "bedrooms",
     question: "How many bedrooms do you have?",
     cols: "md:grid-cols-6",

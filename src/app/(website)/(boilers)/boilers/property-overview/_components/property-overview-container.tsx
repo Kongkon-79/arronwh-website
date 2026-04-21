@@ -208,6 +208,19 @@ const PropertyOverviewContainer = () => {
             Which of these best describes <span className="text-primary">your home</span>?
           </>
         );
+      case "flatOnSecondFloor":
+        return (
+          <>
+            Is your <span className="text-[#F25B5B]">flat</span> on or above the second floor?
+          </>
+        );
+      case "accessEquipmentCharges":
+        return (
+          <>
+            <span className="text-[#F25B5B]">Do you accept</span> that there may be extra
+            charges for access equipment?
+          </>
+        );
       case "bedrooms":
         return (
           <>
@@ -411,6 +424,28 @@ const PropertyOverviewContainer = () => {
         return;
       }
     }
+    if (step?.id === "bedrooms" && answers.homeType && answers.homeType !== "Flat") {
+      const homeTypeStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "homeType",
+      );
+      if (homeTypeStepIndex >= 0) {
+        goToStep(homeTypeStepIndex);
+        return;
+      }
+    }
+    if (
+      step?.id === "bedrooms" &&
+      answers.homeType === "Flat" &&
+      answers.flatOnSecondFloor === "No"
+    ) {
+      const flatOnSecondFloorStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "flatOnSecondFloor",
+      );
+      if (flatOnSecondFloorStepIndex >= 0) {
+        goToStep(flatOnSecondFloorStepIndex);
+        return;
+      }
+    }
     prevStep();
   };
 
@@ -551,6 +586,41 @@ const PropertyOverviewContainer = () => {
           return;
         }
       }
+    }
+    if (step.id === "homeType" && value !== "Flat") {
+      setAnswer("flatOnSecondFloor", "");
+      setAnswer("accessEquipmentCharges", "");
+      const bedroomsStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "bedrooms",
+      );
+      if (bedroomsStepIndex >= 0) {
+        goToStep(bedroomsStepIndex);
+        return;
+      }
+    }
+    if (step.id === "flatOnSecondFloor") {
+      if (value === "No") {
+        setAnswer("accessEquipmentCharges", "");
+        const bedroomsStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "bedrooms",
+        );
+        if (bedroomsStepIndex >= 0) {
+          goToStep(bedroomsStepIndex);
+          return;
+        }
+      }
+
+      const accessEquipmentStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "accessEquipmentCharges",
+      );
+      if (accessEquipmentStepIndex >= 0) {
+        goToStep(accessEquipmentStepIndex);
+        return;
+      }
+    }
+    if (step.id === "accessEquipmentCharges" && value === "No") {
+      router.push("/boilers/callout");
+      return;
     }
     if (step.id === "newBoilerLocation") {
       if (value === "Somewhere else") {
@@ -740,6 +810,14 @@ const PropertyOverviewContainer = () => {
           ) : step?.id === "newBoilerLocation" ? (
             <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
               Big moves will cost a bit more. For a loft, you&apos;ll need a ladder and a light up there.
+            </p>
+          ) : step?.id === "flatOnSecondFloor" ? (
+            <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
+              If your lowest floor is more than one storey off the ground, answer Yes.
+            </p>
+          ) : step?.id === "accessEquipmentCharges" ? (
+            <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
+              We will ask for photos after you checkout, and advise you if access equipment is required.
             </p>
           ) : null}
 
