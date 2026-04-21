@@ -10,7 +10,7 @@ import { ApiController } from "../../_hooks/useControllers";
 
 function formatPrice(price: number): string {
   if (price <= 0) return "Included";
-  return `$${price % 1 === 0 ? price.toFixed(0) : price.toFixed(2)}`;
+  return `£${price % 1 === 0 ? price.toFixed(0) : price.toFixed(2)}`;
 }
 
 interface ControllerCardProps {

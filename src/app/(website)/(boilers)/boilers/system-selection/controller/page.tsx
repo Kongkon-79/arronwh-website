@@ -19,12 +19,12 @@ import { useQuoteById } from "../_hooks/useQuoteById";
 
 function formatControllerPrice(price: number): string {
   if (price <= 0) return "Included";
-  return `$${price % 1 === 0 ? price.toFixed(0) : price.toFixed(2)}`;
+  return `£${price % 1 === 0 ? price.toFixed(0) : price.toFixed(2)}`;
 }
 
 function formatMoney(value: number): string {
-  if (value % 1 === 0) return `$${value.toLocaleString("en-US")}`;
-  return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (value % 1 === 0) return `£${value.toLocaleString("en-US")}`;
+  return `£${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 type UpdateControllerResponse = {
@@ -37,6 +37,13 @@ type EmailQuoteResponse = {
   success?: boolean;
   status?: boolean;
   message?: string;
+};
+
+type QuoteItem = {
+  label: string;
+  value: string;
+  highlight: boolean;
+  onClick?: () => void;
 };
 
 function resolveQuoteEndpoint(): string {
@@ -146,11 +153,24 @@ function ChooseControlsPage() {
   const originalTotal = product ? (product.price ?? 0) + selectedControllerPrice : 0;
   const monthlyCost = payTodayTotal / 12;
 
+  const handleViewDetails = () => {
+    const params = new URLSearchParams();
+    if (resolvedProductId) {
+      params.set("productId", resolvedProductId);
+    }
+    if (quoteId) {
+      params.set("quoteId", quoteId);
+    }
+
+    const query = params.toString();
+    router.push(query ? `/boilers/system-selection/product-details?${query}` : "/boilers/system-selection/product-details");
+  };
+
   // Build dynamic quote items from API data
-  const quoteItems = product
+  const quoteItems: QuoteItem[] = product
     ? [
         { label: product.boilerAbility || product.title, value: formatMoney(product.price), highlight: false },
-        { label: "View details", value: "", highlight: true },
+        { label: "View details", value: "", highlight: true, onClick: handleViewDetails },
         ...(selectedController
           ? [
               {
@@ -165,7 +185,7 @@ function ChooseControlsPage() {
           value: f.value,
           highlight: false,
         })),
-        ...product.boilerIncludedData
+        ...(product.boilerIncludedData ?? "")
           .split("\n")
           .filter(Boolean)
           .map((line) => ({ label: line.trim(), value: "Included", highlight: false })),
@@ -341,7 +361,7 @@ function ChooseControlsPage() {
                     {product.boilerAbility || product.title}
                   </span>
                   <span className="ml-2 shrink-0 text-[14px] sm:text-[15px] font-semibold text-[#00A56F]">
-                    -${product.discountPrice}
+                    -{formatMoney(product.discountPrice ?? 0)}
                   </span>
                 </div>
 
@@ -381,15 +401,19 @@ function ChooseControlsPage() {
                       key={`${item.label}-${index}`}
                       className="flex min-w-0 items-start justify-between gap-3 border-b border-dotted border-[#A7B1BB] py-3 last:border-b-0"
                     >
-                      <div
-                        className={
-                          item.highlight
-                            ? "min-w-0 flex-1 break-words text-[14px] sm:text-[15px] font-medium text-[#F5C842] underline cursor-pointer"
-                            : "min-w-0 flex-1 break-words text-[14px] sm:text-[15px] text-[#2D3D4D]"
-                        }
-                      >
-                        {item.label}
-                      </div>
+                      {item.highlight ? (
+                        <button
+                          type="button"
+                          onClick={item.onClick}
+                          className="min-w-0 flex-1 break-words text-left text-[14px] sm:text-[15px] font-medium text-[#F5C842] underline cursor-pointer"
+                        >
+                          {item.label}
+                        </button>
+                      ) : (
+                        <div className="min-w-0 flex-1 break-words text-[14px] sm:text-[15px] text-[#2D3D4D]">
+                          {item.label}
+                        </div>
+                      )}
 
                       {item.value ? (
                         <div className="max-w-[46%] text-right break-words text-[14px] sm:text-[15px] font-semibold text-[#2D3D4D]">
