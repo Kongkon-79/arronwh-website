@@ -12,6 +12,7 @@ import { ControllerCard } from "./_components/ControllerCard";
 import { ControllerCardSkeleton } from "./_components/ControllerCardSkeleton";
 import { FeaturedBundleSkeleton } from "./_components/FeaturedBundleSkeleton";
 import { ProductSummarySkeleton } from "./_components/ProductSummarySkeleton";
+import FinanceCalculatorModal from "../_components/FinanceCalculatorModal";
 import { useControllers } from "../_hooks/useControllers";
 import { useProductById } from "../_hooks/useProductById";
 import { useQuoteById } from "../_hooks/useQuoteById";
@@ -27,6 +28,12 @@ function formatMoney(value: number): string {
 }
 
 type UpdateControllerResponse = {
+  success?: boolean;
+  status?: boolean;
+  message?: string;
+};
+
+type EmailQuoteResponse = {
   success?: boolean;
   status?: boolean;
   message?: string;
@@ -72,6 +79,24 @@ async function updateQuoteController({
   return result ?? {};
 }
 
+async function emailQuote({ quoteId }: { quoteId: string }): Promise<EmailQuoteResponse> {
+  const response = await fetch(
+    `${resolveQuoteEndpoint()}/${encodeURIComponent(quoteId)}/email`,
+    {
+      method: "POST",
+    }
+  );
+
+  const result = (await response.json().catch(() => null)) as EmailQuoteResponse | null;
+  const hasExplicitFailure = result?.success === false || result?.status === false;
+
+  if (!response.ok || hasExplicitFailure) {
+    throw new Error(result?.message || "Failed to send quote email.");
+  }
+
+  return result ?? {};
+}
+
 function ChooseControlsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -88,8 +113,13 @@ function ChooseControlsPage() {
     mutationKey: ["update-quote-controller"],
     mutationFn: updateQuoteController,
   });
+  const { mutateAsync: mutateEmailQuote, isPending: isEmailingQuote } = useMutation({
+    mutationKey: ["email-quote"],
+    mutationFn: emailQuote,
+  });
 
   const [selectedControllerId, setSelectedControllerId] = useState<string | null>(null);
+  const [isFinanceCalculatorOpen, setIsFinanceCalculatorOpen] = useState(false);
   const hasHydratedInitialController = useRef(false);
 
   const preselectedControllerId =
@@ -167,6 +197,20 @@ function ChooseControlsPage() {
       router.push(`/boilers/system-selection/extras?${params.toString()}`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to update controller.");
+    }
+  };
+
+  const handleEmailQuote = async () => {
+    if (!quoteId) {
+      toast.error("Quote ID not found. Please start again.");
+      return;
+    }
+
+    try {
+      const result = await mutateEmailQuote({ quoteId });
+      toast.success(result.message || "Quote email sent successfully.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send quote email.");
     }
   };
 
@@ -302,6 +346,16 @@ function ChooseControlsPage() {
                 </div>
 
                 {/* Action buttons */}
+                <div className="mt-3 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setIsFinanceCalculatorOpen(true)}
+                    className="text-[#f96962] underline"
+                  >
+                    View finance calculator
+                  </button>
+                </div>
+
                 <Button
                   disabled={isUpdatingController}
                   className="mt-4 h-[48px] w-full rounded-[6px] bg-[#00A56F] text-[15px] sm:text-[16px] font-medium text-white hover:bg-[#009562]"
@@ -312,9 +366,11 @@ function ChooseControlsPage() {
 
                 <Button
                   variant="outline"
+                  disabled={isEmailingQuote}
+                  onClick={handleEmailQuote}
                   className="mt-3 h-[48px] w-full rounded-[6px] border border-[#F5D64E] bg-transparent text-[15px] sm:text-[16px] font-medium text-[#F5C842] hover:bg-transparent"
                 >
-                  Email My quote
+                  {isEmailingQuote ? "Sending..." : "Email My quote"}
                   <Mail className="ml-2 h-4 w-4" />
                 </Button>
 
@@ -348,6 +404,20 @@ function ChooseControlsPage() {
           </div>
         </div>
       </div>
+
+      {product ? (
+        <FinanceCalculatorModal
+          open={isFinanceCalculatorOpen}
+          onOpenChange={setIsFinanceCalculatorOpen}
+          productName={product.boilerAbility || product.title}
+          totalPrice={payTodayTotal}
+          discountAmount={product.discountPrice ?? 0}
+          monthlyBasePrice={monthlyCost}
+          variant="controller"
+          onAddToBasket={handleNextExtras}
+          onViewProductDetails={() => setIsFinanceCalculatorOpen(false)}
+        />
+      ) : null}
     </BoilerFlowShell>
   );
 }
