@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import FinanceCalculatorModal from "./FinanceCalculatorModal";
 import {
   ChevronRight,
   BadgePercent,
@@ -37,6 +38,10 @@ export type ProductItem = {
   monthlyCostOld?: string;
   discountTitle: string;
   discountValue: string;
+  payablePriceValue?: number;
+  priceValue?: number;
+  discountAmountValue?: number;
+  monthlyPriceValue?: number;
 };
 
 function Tag({ label }: { label: string }) {
@@ -84,6 +89,7 @@ export function ProductCard({ product }: { product: ProductItem }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeImage, setActiveImage] = useState(0);
+  const [isFinanceCalculatorOpen, setIsFinanceCalculatorOpen] = useState(false);
   const quoteId = searchParams.get("quoteId");
   const activeImageSrc = product.images[activeImage] || product.images[0] || "/product.png";
   const headingTitle = product.boilerAbility || product.title;
@@ -94,6 +100,16 @@ export function ProductCard({ product }: { product: ProductItem }) {
   const nextImage = () => {
     if (!product.images.length) return;
     setActiveImage((prev) => (prev + 1) % product.images.length);
+  };
+
+  const handleChooseProduct = () => {
+    const params = new URLSearchParams();
+    params.set("productId", String(product.id));
+    if (quoteId) {
+      params.set("quoteId", quoteId);
+    }
+
+    router.push(`/boilers/system-selection/controller?${params.toString()}`);
   };
 
   return (
@@ -241,18 +257,18 @@ export function ProductCard({ product }: { product: ProductItem }) {
                 {product.discountValue}
               </span>
             </div>
-
+            <div className="flex justify-center mt-3">
+              <button
+                type="button"
+                onClick={() => setIsFinanceCalculatorOpen(true)}
+                className="text-[#f96962] underline"
+              >
+                View finance calculator
+              </button>
+            </div>
             <Button
               className="mt-4 h-[46px] w-full rounded-[6px] bg-[#00A56F] text-[15px] sm:text-[16px] font-medium text-white hover:bg-[#009562]"
-              onClick={() => {
-                const params = new URLSearchParams();
-                params.set("productId", String(product.id));
-                if (quoteId) {
-                  params.set("quoteId", quoteId);
-                }
-
-                router.push(`/boilers/system-selection/controller?${params.toString()}`);
-              }}
+              onClick={handleChooseProduct}
             >
               Choose
             </Button>
@@ -266,6 +282,17 @@ export function ProductCard({ product }: { product: ProductItem }) {
           </div>
         </div>
       </div>
+
+      <FinanceCalculatorModal
+        open={isFinanceCalculatorOpen}
+        onOpenChange={setIsFinanceCalculatorOpen}
+        productName={headingTitle}
+        totalPrice={product.payablePriceValue ?? product.priceValue ?? 0}
+        discountAmount={product.discountAmountValue ?? 0}
+        monthlyBasePrice={product.monthlyPriceValue}
+        onAddToBasket={handleChooseProduct}
+        onViewProductDetails={() => setIsFinanceCalculatorOpen(false)}
+      />
     </div>
   );
 }

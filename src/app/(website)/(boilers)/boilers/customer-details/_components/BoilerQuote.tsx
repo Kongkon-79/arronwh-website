@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
 import { Button } from "@/components/ui/button";
+import { useMutation } from "@tanstack/react-query";
 import {
   BadgeCheck,
   BadgeDollarSign,
@@ -22,6 +23,7 @@ import {
   Trash2,
   Wrench,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useProductById, type ApiProductFull } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useProductById";
 import {
   type ApiQuoteController,
@@ -47,6 +49,40 @@ const accordions = [
   { icon: MapPin, label: "Where are we visiting?" },
   { icon: CreditCard, label: "How would you like to pay?" },
 ];
+
+type EmailQuoteResponse = {
+  success?: boolean;
+  status?: boolean;
+  message?: string;
+};
+
+function resolveQuoteEndpoint(): string {
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return `${process.env.NEXT_PUBLIC_API_BASE_URL}/quote`;
+  }
+  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/quote`;
+  }
+  return "/quote";
+}
+
+async function emailQuote({ quoteId }: { quoteId: string }): Promise<EmailQuoteResponse> {
+  const response = await fetch(
+    `${resolveQuoteEndpoint()}/${encodeURIComponent(quoteId)}/email`,
+    {
+      method: "POST",
+    }
+  );
+
+  const result = (await response.json().catch(() => null)) as EmailQuoteResponse | null;
+  const hasExplicitFailure = result?.success === false || result?.status === false;
+
+  if (!response.ok || hasExplicitFailure) {
+    throw new Error(result?.message || "Failed to send quote email.");
+  }
+
+  return result ?? {};
+}
 
 function formatMoney(value: number): string {
   if (value % 1 === 0) return `$${value.toLocaleString("en-US")}`;
@@ -302,6 +338,10 @@ export default function BoilerQuote() {
   const [showAllIncludedItems, setShowAllIncludedItems] = useState(false);
   const quoteId = searchParams.get("quoteId");
   const productIdFromQuery = searchParams.get("productId");
+  const { mutateAsync: mutateEmailQuote, isPending: isEmailingQuote } = useMutation({
+    mutationKey: ["email-quote"],
+    mutationFn: emailQuote,
+  });
 
   const { data: quote, isLoading: quoteLoading } = useQuoteById(quoteId);
   const quoteProductId =
@@ -351,6 +391,20 @@ export default function BoilerQuote() {
 
     const query = params.toString();
     router.push(query ? `/boilers/installation-booking?${query}` : "/boilers/installation-booking");
+  };
+
+  const handleSaveQuote = async () => {
+    if (!quoteId) {
+      toast.error("Quote ID not found. Please start again.");
+      return;
+    }
+
+    try {
+      const result = await mutateEmailQuote({ quoteId });
+      toast.success(result.message || "Quote email sent successfully.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send quote email.");
+    }
   };
 
   return (
@@ -424,9 +478,11 @@ export default function BoilerQuote() {
                     </Button>
                     <Button
                       variant="outline"
+                      disabled={isEmailingQuote}
+                      onClick={handleSaveQuote}
                       className="h-[48px] w-full rounded-[4px] border border-[#F5D64E] bg-transparent text-[18px] font-medium text-[#FFDE59] hover:bg-transparent"
                     >
-                      Save this quote
+                      {isEmailingQuote ? "Sending..." : "Save this quote"}
                       <Mail className="ml-1.5 h-3.5 w-3.5" />
                     </Button>
                   </div>

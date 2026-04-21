@@ -26,6 +26,7 @@ type ApiProduct = {
   boilerAbility?: string;
   boilerFeatures?: Array<ApiBoilerFeature | string>;
   boilerIncludedData?: string;
+  isBestSeller?: boolean;
 };
 
 type ProductsApiResponse = {
@@ -122,8 +123,15 @@ const toProductCardItem = (product: ApiProduct): ProductItem => {
       ? `was ${formatMoney(product.price)}`
       : "";
 
-  const monthlyCostValue = formatMoney(product.monthlyPrice);
-  const monthlyCost = monthlyCostValue ? `${monthlyCostValue}+` : "$0";
+  const monthlyPriceNumber =
+    typeof product.monthlyPrice === "number" && product.monthlyPrice > 0
+      ? product.monthlyPrice
+      : typeof product.payablePrice === "number" && product.payablePrice > 0
+        ? product.payablePrice / 12
+        : typeof product.price === "number" && product.price > 0
+          ? product.price / 12
+          : 0;
+  const monthlyCost = monthlyPriceNumber > 0 ? `${formatMoney(monthlyPriceNumber)}/mo` : "$0/mo";
 
   const discountAmount =
     typeof product.discountPrice === "number" && product.discountPrice > 0
@@ -136,7 +144,7 @@ const toProductCardItem = (product: ApiProduct): ProductItem => {
     id: product._id,
     title,
     boilerAbility,
-    topBadge: tags.some((tag) => /popular|best/i.test(tag)) ? "OUR BEST SELLER" : undefined,
+    topBadge: product.isBestSeller ? "OUR BEST SELLER" : undefined,
     tags,
     images: images.length ? images : [FALLBACK_IMAGE],
     summaryTitle,
@@ -148,6 +156,18 @@ const toProductCardItem = (product: ApiProduct): ProductItem => {
     monthlyCostOld: "",
     discountTitle: `${title} Discount`,
     discountValue: discountAmount > 0 ? `-$${discountAmount.toLocaleString("en-US")}` : "$0",
+    payablePriceValue:
+      typeof product.payablePrice === "number"
+        ? product.payablePrice
+        : typeof product.price === "number"
+          ? product.price
+          : 0,
+    priceValue: typeof product.price === "number" ? product.price : 0,
+    discountAmountValue: discountAmount,
+    monthlyPriceValue:
+      monthlyPriceNumber > 0
+        ? Number(monthlyPriceNumber.toFixed(2))
+        : undefined,
   };
 };
 

@@ -8,11 +8,18 @@ import { useMutation } from "@tanstack/react-query";
 import { BadgePercent, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { ExtraCard, ExtraCardSkeleton } from "./_components/ExtraCard";
+import FinanceCalculatorModal from "../_components/FinanceCalculatorModal";
 import { useExtras } from "../_hooks/useExtras";
 import { useProductById } from "../_hooks/useProductById";
 import { useQuoteById } from "../_hooks/useQuoteById";
 
 type UpdateExtraResponse = {
+  success?: boolean;
+  status?: boolean;
+  message?: string;
+};
+
+type EmailQuoteResponse = {
   success?: boolean;
   status?: boolean;
   message?: string;
@@ -55,6 +62,24 @@ async function updateQuoteExtra({
   return result ?? {};
 }
 
+async function emailQuote({ quoteId }: { quoteId: string }): Promise<EmailQuoteResponse> {
+  const response = await fetch(
+    `${resolveQuoteEndpoint()}/${encodeURIComponent(quoteId)}/email`,
+    {
+      method: "POST",
+    }
+  );
+
+  const result = (await response.json().catch(() => null)) as EmailQuoteResponse | null;
+  const hasExplicitFailure = result?.success === false || result?.status === false;
+
+  if (!response.ok || hasExplicitFailure) {
+    throw new Error(result?.message || "Failed to send quote email.");
+  }
+
+  return result ?? {};
+}
+
 function formatMoney(value: number): string {
   if (value % 1 === 0) return `$${value.toLocaleString("en-US")}`;
   return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -73,6 +98,10 @@ function ExtrasPageContent() {
   const { mutateAsync: mutateExtra, isPending: isUpdatingExtra } = useMutation({
     mutationKey: ["update-quote-extra"],
     mutationFn: updateQuoteExtra,
+  });
+  const { mutateAsync: mutateEmailQuote, isPending: isEmailingQuote } = useMutation({
+    mutationKey: ["email-quote"],
+    mutationFn: emailQuote,
   });
 
   const { data: extras = [], isLoading: extrasLoading } = useExtras();
@@ -101,6 +130,7 @@ function ExtrasPageContent() {
     quote?.extra && typeof quote.extra !== "string" ? quote.extra : null;
 
   const [selectedExtraId, setSelectedExtraId] = useState<string | null>(null);
+  const [isFinanceCalculatorOpen, setIsFinanceCalculatorOpen] = useState(false);
   const hasHydratedInitialExtra = useRef(false);
 
   useEffect(() => {
@@ -166,6 +196,20 @@ function ExtrasPageContent() {
       router.push(`/boilers/customer-details?${params.toString()}`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to update extra.");
+    }
+  };
+
+  const handleEmailQuote = async () => {
+    if (!quoteId) {
+      toast.error("Quote ID not found. Please start again.");
+      return;
+    }
+
+    try {
+      const result = await mutateEmailQuote({ quoteId });
+      toast.success(result.message || "Quote email sent successfully.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send quote email.");
     }
   };
 
@@ -330,6 +374,16 @@ function ExtrasPageContent() {
                 </span>
               </div>
 
+              <div className="mt-3 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setIsFinanceCalculatorOpen(true)}
+                  className="text-[#f96962] underline"
+                >
+                  View finance calculator
+                </button>
+              </div>
+
               <Button
                 disabled={isUpdatingExtra}
                 onClick={handleNextCheckout}
@@ -340,9 +394,11 @@ function ExtrasPageContent() {
 
               <Button
                 variant="outline"
+                disabled={isEmailingQuote}
+                onClick={handleEmailQuote}
                 className="mt-3 h-[48px] w-full rounded-[6px] border border-[#F5D64E] bg-transparent text-[15px] sm:text-[16px] font-medium text-[#F5C842] hover:bg-transparent"
               >
-                Email My quote
+                {isEmailingQuote ? "Sending..." : "Email My quote"}
                 <Mail className="ml-2 h-4 w-4" />
               </Button>
 
@@ -376,6 +432,20 @@ function ExtrasPageContent() {
         </div>
         </div>
       </div>
+
+      {product ? (
+        <FinanceCalculatorModal
+          open={isFinanceCalculatorOpen}
+          onOpenChange={setIsFinanceCalculatorOpen}
+          productName={product.boilerAbility || product.title}
+          totalPrice={payTodayTotal}
+          discountAmount={product.discountPrice ?? 0}
+          monthlyBasePrice={monthlyCost}
+          variant="controller"
+          onAddToBasket={handleNextCheckout}
+          onViewProductDetails={() => setIsFinanceCalculatorOpen(false)}
+        />
+      ) : null}
     </BoilerFlowShell>
   );
 }
