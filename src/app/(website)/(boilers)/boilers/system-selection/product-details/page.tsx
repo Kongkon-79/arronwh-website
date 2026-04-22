@@ -60,7 +60,7 @@ function SpecIcon({ label }: { label: string }) {
   if (l.includes("warranty")) return <ShieldCheck className="h-4 w-4 text-[#64748B]" />;
   if (l.includes("flow")) return <CircleDollarSign className="h-4 w-4 text-[#64748B]" />;
   if (l.includes("heating")) return <Flame className="h-4 w-4 text-[#64748B]" />;
-  return <Ruler className="h-4 w-4 text-[#64748B]" />;
+  return <Ruler className="h-5 w-5 text-[#64748B]" />;
 }
 
 const STATIC_FEATURE_ICON_IMAGES = [
@@ -310,7 +310,7 @@ function ProductDetailsPageContent() {
 
                   <div className="mt-3 space-y-2">
                     {summaryPoints.map((point) => (
-                      <p key={point} className="text-[14px] leading-6 text-[#2D3D4D]">
+                      <p key={point} className="text-[16px] leading-6 text-[#2D3D4D]">
                         {point}
                       </p>
                     ))}
@@ -322,7 +322,7 @@ function ProductDetailsPageContent() {
                     {topFeatures.map((feature) => (
                       <div
                         key={`${feature.title}-${feature.value}`}
-                        className="flex items-start justify-between gap-3 text-[13px] text-[#2D3D4D]"
+                        className="flex items-start justify-between gap-3 text-[16px] text-[#2D3D4D]"
                       >
                         <span>{feature.title}</span>
                         <div className="flex items-center gap-2 text-right">

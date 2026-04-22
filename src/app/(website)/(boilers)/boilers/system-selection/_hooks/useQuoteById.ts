@@ -36,11 +36,34 @@ export interface ApiQuoteExtra {
   images?: string[];
 }
 
+export interface ApiQuoteQuizAnswer {
+  question: string;
+  answer: string;
+}
+
+export interface ApiQuotePersonalInfo {
+  title?: string;
+  fastName?: string;
+  sureName?: string;
+  email?: string;
+  mobleNumber?: string;
+  postcode?: string | null;
+}
+
 export interface ApiQuote {
   _id: string;
   productId?: ApiQuoteProduct | string | null;
   controller?: ApiQuoteController | string | null;
   extra?: ApiQuoteExtra | string | null;
+  quizAnswers?: ApiQuoteQuizAnswer[];
+  personalInfo?: ApiQuotePersonalInfo | null;
+  installAddress?: string;
+  surveyDate?: string;
+  installDate?: string;
+  payByCard?: boolean;
+  payMounthly?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 type QuoteApiResponse = {

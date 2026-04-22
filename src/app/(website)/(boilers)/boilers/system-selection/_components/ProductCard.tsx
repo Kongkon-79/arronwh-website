@@ -112,6 +112,21 @@ export function ProductCard({ product }: { product: ProductItem }) {
     router.push(`/boilers/system-selection/controller?${params.toString()}`);
   };
 
+  const handleViewProductDetails = () => {
+    const params = new URLSearchParams();
+    params.set("productId", String(product.id));
+    if (quoteId) {
+      params.set("quoteId", quoteId);
+    }
+
+    const query = params.toString();
+    router.push(
+      query
+        ? `/boilers/system-selection/product-details?${query}`
+        : "/boilers/system-selection/product-details"
+    );
+  };
+
   return (
     <div className="overflow-hidden rounded-[6px] border border-[#00A56F] bg-white shadow-sm">
       {product.topBadge ? (
@@ -291,7 +306,7 @@ export function ProductCard({ product }: { product: ProductItem }) {
         discountAmount={product.discountAmountValue ?? 0}
         monthlyBasePrice={product.monthlyPriceValue}
         onAddToBasket={handleChooseProduct}
-        onViewProductDetails={() => setIsFinanceCalculatorOpen(false)}
+        onViewProductDetails={handleViewProductDetails}
       />
     </div>
   );

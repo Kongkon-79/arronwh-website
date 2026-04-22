@@ -1,10 +1,14 @@
 "use client";
 
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
-import { ChevronDown } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ChevronDown, RotateCcw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ProductCard, ProductItem } from "./ProductCard";
 import BoilerProductsPageSkeleton from "./BoilerProductsPageSkeleton";
+import { useQuoteById } from "../_hooks/useQuoteById";
+import { usePropertyOverviewStore } from "@/app/(website)/(boilers)/boilers/property-overview/_store/use-property-overview-store";
 
 type ApiBoilerFeature = {
   title?: string;
@@ -42,8 +46,72 @@ type ProductsApiResponse = {
   data: ApiProduct[];
 };
 
-const DEFAULT_FILTER_TEXT = "0-5 radiators, 1bed, 0 showers, 0 bathtubs";
+const DEFAULT_FILTER_TEXT = "0-5 radiators, 1 bedroom, 0 showers, 0 bathtubs";
 const FALLBACK_IMAGE = "/product.png";
+
+const answerByKeywords = (
+  quizAnswers: Array<{ question?: string; answer?: string }> | undefined,
+  keywords: string[]
+) => {
+  const answers = quizAnswers ?? [];
+
+  const matched = answers.find((item) => {
+    const normalizedQuestion = item.question?.toLowerCase() ?? "";
+    return keywords.every((keyword) => normalizedQuestion.includes(keyword));
+  });
+
+  return matched?.answer?.trim() ?? "";
+};
+
+const buildSelectedFilterText = (
+  quizAnswers: Array<{ question?: string; answer?: string }> | undefined
+) => {
+  if (!quizAnswers?.length) {
+    return DEFAULT_FILTER_TEXT;
+  }
+
+  const radiators = answerByKeywords(quizAnswers, ["radiator"]) || "0-5 radiators";
+  const bedrooms = answerByKeywords(quizAnswers, ["bedroom"]) || "1 bedroom";
+  const showers = answerByKeywords(quizAnswers, ["showers"]) || "0 showers";
+  const bathtubs = answerByKeywords(quizAnswers, ["bathtubs"]) || "0 bathtubs";
+
+  return `${radiators}, ${bedrooms}, ${showers}, ${bathtubs}`;
+};
+
+const buildQuoteHighlights = (
+  quizAnswers: Array<{ question?: string; answer?: string }> | undefined
+) => {
+  if (!quizAnswers?.length) {
+    return [];
+  }
+
+  const propertyType = answerByKeywords(quizAnswers, ["describes your home"]);
+  const currentBoilerPlace = answerByKeywords(quizAnswers, ["where's your current boiler"]);
+  const plannedBoilerPlace = answerByKeywords(quizAnswers, ["different place"]);
+  const fluePosition = answerByKeywords(quizAnswers, ["where does your flue come out"]);
+
+  return [propertyType, currentBoilerPlace, plannedBoilerPlace, fluePosition].filter(Boolean);
+};
+
+const resetPropertyOverviewStore = () => {
+  usePropertyOverviewStore.setState({
+    currentStep: 0,
+    answers: {},
+    selectedProductId: null,
+    personalInfo: {
+      title: "",
+      fastName: "",
+      sureName: "",
+      email: "",
+      mobleNumber: "",
+      postcode: "",
+    },
+    isSubmitting: false,
+    submitError: null,
+    submitSuccessMessage: null,
+    quoteId: null,
+  });
+};
 
 const stripHtml = (value?: string) =>
   value
@@ -172,7 +240,11 @@ const toProductCardItem = (product: ApiProduct): ProductItem => {
 };
 
 export default function BoilerProductsPage() {
-  const selectedFilter = DEFAULT_FILTER_TEXT;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const quoteId = searchParams.get("quoteId");
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const { data: quote, isLoading: isQuoteLoading } = useQuoteById(quoteId);
 
   const {
     data: productsData = [],
@@ -185,6 +257,41 @@ export default function BoilerProductsPage() {
   });
 
   const products = productsData.map(toProductCardItem);
+  const selectedFilter = useMemo(() => {
+    if (!quoteId) {
+      return DEFAULT_FILTER_TEXT;
+    }
+
+    if (isQuoteLoading) {
+      return "Loading your answers...";
+    }
+
+    return buildSelectedFilterText(quote?.quizAnswers);
+  }, [quote?.quizAnswers, isQuoteLoading, quoteId]);
+  const quoteHighlights = useMemo(
+    () => buildQuoteHighlights(quote?.quizAnswers).slice(0, 4),
+    [quote?.quizAnswers]
+  );
+  const quoteOwner = useMemo(() => {
+    if (!quote?.personalInfo) {
+      return "";
+    }
+
+    return [
+      quote.personalInfo.title,
+      quote.personalInfo.fastName,
+      quote.personalInfo.sureName,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+  }, [quote?.personalInfo]);
+
+  const handleResetAnswers = () => {
+    resetPropertyOverviewStore();
+    setIsResetModalOpen(false);
+    router.push("/boilers/property-overview");
+  };
 
   if (isLoading) {
     return <BoilerProductsPageSkeleton />;
@@ -196,13 +303,19 @@ export default function BoilerProductsPage() {
       <div className="bg-[#EEF2F5] px-3 py-4 sm:px-4 lg:px-0">
         <div className="mx-auto container">
           {/* Top Filter */}
-          <div className="mb-4 flex justify-end">
-            <div className="flex overflow-hidden rounded-full border border-[#D9E0E7] bg-white shadow-sm">
-              <button className="flex items-center gap-2 px-4 py-2 text-[12px] sm:text-[13px] font-medium text-[#2D3D4D]">
+          <div className="mb-5 flex flex-col items-end gap-2">
+            <div className="flex w-full max-w-[860px] flex-wrap overflow-hidden rounded-full border border-[#D9E0E7] bg-white shadow-sm sm:w-auto sm:flex-nowrap">
+              <button
+                type="button"
+                className="flex min-w-0 flex-1 items-center gap-2 px-4 py-2 text-left text-[12px] sm:text-[13px] font-medium text-[#2D3D4D]"
+              >
                 {selectedFilter}
-                <ChevronDown className="h-4 w-4" />
               </button>
-              <button className="border-l border-[#E5E7EB] px-4 py-2 text-[12px] sm:text-[13px] font-medium text-[#2D3D4D]">
+              <button
+                type="button"
+                onClick={() => setIsResetModalOpen(true)}
+                className="w-full border-t border-[#E5E7EB] px-4 py-2 text-[12px] sm:w-auto sm:border-l sm:border-t-0 sm:text-[13px] font-medium text-[#2D3D4D]"
+              >
                 Start again
               </button>
             </div>
@@ -223,6 +336,48 @@ export default function BoilerProductsPage() {
           </div>
         </div>
       </div>
+
+      {isResetModalOpen ? (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-[#233445]/45 px-4 backdrop-blur-[3px]"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="start-again-title"
+          onClick={() => setIsResetModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-[560px] rounded-[12px] bg-white p-4 shadow-[0_24px_64px_rgba(15,23,42,0.25)] sm:p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2
+              id="start-again-title"
+              className="text-center text-[28px] font-semibold leading-none text-[#233445] sm:text-[35px]"
+            >
+              Start again?
+            </h2>
+            <p className="mx-auto mt-4 max-w-[420px] text-center text-[18px] leading-[1.35] text-[#233445] sm:text-[24px]">
+              Continuing will reset your answers and take you back to the first question.
+            </p>
+
+            <button
+              type="button"
+              onClick={handleResetAnswers}
+              className="mt-6 inline-flex h-[58px] w-full items-center justify-center gap-3 rounded-[2px] bg-[#00A56F] px-4 text-[20px] font-medium text-white transition hover:bg-[#009562] sm:text-[24px]"
+            >
+              <RotateCcw className="h-6 w-6 sm:h-7 sm:w-7" />
+              Reset answers
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsResetModalOpen(false)}
+              className="mt-3 inline-flex h-[58px] w-full items-center justify-center rounded-[2px] border border-[#00A56F] bg-white px-4 text-[20px] font-medium text-[#00A56F] transition hover:bg-[#F1FCF8] sm:text-[24px]"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      ) : null}
     </BoilerFlowShell>
   );
 }
