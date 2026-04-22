@@ -2,42 +2,22 @@
 
 import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
-
-type FaqItem = {
-  question: string;
-  answer: string;
-};
-
-const faqItems: FaqItem[] = [
-  {
-    question: "Are yolo heat installers trained and Gas Safe registered?",
-    answer:
-      "Yes, all Yolo Heat installers are fully trained and Gas Safe registered.",
-  },
-  {
-    question: "What services do Yolo heat installers provide?",
-    answer:
-      "Yolo Heat installers offer installation, maintenance, and repair services for heating systems.",
-  },
-  {
-    question: "How can I book a Yolo heat installation service?",
-    answer:
-      "You can book a service through our website or by calling our customer service.",
-  },
-  {
-    question: "What types of heating systems do you install?",
-    answer:
-      "We install various heating systems including combi boilers, conventional boilers, and underfloor heating.",
-  },
-  {
-    question: "Do you offer emergency heating services?",
-    answer:
-      "Yes, we provide emergency heating services to ensure your home stays warm.",
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { FAQ_QUERY_KEY, fetchFaqs } from "./faq-data-type";
 
 const Faq = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const {
+    data: faqItems = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery({
+    queryKey: FAQ_QUERY_KEY,
+    queryFn: fetchFaqs,
+  });
 
   return (
     <section className="bg-white py-6 md:py-8 lg:py-10">
@@ -50,11 +30,40 @@ const Faq = () => {
           </div>
 
           <div className="mt-8 space-y-3 md:mt-10">
-            {faqItems.map((item, index) => {
+            {isLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="animate-pulse border-b border-[#2D3D4D] pb-2">
+                    <div className="h-6 w-4/5 rounded bg-[#EEF2F5]" />
+                    <div className="mt-2 h-4 w-full rounded bg-[#EEF2F5]" />
+                  </div>
+                ))}
+              </div>
+            ) : isError ? (
+              <div className="rounded-lg border border-[#F2B8B5] bg-[#FFF5F4] p-4 text-[#7A2D2A]">
+                <p className="text-sm md:text-base">
+                  {error instanceof Error
+                    ? error.message
+                    : "Unable to load FAQs right now. Please try again."}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => refetch()}
+                  disabled={isFetching}
+                  className="mt-3 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isFetching ? "Retrying..." : "Try again"}
+                </button>
+              </div>
+            ) : faqItems.length === 0 ? (
+              <div className="rounded-lg border border-[#DDE4EC] bg-[#F8FAFC] p-4 text-sm md:text-base text-[#2D3D4D]">
+                No FAQs found at the moment.
+              </div>
+            ) : faqItems.map((item, index) => {
               const isOpen = openIndex === index;
 
               return (
-                <div key={item.question} className="border-b border-[2D3D4D] pb-2">
+                <div key={item._id || item.question} className="border-b border-[#2D3D4D] pb-2">
                   <button
                     type="button"
                     onClick={() => setOpenIndex(isOpen ? null : index)}
