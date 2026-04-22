@@ -1,6 +1,8 @@
 "use client";
 
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
+import HelpContainer from "@/app/(website)/helps/_components.tsx/help-container";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, Info, MessageCircleQuestion } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -48,6 +50,7 @@ const PropertyOverviewContainer = () => {
   const [isPostcodeStep, setIsPostcodeStep] = useState(false);
   const [isOtherRoomPrompt, setIsOtherRoomPrompt] = useState(false);
   const [otherRoomName, setOtherRoomName] = useState("");
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const step = propertyChoiceSteps[currentStep];
   const maxStep = propertyChoiceSteps.length - 1;
@@ -798,13 +801,23 @@ const PropertyOverviewContainer = () => {
               ))}
             </div>
 
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 border-l border-[#E7ECF3] px-3 text-lg md:text-xl font-normal text-[#2D3D4D] leading-normal transition hover:bg-[#F8FAFC]"
-            >
-              <MessageCircleQuestion className="h-6 w-6" />
-              Help
-            </button>
+            <Sheet open={isHelpOpen} onOpenChange={setIsHelpOpen}>
+              <SheetTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 border-l border-[#E7ECF3] px-3 text-lg md:text-xl font-normal text-[#2D3D4D] leading-normal transition hover:bg-[#F8FAFC]"
+                >
+                  <MessageCircleQuestion className="h-6 w-6" />
+                  Help
+                </button>
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="w-full border-l-0 p-0 sm:max-w-[530px] [&>button]:hidden"
+              >
+                <HelpContainer embedded onClose={() => setIsHelpOpen(false)} />
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>

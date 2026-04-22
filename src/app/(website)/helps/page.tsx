@@ -1,9 +1,7 @@
-import React from 'react'
+import HelpContainer from "./_components.tsx/help-container";
 
 const HelpsPage = () => {
-  return (
-    <div>HelpsPage</div>
-  )
-}
+  return <HelpContainer />;
+};
 
-export default HelpsPage
+export default HelpsPage;

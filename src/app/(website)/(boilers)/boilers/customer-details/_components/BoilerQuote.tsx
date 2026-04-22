@@ -232,7 +232,6 @@ function SummaryCard({
   product,
   payTodayTotal,
   originalTotal,
-  quotePriceItem,
 }: {
   product: ApiProductFull;
   controller: ApiQuoteController | null;

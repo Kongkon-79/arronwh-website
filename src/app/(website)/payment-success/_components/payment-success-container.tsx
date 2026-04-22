@@ -46,7 +46,7 @@ export default function PaymentSuccessContainer() {
         </h1>
 
         <p className="text-sm text-[#64748B] mt-2 leading-[150%]">
-          Thank you! Your payment has been processed successfully.
+          Thank you! Your payment has been processed successfully. 
         </p>
 
         <div className="mt-6 bg-[#F1F5F9] rounded-lg p-4 text-left">
