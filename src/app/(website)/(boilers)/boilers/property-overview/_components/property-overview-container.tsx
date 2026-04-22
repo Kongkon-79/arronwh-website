@@ -18,6 +18,15 @@ const topSteps = [
   { id: 4, title: "4. Installation Booking" },
 ];
 
+const parsePriceTag = (priceTag?: string): number | undefined => {
+  if (!priceTag) return undefined;
+
+  const numericValue = Number(priceTag.replace(/[^\d.]/g, ""));
+  if (Number.isNaN(numericValue) || numericValue < 0) return undefined;
+
+  return numericValue;
+};
+
 const PropertyOverviewContainer = () => {
   const router = useRouter();
   const pathname = usePathname();
@@ -80,10 +89,19 @@ const PropertyOverviewContainer = () => {
   const quizAnswers = useMemo(
     () =>
       propertyChoiceSteps
-        .map((item) => ({
-          question: item.question,
-          answer: answers[item.id] || "",
-        }))
+        .map((item) => {
+          const selectedAnswer = answers[item.id] || "";
+          const selectedOption = item.options.find(
+            (option) => option.value === selectedAnswer,
+          );
+          const parsedPrice = parsePriceTag(selectedOption?.priceTag);
+
+          return {
+            question: item.question,
+            answer: selectedAnswer,
+            ...(parsedPrice !== undefined ? { price: parsedPrice } : {}),
+          };
+        })
         .filter((item) => item.answer),
     [answers],
   );
