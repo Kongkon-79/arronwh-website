@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import {
   EXPLORE_HEATING_PRODUCTS_QUERY_KEY,
   fetchExploreHeatingProducts,
@@ -117,23 +118,36 @@ const ExploreOurHeating = () => {
                 </article>
               ))
             ) : isError ? (
-              <div className="md:col-span-2 rounded-lg border border-[#F2B8B5] bg-[#FFF5F4] p-4 text-[#7A2D2A]">
-                <p className="text-sm md:text-base">
-                  {error instanceof Error
-                    ? error.message
-                    : "Unable to load products right now. Please try again."}
-                </p>
+              <div className="md:col-span-2 rounded-2xl border border-[#F2B8B5] bg-[#FFF5F4] p-5 text-[#7A2D2A] shadow-sm md:p-6">
+                <div className="flex flex-col items-center text-center">
+                  <span className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#FFDCD9] text-[#B63730]">
+                    <AlertTriangle className="h-4 w-4" />
+                  </span>
+                  <div className="mt-3">
+                    <p className="text-base font-semibold leading-normal md:text-lg">
+                      We could not load heating products
+                    </p>
+                    <p className="mt-1 text-sm leading-normal md:text-base">
+                      {error instanceof Error
+                        ? error.message
+                        : "Something went wrong while loading products. Please try again."}
+                    </p>
+                    <p className="mt-1 text-xs leading-normal text-[#8A3A36] md:text-sm">
+                      You can refresh now and continue from where you left off.
+                    </p>
+                  </div>
+                </div>
                 <button
                   type="button"
                   onClick={() => refetch()}
                   disabled={isFetching}
-                  className="mt-3 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mx-auto mt-4 block rounded-md bg-[#B63730] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#9C2E29] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isFetching ? "Retrying..." : "Try again"}
+                  {isFetching ? "Trying again..." : "Try again"}
                 </button>
               </div>
             ) : exploreCards.length === 0 ? (
-              <div className="md:col-span-2 rounded-lg border border-[#DDE4EC] bg-[#F8FAFC] p-4 text-sm md:text-base text-[#2D3D4D]">
+              <div className="md:col-span-2 rounded-lg border border-[#DDE4EC] bg-[#F8FAFC] p-4 text-center text-sm text-[#2D3D4D] md:text-base">
                 No products found at the moment.
               </div>
             ) : (
