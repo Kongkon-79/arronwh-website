@@ -251,7 +251,6 @@ function PriceSummary({
   product,
   payTodayTotal,
   originalTotal,
-  quotePriceItem,
 }: {
   product: ApiProductFull;
   payTodayTotal: number;

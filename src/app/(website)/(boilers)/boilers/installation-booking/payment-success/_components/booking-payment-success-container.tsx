@@ -238,20 +238,7 @@ function buildDetailRows(quote: BookingQuote | null, product: BookingProduct | n
   return rows;
 }
 
-function getPaymentStatusLabel(rawStatus: string | null): string {
-  if (!rawStatus) return "Confirmed";
 
-  switch (rawStatus) {
-    case "succeeded":
-      return "Paid";
-    case "processing":
-      return "Processing";
-    case "requires_capture":
-      return "Authorized";
-    default:
-      return "Confirmed";
-  }
-}
 
 function FooterDisclaimer() {
   return (
@@ -269,8 +256,6 @@ export default function BookingPaymentSuccessContainer() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const bookingId = searchParams.get("bookingId");
-  const paymentIntentId = searchParams.get("paymentIntentId");
-  const paymentStatus = searchParams.get("paymentStatus");
   const quoteId = searchParams.get("quoteId");
   const productId = searchParams.get("productId");
 
@@ -334,8 +319,6 @@ export default function BookingPaymentSuccessContainer() {
 
   const detailRows = React.useMemo(() => buildDetailRows(quote, product), [quote, product]);
 
-  const paymentBadge = getPaymentStatusLabel(paymentStatus);
-
   const customerDetailsUrl = React.useMemo(() => {
     const params = new URLSearchParams();
     if (quoteId) {
@@ -379,15 +362,7 @@ export default function BookingPaymentSuccessContainer() {
               Thanks {fullName}. Your payment has been received and your installation booking is confirmed.
             </p>
 
-            {paymentIntentId ? (
-              <div className="mx-auto mt-4 flex max-w-[460px] items-center justify-center gap-2 rounded-[6px] bg-[#F0F3F6] px-3 py-2 text-[13px] text-[#2D3D4D]">
-                <span className="font-semibold">Payment Ref:</span>
-                <span className="truncate">{paymentIntentId}</span>
-                <span className="rounded-full bg-[#E4F8EE] px-2 py-0.5 text-[11px] font-semibold text-[#0A7E52]">
-                  {paymentBadge}
-                </span>
-              </div>
-            ) : null}
+        
 
             {!bookingId ? (
               <div className="mt-6 rounded-[6px] border border-[#f0b4b4] bg-[#fff6f6] px-4 py-3 text-center text-[14px] text-[#b42318]">

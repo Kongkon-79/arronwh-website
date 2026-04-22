@@ -428,7 +428,6 @@ function PriceSummary({
   originalTotal,
   installDateLabel,
   installedAtLabel,
-  quotePriceItem,
 }: {
   product: ApiProductFull;
   payTodayTotal: number;
