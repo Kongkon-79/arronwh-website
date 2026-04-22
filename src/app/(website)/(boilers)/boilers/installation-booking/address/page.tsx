@@ -13,12 +13,18 @@ import {
   useQuoteById,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useQuoteById";
 import {
+  type QuotePriceAdjustmentItem,
+  getPrimaryQuotePriceAdjustmentItem,
+  getQuotePriceAdjustmentTotal,
+} from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
+import {
   BadgePercent,
   CalendarDays,
   CreditCard,
   MapPin,
   ShieldCheck,
 } from "lucide-react";
+import Link from "next/link";
 
 type PostcodeLocation = {
   area: string;
@@ -385,7 +391,13 @@ function getWarrantyText(product: ApiProductFull): string | undefined {
   return `with ${warrantyFeature.value} warranty`;
 }
 
-function TopBanner({ payTodayTotal }: { payTodayTotal: number }) {
+function TopBanner({
+  payTodayTotal,
+  onViewDetails,
+}: {
+  payTodayTotal: number;
+  onViewDetails: () => void;
+}) {
   return (
     <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4">
       <div className="flex items-start justify-between gap-3">
@@ -398,7 +410,11 @@ function TopBanner({ payTodayTotal }: { payTodayTotal: number }) {
             Installation available from next working day- choose your install date below
           </p>
         </div>
-        <button className="shrink-0 pt-1 text-[16px] font-bold text-[#FFDE59] underline underline-offset-2">
+        <button
+          type="button"
+          onClick={onViewDetails}
+          className="shrink-0 pt-1 text-[16px] font-bold text-[#FFDE59] underline underline-offset-2"
+        >
           View
         </button>
       </div>
@@ -412,12 +428,14 @@ function PriceSummary({
   originalTotal,
   installDateLabel,
   installedAtLabel,
+  quotePriceItem,
 }: {
   product: ApiProductFull;
   payTodayTotal: number;
   originalTotal: number;
   installDateLabel: string;
   installedAtLabel: string;
+  quotePriceItem: QuotePriceAdjustmentItem | null;
 }) {
   return (
     <aside className="h-fit rounded-[8px] bg-white p-3 shadow-sm xl:sticky xl:top-5">
@@ -480,6 +498,15 @@ function PriceSummary({
               {installedAtLabel}
             </span>
           </div>
+
+          {quotePriceItem ? (
+            <div className="flex items-start justify-between gap-3 border-t border-dotted border-[#A7B1BB] pt-2">
+              <span className="text-[18px] text-[#2D3D4D]">{quotePriceItem.label}</span>
+              <span className="text-right text-[18px] font-semibold text-[#2D3D4D]">
+                {formatMoney(quotePriceItem.price)}
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
     </aside>
@@ -621,15 +648,17 @@ function AddressStep({
           <button
             type="button"
             onClick={onManualAddressClick}
-            className="text-[14px] font-medium text-[#FFDE59] underline underline-offset-2"
+            className="text-[18px] font-medium text-[#FFDE59] underline underline-offset-2"
           >
             Enter address manually
           </button>
         </div>
 
-        <p className="mt-5 text-[14px] text-[#2D3D4D]">
+        <p className="mt-5 text-[16px] text-[#2D3D4D]">
           Your personal data will processed in accordance with our{" "}
-          <span className="text-[#FFDE59] underline underline-offset-2">Privacy policy</span>
+          <Link href="/privacy-policy">
+            <span className="text-[#FFDE59] underline underline-offset-2">Privacy policy</span>
+          </Link>
         </p>
 
         <button
@@ -693,6 +722,17 @@ function BoilerAddressPageContent() {
       ? `/boilers/installation-booking/payment-method?${query}`
       : "/boilers/installation-booking/payment-method";
   }, [quoteId, resolvedProductId, searchParams]);
+  const customerDetailsUrl = React.useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (resolvedProductId) {
+      params.set("productId", resolvedProductId);
+    }
+    if (quoteId) {
+      params.set("quoteId", quoteId);
+    }
+    const query = params.toString();
+    return query ? `/boilers/customer-details?${query}` : "/boilers/customer-details";
+  }, [quoteId, resolvedProductId, searchParams]);
 
   const { data: product, isLoading: productLoading } = useProductById(resolvedProductId);
 
@@ -709,12 +749,17 @@ function BoilerAddressPageContent() {
     selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0
       ? selectedExtra.price
       : 0;
+  const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
+  const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
 
   const payTodayTotal = product
-    ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.payablePrice ?? product.price ?? 0) +
+      selectedControllerPrice +
+      selectedExtraPrice +
+      quotePriceAdjustment
     : 0;
   const originalTotal = product
-    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice + quotePriceAdjustment
     : 0;
 
   const isLoading = (quoteId ? quoteLoading : false) || (resolvedProductId ? productLoading : false);
@@ -763,7 +808,10 @@ function BoilerAddressPageContent() {
           ) : (
             <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
               <section className="space-y-4">
-                <TopBanner payTodayTotal={payTodayTotal} />
+                <TopBanner
+                  payTodayTotal={payTodayTotal}
+                  onViewDetails={() => router.push(customerDetailsUrl)}
+                />
                 <CollapsedStep icon={CalendarDays} label="When should we Survey?" />
                 <CollapsedStep icon={CalendarDays} label="When should we install?" />
                 <AddressStep
@@ -785,6 +833,7 @@ function BoilerAddressPageContent() {
                   originalTotal={originalTotal}
                   installDateLabel={installDateLabel}
                   installedAtLabel={installedAtLabel}
+                  quotePriceItem={quotePriceItem}
                 />
               </div>
             </div>

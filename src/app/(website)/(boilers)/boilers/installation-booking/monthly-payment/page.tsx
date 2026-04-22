@@ -23,6 +23,11 @@ import {
   type ApiQuoteExtra,
   useQuoteById,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useQuoteById";
+import {
+  type QuotePriceAdjustmentItem,
+  getPrimaryQuotePriceAdjustmentItem,
+  getQuotePriceAdjustmentTotal,
+} from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
 
 type UpdateQuotePaymentMethodPayload = {
@@ -209,9 +214,11 @@ function calculateMonthlyPayment(principal: number, months: number, apr: number)
 function TopBanner({
   totalPrice,
   isLoading,
+  onViewDetails,
 }: {
   totalPrice: number;
   isLoading: boolean;
+  onViewDetails: () => void;
 }) {
   return (
     <div className="rounded-[10px] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-[#e8eaed] sm:px-6">
@@ -225,7 +232,11 @@ function TopBanner({
             Installation available from next working day- choose your install date below
           </p>
         </div>
-        <button className="shrink-0 pt-1 text-[16px] font-medium text-[#d4a62c] underline underline-offset-2">
+        <button
+          type="button"
+          onClick={onViewDetails}
+          className="shrink-0 pt-1 text-[16px] font-bold text-[#FFDE59] underline underline-offset-2"
+        >
           View
         </button>
       </div>
@@ -242,6 +253,7 @@ function PriceSummary({
   installDateLabel,
   installedAtLabel,
   isLoading,
+  quotePriceItem,
 }: {
   product: ApiProductFull | null;
   payTodayValue: number;
@@ -251,6 +263,7 @@ function PriceSummary({
   installDateLabel: string;
   installedAtLabel: string;
   isLoading: boolean;
+  quotePriceItem: QuotePriceAdjustmentItem | null;
 }) {
   if (isLoading) {
     return (
@@ -331,6 +344,16 @@ function PriceSummary({
             <span className="text-[18px] text-[#2D3D4D]">Installed at</span>
             <span className="text-right text-[18px] font-semibold text-[#2D3D4D]">{installedAtLabel}</span>
           </div>
+
+          {quotePriceItem ? (
+            <div className="flex items-start justify-between gap-3 border-t border-dotted border-[#A7B1BB] pt-2">
+              <span className="text-[18px] text-[#2D3D4D]">{quotePriceItem.label}</span>
+              <span className="text-right text-[18px] font-semibold text-[#2D3D4D]">
+                {formatMoney(quotePriceItem.price)}
+              </span>
+            </div>
+          ) : null}
+
         </div>
       </div>
     </aside>
@@ -950,6 +973,17 @@ function BoilerFinanceCloneContent() {
   const quoteProductId =
     typeof quote?.productId === "string" ? quote.productId : quote?.productId?._id ?? null;
   const resolvedProductId = productIdFromQuery ?? quoteProductId;
+  const customerDetailsUrl = React.useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (resolvedProductId) {
+      params.set("productId", resolvedProductId);
+    }
+    if (quoteId) {
+      params.set("quoteId", quoteId);
+    }
+    const query = params.toString();
+    return query ? `/boilers/customer-details?${query}` : "/boilers/customer-details";
+  }, [quoteId, resolvedProductId, searchParams]);
   const { data: product, isLoading: productLoading } = useProductById(resolvedProductId);
 
   const selectedController: ApiQuoteController | null =
@@ -965,12 +999,17 @@ function BoilerFinanceCloneContent() {
     selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0
       ? selectedExtra.price
       : 0;
+  const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
+  const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
 
   const totalPrice = product
-    ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.payablePrice ?? product.price ?? 0) +
+      selectedControllerPrice +
+      selectedExtraPrice +
+      quotePriceAdjustment
     : 0;
   const originalTotal = product
-    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice + quotePriceAdjustment
     : 0;
 
   const payTodaySidebarValue = totalPrice;
@@ -989,7 +1028,11 @@ function BoilerFinanceCloneContent() {
         <div className="mx-auto container">
           <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
             <section className="space-y-4">
-              <TopBanner totalPrice={totalPrice} isLoading={isLoading} />
+              <TopBanner
+                totalPrice={totalPrice}
+                isLoading={isLoading}
+                onViewDetails={() => router.push(customerDetailsUrl)}
+              />
               <CollapsedStep label="When should we Survey?" />
               <CollapsedStep label="When should we install?" />
               <CollapsedStep label="Where are we visiting?" />
@@ -1019,6 +1062,7 @@ function BoilerFinanceCloneContent() {
                 installDateLabel={installDateLabel}
                 installedAtLabel={installedAtLabel}
                 isLoading={isLoading}
+                quotePriceItem={quotePriceItem}
               />
             </div>
           </div>

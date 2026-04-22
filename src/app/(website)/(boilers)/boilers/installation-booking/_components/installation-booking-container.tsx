@@ -11,6 +11,11 @@ import {
   useQuoteById,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useQuoteById";
 import {
+  type QuotePriceAdjustmentItem,
+  getPrimaryQuotePriceAdjustmentItem,
+  getQuotePriceAdjustmentTotal,
+} from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
+import {
   BadgePercent,
   CalendarDays,
   ChevronDown,
@@ -217,7 +222,13 @@ function getWarrantyText(product: ApiProductFull): string | undefined {
   return `with ${warrantyFeature.value} warranty`;
 }
 
-function TopBanner({ payTodayTotal }: { payTodayTotal: number }) {
+function TopBanner({
+  payTodayTotal,
+  onViewDetails,
+}: {
+  payTodayTotal: number;
+  onViewDetails: () => void;
+}) {
   return (
     <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4">
       <div className="flex items-start justify-between gap-3">
@@ -230,7 +241,11 @@ function TopBanner({ payTodayTotal }: { payTodayTotal: number }) {
             Installation available from next working day- choose your install date below
           </p>
         </div>
-        <button className="shrink-0 pt-1 text-[16px] font-bold text-[#FFDE59] underline underline-offset-2">
+        <button
+          type="button"
+          onClick={onViewDetails}
+          className="shrink-0 pt-1 text-[16px] font-bold text-[#FFDE59] underline underline-offset-2"
+        >
           View
         </button>
       </div>
@@ -242,10 +257,12 @@ function PriceSummary({
   product,
   payTodayTotal,
   originalTotal,
+  quotePriceItem,
 }: {
   product: ApiProductFull;
   payTodayTotal: number;
   originalTotal: number;
+  quotePriceItem: QuotePriceAdjustmentItem | null;
 }) {
   return (
     <aside className="h-fit rounded-[8px] bg-white p-3 shadow-sm xl:sticky xl:top-5">
@@ -296,6 +313,15 @@ function PriceSummary({
               ) : null}
             </div>
           </div>
+
+          {quotePriceItem ? (
+            <div className="flex items-start justify-between gap-3 border-b border-dotted border-[#A7B1BB] pb-2">
+              <span className="text-[16px] text-[#2D3D4D]">{quotePriceItem.label}</span>
+              <span className="text-right text-[16px] font-semibold text-[#2D3D4D]">
+                {formatMoney(quotePriceItem.price)}
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
     </aside>
@@ -581,6 +607,17 @@ export default function InstallationBookingContainer() {
   const quoteProductId =
     typeof quote?.productId === "string" ? quote.productId : quote?.productId?._id ?? null;
   const resolvedProductId = productIdFromQuery ?? quoteProductId;
+  const customerDetailsUrl = React.useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (resolvedProductId) {
+      params.set("productId", resolvedProductId);
+    }
+    if (quoteId) {
+      params.set("quoteId", quoteId);
+    }
+    const query = params.toString();
+    return query ? `/boilers/customer-details?${query}` : "/boilers/customer-details";
+  }, [quoteId, resolvedProductId, searchParams]);
 
   const { data: product, isLoading: productLoading } = useProductById(resolvedProductId);
 
@@ -597,15 +634,20 @@ export default function InstallationBookingContainer() {
     selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0
       ? selectedExtra.price
       : 0;
+  const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
+  const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
 
   const [selectedSurveyDate, setSelectedSurveyDate] = React.useState<string | null>(null);
   const selectedDateSurcharge = isSaturdayDateKey(selectedSurveyDate) ? SATURDAY_SURCHARGE : 0;
 
   const payTodayTotalBase = product
-    ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.payablePrice ?? product.price ?? 0) +
+      selectedControllerPrice +
+      selectedExtraPrice +
+      quotePriceAdjustment
     : 0;
   const originalTotalBase = product
-    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice + quotePriceAdjustment
     : 0;
   const payTodayTotal = payTodayTotalBase + selectedDateSurcharge;
   const originalTotal = originalTotalBase + selectedDateSurcharge;
@@ -679,7 +721,10 @@ export default function InstallationBookingContainer() {
           ) : (
             <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
               <section className="space-y-4">
-                <TopBanner payTodayTotal={payTodayTotal} />
+                <TopBanner
+                  payTodayTotal={payTodayTotal}
+                  onViewDetails={() => router.push(customerDetailsUrl)}
+                />
                 <SurveySection
                   blockedDateKeys={blockedDateKeys}
                   isBookingDatesLoading={installSurveyDataLoading}
@@ -704,7 +749,12 @@ export default function InstallationBookingContainer() {
               </section>
 
               <div>
-                <PriceSummary product={product} payTodayTotal={payTodayTotal} originalTotal={originalTotal} />
+                <PriceSummary
+                  product={product}
+                  payTodayTotal={payTodayTotal}
+                  originalTotal={originalTotal}
+                  quotePriceItem={quotePriceItem}
+                />
               </div>
             </div>
           )}

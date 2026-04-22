@@ -22,6 +22,10 @@ import {
   useQuoteById,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useQuoteById";
 import { useProductById } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useProductById";
+import {
+  getPrimaryQuotePriceAdjustmentItem,
+  getQuotePriceAdjustmentTotal,
+} from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
 
 function stripHtml(value?: string) {
   return (
@@ -60,7 +64,7 @@ function SpecIcon({ label }: { label: string }) {
   if (l.includes("warranty")) return <ShieldCheck className="h-4 w-4 text-[#64748B]" />;
   if (l.includes("flow")) return <CircleDollarSign className="h-4 w-4 text-[#64748B]" />;
   if (l.includes("heating")) return <Flame className="h-4 w-4 text-[#64748B]" />;
-  return <Ruler className="h-4 w-4 text-[#64748B]" />;
+  return <Ruler className="h-5 w-5 text-[#64748B]" />;
 }
 
 const STATIC_FEATURE_ICON_IMAGES = [
@@ -161,12 +165,17 @@ function ProductDetailsPageContent() {
     selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0
       ? selectedExtra.price
       : 0;
+  const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
+  const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
 
   const payTodayTotal = product
-    ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.payablePrice ?? product.price ?? 0) +
+      selectedControllerPrice +
+      selectedExtraPrice +
+      quotePriceAdjustment
     : 0;
   const originalTotal = product
-    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice + quotePriceAdjustment
     : 0;
   const monthlyCost = payTodayTotal > 0 ? payTodayTotal / 12 : 0;
 
@@ -310,7 +319,7 @@ function ProductDetailsPageContent() {
 
                   <div className="mt-3 space-y-2">
                     {summaryPoints.map((point) => (
-                      <p key={point} className="text-[14px] leading-6 text-[#2D3D4D]">
+                      <p key={point} className="text-[16px] leading-6 text-[#2D3D4D]">
                         {point}
                       </p>
                     ))}
@@ -322,7 +331,7 @@ function ProductDetailsPageContent() {
                     {topFeatures.map((feature) => (
                       <div
                         key={`${feature.title}-${feature.value}`}
-                        className="flex items-start justify-between gap-3 text-[13px] text-[#2D3D4D]"
+                        className="flex items-start justify-between gap-3 text-[16px] text-[#2D3D4D]"
                       >
                         <span>{feature.title}</span>
                         <div className="flex items-center gap-2 text-right">
@@ -365,6 +374,17 @@ function ProductDetailsPageContent() {
                     -{formatMoney(product.discountPrice ?? 0)}
                   </span>
                 </div>
+
+                {quotePriceItem ? (
+                  <div className="mt-3 rounded-[6px] bg-white px-2.5 py-2">
+                    <div className="flex items-center justify-between gap-3 border-b border-dotted border-[#A7B1BB] pb-1.5">
+                      <span className="text-[13px] text-[#2D3D4D]">{quotePriceItem.label}</span>
+                      <span className="text-[13px] font-semibold text-[#2D3D4D]">
+                        {formatMoney(quotePriceItem.price)}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
 
                 <Button
                   className="mt-4 h-[46px] w-full rounded-[6px] bg-[#00A56F] text-[15px] sm:text-[16px] font-medium text-white hover:bg-[#009562]"

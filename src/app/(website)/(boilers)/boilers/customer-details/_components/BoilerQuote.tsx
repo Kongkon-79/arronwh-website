@@ -30,6 +30,11 @@ import {
   type ApiQuoteExtra,
   useQuoteById,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useQuoteById";
+import {
+  type QuotePriceAdjustmentItem,
+  getPrimaryQuotePriceAdjustmentItem,
+  getQuotePriceAdjustmentTotal,
+} from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
 
 type IncludedItem = {
   icon: ElementType;
@@ -103,7 +108,8 @@ function getWarrantyText(product: ApiProductFull): string | undefined {
 function buildIncludedItems(
   product: ApiProductFull,
   controller: ApiQuoteController | null,
-  extra: ApiQuoteExtra | null
+  extra: ApiQuoteExtra | null,
+  quotePriceItem: QuotePriceAdjustmentItem | null
 ): IncludedItem[] {
   const items: IncludedItem[] = [
     {
@@ -133,6 +139,15 @@ function buildIncludedItems(
       subtitle: "Selected extra",
       price: formatAddonPrice(extra.price ?? 0),
       image: extra.images?.[0] ?? "/product.png",
+    });
+  }
+
+  if (quotePriceItem) {
+    items.push({
+      icon: BadgeDollarSign,
+      title: quotePriceItem.label,
+      subtitle: "Quote adjustment",
+      price: formatMoney(quotePriceItem.price),
     });
   }
 
@@ -217,12 +232,14 @@ function SummaryCard({
   product,
   payTodayTotal,
   originalTotal,
+  quotePriceItem,
 }: {
   product: ApiProductFull;
   controller: ApiQuoteController | null;
   extra: ApiQuoteExtra | null;
   payTodayTotal: number;
   originalTotal: number;
+  quotePriceItem: QuotePriceAdjustmentItem | null;
 }) {
   return (
     <div className="h-fit rounded-[8px] bg-white p-3 shadow-sm xl:sticky xl:top-5">
@@ -275,7 +292,16 @@ function SummaryCard({
               ) : null}
             </div>
           </div>
-   
+
+          {quotePriceItem ? (
+            <div className="flex items-start justify-between gap-3 border-b border-dotted border-[#A7B1BB] pb-2">
+              <span className="text-[16px] text-[#2D3D4D]">{quotePriceItem.label}</span>
+              <span className="text-right text-[16px] font-semibold text-[#2D3D4D]">
+                {formatMoney(quotePriceItem.price)}
+              </span>
+            </div>
+          ) : null}
+
         </div>
       </div>
     </div>
@@ -365,15 +391,22 @@ export default function BoilerQuote() {
     selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0
       ? selectedExtra.price
       : 0;
+  const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
+  const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
 
   const payTodayTotal = product
-    ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.payablePrice ?? product.price ?? 0) +
+      selectedControllerPrice +
+      selectedExtraPrice +
+      quotePriceAdjustment
     : 0;
   const originalTotal = product
-    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice + quotePriceAdjustment
     : 0;
 
-  const includedItems = product ? buildIncludedItems(product, selectedController, selectedExtra) : [];
+  const includedItems = product
+    ? buildIncludedItems(product, selectedController, selectedExtra, quotePriceItem)
+    : [];
   const hasMoreIncludedItems = includedItems.length > DEFAULT_VISIBLE_INCLUDE_ITEMS;
   const visibleIncludedItems = showAllIncludedItems
     ? includedItems
@@ -510,6 +543,7 @@ export default function BoilerQuote() {
                 extra={selectedExtra}
                 payTodayTotal={payTodayTotal}
                 originalTotal={originalTotal}
+                quotePriceItem={quotePriceItem}
               />
             </div>
           )}

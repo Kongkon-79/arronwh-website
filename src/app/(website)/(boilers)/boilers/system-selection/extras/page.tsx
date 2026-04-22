@@ -12,6 +12,10 @@ import FinanceCalculatorModal from "../_components/FinanceCalculatorModal";
 import { useExtras } from "../_hooks/useExtras";
 import { useProductById } from "../_hooks/useProductById";
 import { useQuoteById } from "../_hooks/useQuoteById";
+import {
+  getPrimaryQuotePriceAdjustmentItem,
+  getQuotePriceAdjustmentTotal,
+} from "../_utils/quote-price-adjustment";
 
 type UpdateExtraResponse = {
   success?: boolean;
@@ -162,12 +166,17 @@ function ExtrasPageContent() {
     selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0
       ? selectedExtra.price
       : 0;
+  const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
+  const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
 
   const payTodayTotal = product
-    ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.payablePrice ?? product.price ?? 0) +
+      selectedControllerPrice +
+      selectedExtraPrice +
+      quotePriceAdjustment
     : 0;
   const originalTotal = product
-    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice + quotePriceAdjustment
     : 0;
   const monthlyCost = payTodayTotal / 12;
 
@@ -255,6 +264,15 @@ function ExtrasPageContent() {
               {
                 label: selectedExtra.title,
                 value: formatControllerPrice(selectedExtraPrice),
+                highlight: false,
+              },
+            ]
+          : []),
+        ...(quotePriceItem
+          ? [
+              {
+                label: quotePriceItem.label,
+                value: formatMoney(quotePriceItem.price),
                 highlight: false,
               },
             ]

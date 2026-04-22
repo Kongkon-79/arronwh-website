@@ -21,6 +21,11 @@ import {
   type ApiQuoteExtra,
   useQuoteById,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useQuoteById";
+import {
+  type QuotePriceAdjustmentItem,
+  getPrimaryQuotePriceAdjustmentItem,
+  getQuotePriceAdjustmentTotal,
+} from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
 
 type UpdateQuotePaymentMethodPayload = {
@@ -34,6 +39,21 @@ type UpdateQuotePaymentMethodResponse = {
   message?: string;
 };
 
+type CreateBookingPayload = {
+  quote: string;
+  price: number;
+};
+
+type CreateBookingResponse = {
+  statusCode?: number;
+  success?: boolean;
+  status?: boolean;
+  message?: string;
+  data?: {
+    _id?: string;
+  };
+};
+
 function resolveQuoteEndpoint() {
   if (process.env.NEXT_PUBLIC_API_BASE_URL) {
     return `${process.env.NEXT_PUBLIC_API_BASE_URL}/quote`;
@@ -42,6 +62,16 @@ function resolveQuoteEndpoint() {
     return `${process.env.NEXT_PUBLIC_BACKEND_URL}/quote`;
   }
   return "/quote";
+}
+
+function resolveBookingEndpoint() {
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return `${process.env.NEXT_PUBLIC_API_BASE_URL}/booking`;
+  }
+  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/booking`;
+  }
+  return "/booking";
 }
 
 async function updateQuotePaymentMethod({
@@ -67,6 +97,26 @@ async function updateQuotePaymentMethod({
   }
 
   return result ?? {};
+}
+
+async function createBooking(payload: CreateBookingPayload): Promise<string> {
+  const response = await fetch(resolveBookingEndpoint(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const result = (await response.json().catch(() => null)) as CreateBookingResponse | null;
+  const hasExplicitFailure = result?.success === false || result?.status === false;
+  const bookingId = typeof result?.data?._id === "string" ? result.data._id : "";
+
+  if (!response.ok || hasExplicitFailure || !bookingId) {
+    throw new Error(result?.message || "Failed to create booking.");
+  }
+
+  return bookingId;
 }
 
 function getOrdinalDay(day: number): string {
@@ -135,9 +185,11 @@ function extractInstallAddressLabel(quote: ApiQuote | null | undefined): string 
 function TopBanner({
   payTodayTotal,
   isLoading,
+  onViewDetails,
 }: {
   payTodayTotal: number;
   isLoading: boolean;
+  onViewDetails: () => void;
 }) {
   return (
     <div className="rounded-[10px] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-[#e8eaed] sm:px-6">
@@ -151,7 +203,11 @@ function TopBanner({
             Installation available from next working day- choose your install date below
           </p>
         </div>
-        <button className="shrink-0 pt-1 text-[16px] font-medium text-[#d4a62c] underline underline-offset-2">
+        <button
+          type="button"
+          onClick={onViewDetails}
+          className="shrink-0 pt-1 text-[16px] font-bold text-[#FFDE59] underline underline-offset-2"
+        >
           View
         </button>
       </div>
@@ -173,6 +229,7 @@ function PriceSummary({
   installDateLabel: string;
   installedAtLabel: string;
   isLoading: boolean;
+  quotePriceItem: QuotePriceAdjustmentItem | null;
 }) {
   if (isLoading) {
     return (
@@ -253,6 +310,7 @@ function PriceSummary({
             <span className="text-[18px] text-[#2D3D4D]">Installed at</span>
             <span className="text-right text-[18px] font-semibold text-[#2D3D4D]">{installedAtLabel}</span>
           </div>
+
         </div>
       </div>
     </aside>
@@ -368,6 +426,10 @@ function BoilerPaymentCloneContent() {
     mutationKey: ["update-quote-payment-method"],
     mutationFn: updateQuotePaymentMethod,
   });
+  const { mutateAsync: mutateCreateBooking, isPending: isCreatingBooking } = useMutation({
+    mutationKey: ["create-booking"],
+    mutationFn: createBooking,
+  });
   const monthlyPaymentUrl = React.useMemo(() => {
     const query = searchParams.toString();
     return query
@@ -400,31 +462,22 @@ function BoilerPaymentCloneContent() {
       console.error("Failed to update payment method (monthly).", error);
     }
   }, [monthlyPaymentUrl, mutatePaymentMethod, queryClient, quoteId, router]);
-  const handleSelectCard = React.useCallback(async () => {
-    if (!quoteId) {
-      router.push(paymentPageUrl);
-      return;
-    }
-
-    try {
-      await mutatePaymentMethod({
-        quoteId,
-        payload: {
-          payByCard: true,
-          payMounthly: false,
-        },
-      });
-      await queryClient.invalidateQueries({ queryKey: ["quote", quoteId] });
-      router.push(paymentPageUrl);
-    } catch (error) {
-      console.error("Failed to update payment method (card).", error);
-    }
-  }, [mutatePaymentMethod, paymentPageUrl, queryClient, quoteId, router]);
 
   const { data: quote, isLoading: quoteLoading } = useQuoteById(quoteId);
   const quoteProductId =
     typeof quote?.productId === "string" ? quote.productId : quote?.productId?._id ?? null;
   const resolvedProductId = productIdFromQuery ?? quoteProductId;
+  const customerDetailsUrl = React.useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (resolvedProductId) {
+      params.set("productId", resolvedProductId);
+    }
+    if (quoteId) {
+      params.set("quoteId", quoteId);
+    }
+    const query = params.toString();
+    return query ? `/boilers/customer-details?${query}` : "/boilers/customer-details";
+  }, [quoteId, resolvedProductId, searchParams]);
   const { data: product, isLoading: productLoading } = useProductById(resolvedProductId);
 
   const selectedController: ApiQuoteController | null =
@@ -440,12 +493,17 @@ function BoilerPaymentCloneContent() {
     selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0
       ? selectedExtra.price
       : 0;
+  const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
+  const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
 
   const payTodayTotal = product
-    ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.payablePrice ?? product.price ?? 0) +
+      selectedControllerPrice +
+      selectedExtraPrice +
+      quotePriceAdjustment
     : 0;
   const originalTotal = product
-    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice + quotePriceAdjustment
     : 0;
 
   const installDateRaw = (quote as unknown as Record<string, unknown> | null)?.installDate;
@@ -454,6 +512,44 @@ function BoilerPaymentCloneContent() {
   );
   const installedAtLabel = extractInstallAddressLabel(quote) || "Not selected";
   const isLoading = (quoteId ? quoteLoading : false) || (resolvedProductId ? productLoading : false);
+  const handleSelectCard = React.useCallback(async () => {
+    if (!quoteId) {
+      router.push(paymentPageUrl);
+      return;
+    }
+
+    try {
+      await mutatePaymentMethod({
+        quoteId,
+        payload: {
+          payByCard: true,
+          payMounthly: false,
+        },
+      });
+
+      const bookingId = await mutateCreateBooking({
+        quote: quoteId,
+        price: Number(payTodayTotal.toFixed(2)),
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ["quote", quoteId] });
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("bookingId", bookingId);
+      const query = params.toString();
+      router.push(query ? `/boilers/installation-booking/payment?${query}` : "/boilers/installation-booking/payment");
+    } catch (error) {
+      console.error("Failed to update payment method (card).", error);
+    }
+  }, [
+    mutateCreateBooking,
+    mutatePaymentMethod,
+    payTodayTotal,
+    paymentPageUrl,
+    queryClient,
+    quoteId,
+    router,
+    searchParams,
+  ]);
 
   return (
     <BoilerFlowShell activeStep={4}>
@@ -461,14 +557,18 @@ function BoilerPaymentCloneContent() {
         <div className="mx-auto container">
           <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
             <section className="space-y-4">
-              <TopBanner payTodayTotal={payTodayTotal} isLoading={isLoading} />
+              <TopBanner
+                payTodayTotal={payTodayTotal}
+                isLoading={isLoading}
+                onViewDetails={() => router.push(customerDetailsUrl)}
+              />
               <CollapsedStep label="When should we Survey?" />
               <CollapsedStep label="When should we install?" />
               <CollapsedStep label="Where are we visiting?" />
               <PaymentSection
                 onSelectCard={handleSelectCard}
                 onSelectMonthly={handleSelectMonthly}
-                isUpdatingMethod={isUpdatingPaymentMethod}
+                isUpdatingMethod={isUpdatingPaymentMethod || isCreatingBooking}
               />
               <FooterDisclaimer />
             </section>
@@ -481,6 +581,7 @@ function BoilerPaymentCloneContent() {
                 installDateLabel={installDateLabel}
                 installedAtLabel={installedAtLabel}
                 isLoading={isLoading}
+                quotePriceItem={quotePriceItem}
               />
             </div>
           </div>

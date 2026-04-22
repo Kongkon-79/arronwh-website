@@ -16,6 +16,10 @@ import FinanceCalculatorModal from "../_components/FinanceCalculatorModal";
 import { useControllers } from "../_hooks/useControllers";
 import { useProductById } from "../_hooks/useProductById";
 import { useQuoteById } from "../_hooks/useQuoteById";
+import {
+  getPrimaryQuotePriceAdjustmentItem,
+  getQuotePriceAdjustmentTotal,
+} from "../_utils/quote-price-adjustment";
 
 function formatControllerPrice(price: number): string {
   if (price <= 0) return "Included";
@@ -149,8 +153,12 @@ function ChooseControlsPage() {
 
   const selectedController = controllers?.find((c) => c._id === selectedControllerId) ?? null;
   const selectedControllerPrice = selectedController && selectedController.price > 0 ? selectedController.price : 0;
-  const payTodayTotal = product ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice : 0;
-  const originalTotal = product ? (product.price ?? 0) + selectedControllerPrice : 0;
+  const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
+  const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
+  const payTodayTotal = product
+    ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + quotePriceAdjustment
+    : 0;
+  const originalTotal = product ? (product.price ?? 0) + selectedControllerPrice + quotePriceAdjustment : 0;
   const monthlyCost = payTodayTotal / 12;
 
   const handleViewDetails = () => {
@@ -176,6 +184,15 @@ function ChooseControlsPage() {
               {
                 label: `${selectedController.title}`,
                 value: formatControllerPrice(selectedController.price),
+                highlight: false,
+              },
+            ]
+          : []),
+        ...(quotePriceItem
+          ? [
+              {
+                label: quotePriceItem.label,
+                value: formatMoney(quotePriceItem.price),
                 highlight: false,
               },
             ]
