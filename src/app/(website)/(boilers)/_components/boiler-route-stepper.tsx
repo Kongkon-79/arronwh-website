@@ -11,10 +11,26 @@ type BoilerRouteStepperProps = {
 };
 
 const routeSteps = [
-  { id: 1 as const, label: "1. Property Overview", href: "/boilers/property-overview" },
-  { id: 2 as const, label: "2. System Selection", href: "/boilers/system-selection" },
-  { id: 3 as const, label: "3. Customer Details", href: "/boilers/customer-details" },
-  { id: 4 as const, label: "4. Installation Booking", href: "/boilers/installation-booking" },
+  {
+    id: 1 as const,
+    label: "1. Property Overview",
+    href: "/boilers/property-overview",
+  },
+  {
+    id: 2 as const,
+    label: "2. System Selection",
+    href: "/boilers/system-selection",
+  },
+  {
+    id: 3 as const,
+    label: "3. Customer Details",
+    href: "/boilers/customer-details",
+  },
+  {
+    id: 4 as const,
+    label: "4. Installation Booking",
+    href: "/boilers/installation-booking",
+  },
 ];
 
 const BoilerRouteStepper = ({ activeStep }: BoilerRouteStepperProps) => {
@@ -27,25 +43,29 @@ const BoilerRouteStepper = ({ activeStep }: BoilerRouteStepperProps) => {
     <div className="overflow-hidden rounded-full border border-[#DDE4EE] bg-white shadow-sm ">
       <div className="flex h-[56px] items-stretch md:h-[64px] ">
         {/* Left Section: Back Button + Logo */}
-        <div 
+        <div
           className={cn(
-            "flex items-center gap-2 border-r border-[#E7ECF3] px-3 md:gap-4 md:px-6 transition-colors duration-300 bg-primary "
+            "flex items-center gap-2 border-r border-[#E7ECF3] px-3 md:gap-4 md:px-6 transition-colors duration-300 bg-primary ",
           )}
         >
-          <button 
+          <button
             type="button"
-            onClick={() => prevStep ? router.push(prevStep.href) : router.back()}
+            onClick={() =>
+              prevStep ? router.push(prevStep.href) : router.back()
+            }
             className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 transition hover:bg-black/5 md:h-10 md:w-10"
           >
             <ArrowLeft className="h-4 w-4 md:h-5 md:w-5 text-[#2D3D4D]" />
           </button>
-          <Image
-            src="/assets/images/logo.png"
-            alt="Yolo Heat"
-            width={120}
-            height={40}
-            className="h-4 w-auto object-contain md:h-8"
-          />
+          <Link href="/">
+            <Image
+              src="/assets/images/logo.png"
+              alt="Yolo Heat"
+              width={120}
+              height={40}
+              className="h-4 w-auto object-contain md:h-8"
+            />
+          </Link>
         </div>
 
         {/* Steps Section */}
@@ -64,7 +84,7 @@ const BoilerRouteStepper = ({ activeStep }: BoilerRouteStepperProps) => {
                   "relative flex flex-1 items-center justify-center px-1 text-center text-[9px] font-semibold text-[#4D5A6A] transition md:px-4 md:text-[13px] last:border-r-0 border-r border-[#E7ECF3]",
                   isYellow && "bg-primary text-[#2D3D4D] border-transparent",
                   isLastYellow && "rounded-r-full z-10",
-                  !isYellow && "bg-white"
+                  !isYellow && "bg-white",
                 )}
               >
                 {step.label}
