@@ -406,7 +406,13 @@ function extractFormDefaults(quote: ApiQuote | null | undefined): ManualAddressF
   };
 }
 
-function TopBanner({ payTodayTotal }: { payTodayTotal: number }) {
+function TopBanner({
+  payTodayTotal,
+  onViewDetails,
+}: {
+  payTodayTotal: number;
+  onViewDetails: () => void;
+}) {
   return (
     <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4">
       <div className="flex items-start justify-between gap-3">
@@ -419,7 +425,13 @@ function TopBanner({ payTodayTotal }: { payTodayTotal: number }) {
             Installation available from next working day- choose your install date below
           </p>
         </div>
-        <button className="shrink-0 pt-1 text-[16px] font-bold text-[#FFDE59] underline underline-offset-2">View</button>
+        <button
+          type="button"
+          onClick={onViewDetails}
+          className="shrink-0 pt-1 text-[16px] font-bold text-[#FFDE59] underline underline-offset-2"
+        >
+          View
+        </button>
       </div>
     </div>
   );
@@ -835,6 +847,17 @@ function BoilerAddressDetailsCloneContent() {
       ? `/boilers/installation-booking/payment-method?${query}`
       : "/boilers/installation-booking/payment-method";
   }, [quoteId, resolvedProductId, searchParams]);
+  const customerDetailsUrl = React.useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (resolvedProductId) {
+      params.set("productId", resolvedProductId);
+    }
+    if (quoteId) {
+      params.set("quoteId", quoteId);
+    }
+    const query = params.toString();
+    return query ? `/boilers/customer-details?${query}` : "/boilers/customer-details";
+  }, [quoteId, resolvedProductId, searchParams]);
 
   const handleFieldChange = React.useCallback((key: keyof ManualAddressForm, value: string) => {
     setForm((previous) => ({
@@ -921,7 +944,10 @@ function BoilerAddressDetailsCloneContent() {
           ) : (
             <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
               <section className="space-y-4">
-                <TopBanner payTodayTotal={payTodayTotal} />
+                <TopBanner
+                  payTodayTotal={payTodayTotal}
+                  onViewDetails={() => router.push(customerDetailsUrl)}
+                />
                 <CollapsedStep icon={CalendarDays} label="When should we Survey?" />
                 <CollapsedStep icon={CalendarDays} label="When should we install?" />
 

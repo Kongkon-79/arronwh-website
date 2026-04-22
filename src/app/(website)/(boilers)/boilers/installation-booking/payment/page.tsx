@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   BadgePercent,
   CalendarDays,
@@ -93,9 +93,11 @@ function extractInstallAddressLabel(quote: ApiQuote | null | undefined): string 
 function TopBanner({
   payTodayTotal,
   isLoading,
+  onViewDetails,
 }: {
   payTodayTotal: number;
   isLoading: boolean;
+  onViewDetails: () => void;
 }) {
   return (
     <div className="rounded-[10px] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-[#e8eaed] sm:px-6">
@@ -109,7 +111,11 @@ function TopBanner({
             Installation available from next working day- choose your install date below
           </p>
         </div>
-        <button className="shrink-0 pt-1 text-[12px] font-medium text-[#d4a62c] underline underline-offset-2">
+        <button
+          type="button"
+          onClick={onViewDetails}
+          className="shrink-0 pt-1 text-[16px] font-bold text-[#FFDE59] underline underline-offset-2"
+        >
           View
         </button>
       </div>
@@ -214,7 +220,14 @@ function PriceSummary({
             <span className="text-right text-[18px] font-semibold text-[#2D3D4D]">{installedAtLabel}</span>
           </div>
 
-        
+          {quotePriceItem ? (
+            <div className="flex items-start justify-between gap-3 border-t border-dotted border-[#A7B1BB] pt-2">
+              <span className="text-[18px] text-[#2D3D4D]">{quotePriceItem.label}</span>
+              <span className="text-right text-[18px] font-semibold text-[#2D3D4D]">
+                {formatMoney(quotePriceItem.price)}
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
     </aside>
@@ -393,7 +406,7 @@ function PaymentSection() {
 
 function FooterDisclaimer() {
   return (
-    <p className="pt-2 text-[11px] leading-6 text-[#384555] sm:text-[12px]">
+    <p className="pt-2 text-[11px] leading-6 text-[#2D3D4D] sm:text-[16px]">
       *Representative example for 120 month order: £3,099 purchase. Deposit £0. Annual rate of interest 9.48% p.a.
       Representative APR: 9.9% APR. Total amount of credit £3,099 paid over 120 months as 120 monthly payments of
       £40.07 at 9.48% p.a. Cost of finance £1,709.40. Total amount payable £4,808.40. BOXI Limited is a credit broker
@@ -404,6 +417,7 @@ function FooterDisclaimer() {
 }
 
 function BoilerCardPaymentCloneContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const quoteId = searchParams.get("quoteId");
   const productIdFromQuery = searchParams.get("productId");
@@ -412,6 +426,17 @@ function BoilerCardPaymentCloneContent() {
   const quoteProductId =
     typeof quote?.productId === "string" ? quote.productId : quote?.productId?._id ?? null;
   const resolvedProductId = productIdFromQuery ?? quoteProductId;
+  const customerDetailsUrl = React.useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (resolvedProductId) {
+      params.set("productId", resolvedProductId);
+    }
+    if (quoteId) {
+      params.set("quoteId", quoteId);
+    }
+    const query = params.toString();
+    return query ? `/boilers/customer-details?${query}` : "/boilers/customer-details";
+  }, [quoteId, resolvedProductId, searchParams]);
   const { data: product, isLoading: productLoading } = useProductById(resolvedProductId);
 
   const selectedController: ApiQuoteController | null =
@@ -452,7 +477,11 @@ function BoilerCardPaymentCloneContent() {
       <div className="mx-auto container px-4 py-6 sm:px-6 lg:px-0">
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
           <div className="space-y-4">
-            <TopBanner payTodayTotal={payTodayTotal} isLoading={isLoading} />
+            <TopBanner
+              payTodayTotal={payTodayTotal}
+              isLoading={isLoading}
+              onViewDetails={() => router.push(customerDetailsUrl)}
+            />
             <CollapsedStep label="When should we Survey?" />
             <CollapsedStep label="When should we install?" />
             <CollapsedStep label="Where are we visiting?" />
