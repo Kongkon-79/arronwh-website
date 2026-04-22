@@ -499,14 +499,7 @@ function PriceSummary({
             </span>
           </div>
 
-          {quotePriceItem ? (
-            <div className="flex items-start justify-between gap-3 border-t border-dotted border-[#A7B1BB] pt-2">
-              <span className="text-[18px] text-[#2D3D4D]">{quotePriceItem.label}</span>
-              <span className="text-right text-[18px] font-semibold text-[#2D3D4D]">
-                {formatMoney(quotePriceItem.price)}
-              </span>
-            </div>
-          ) : null}
+       
         </div>
       </div>
     </aside>
