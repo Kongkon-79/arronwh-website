@@ -293,15 +293,6 @@ function SummaryCard({
             </div>
           </div>
 
-          {quotePriceItem ? (
-            <div className="flex items-start justify-between gap-3 border-b border-dotted border-[#A7B1BB] pb-2">
-              <span className="text-[16px] text-[#2D3D4D]">{quotePriceItem.label}</span>
-              <span className="text-right text-[16px] font-semibold text-[#2D3D4D]">
-                {formatMoney(quotePriceItem.price)}
-              </span>
-            </div>
-          ) : null}
-
         </div>
       </div>
     </div>

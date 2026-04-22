@@ -201,13 +201,11 @@ const toProductCardItem = (
       : "";
 
   const monthlyPriceNumber =
-    typeof product.monthlyPrice === "number" && product.monthlyPrice > 0
-      ? product.monthlyPrice
-      : adjustedPayablePrice > 0
-        ? adjustedPayablePrice / 12
-        : typeof adjustedOriginalPrice === "number" && adjustedOriginalPrice > 0
-          ? adjustedOriginalPrice / 12
-          : 0;
+    adjustedPayablePrice > 0
+      ? Number((adjustedPayablePrice / 12).toFixed(2))
+      : typeof adjustedOriginalPrice === "number" && adjustedOriginalPrice > 0
+        ? Number((adjustedOriginalPrice / 12).toFixed(2))
+        : 0;
   const monthlyCost = monthlyPriceNumber > 0 ? `${formatMoney(monthlyPriceNumber)}/mo` : "£0/mo";
 
   const discountAmount =
@@ -236,10 +234,7 @@ const toProductCardItem = (
     payablePriceValue: adjustedPayablePrice,
     priceValue: adjustedOriginalPrice ?? 0,
     discountAmountValue: discountAmount,
-    monthlyPriceValue:
-      monthlyPriceNumber > 0
-        ? Number(monthlyPriceNumber.toFixed(2))
-        : undefined,
+    monthlyPriceValue: monthlyPriceNumber > 0 ? monthlyPriceNumber : undefined,
   };
 };
 
