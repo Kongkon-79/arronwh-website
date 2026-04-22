@@ -10,6 +10,7 @@ import { propertyChoiceSteps } from "../_lib/property-overview-data";
 import { usePropertyOverviewStore } from "../_store/use-property-overview-store";
 import Image from "next/image";
 import PersonalInfoForm from "./personal-info-form";
+import Link from "next/link";
 
 const topSteps = [
   { id: 1, title: "1. Property Overview" },
@@ -84,7 +85,14 @@ const PropertyOverviewContainer = () => {
     }
     if (!step) return false;
     return Boolean(answers[step.id]);
-  }, [answers, isOtherRoomPrompt, isPostcodeStep, otherRoomName, personalInfo, step]);
+  }, [
+    answers,
+    isOtherRoomPrompt,
+    isPostcodeStep,
+    otherRoomName,
+    personalInfo,
+    step,
+  ]);
 
   const quizAnswers = useMemo(
     () =>
@@ -131,8 +139,9 @@ const PropertyOverviewContainer = () => {
     if (isPostcodeStep) {
       return (
         <>
-          Finally, please enter the <span className="text-primary">postcode</span> of
-          your property where we will be installing your new boiler.
+          Finally, please enter the{" "}
+          <span className="text-primary">postcode</span> of your property where
+          we will be installing your new boiler.
         </>
       );
     }
@@ -150,22 +159,22 @@ const PropertyOverviewContainer = () => {
       case "fuelType":
         return (
           <>
-            What kind of <span className="text-primary">fuel</span> does your boiler
-            use?
+            What kind of <span className="text-primary">fuel</span> does your
+            boiler use?
           </>
         );
       case "boilerType":
         return (
           <>
-            Currently, what <span className="text-primary">type</span> of boiler do you
-            have?
+            Currently, what <span className="text-primary">type</span> of boiler
+            do you have?
           </>
         );
       case "convertToCombi":
         return (
           <>
-            Do you want to <span className="text-primary">convert</span> to a Combi
-            boiler?
+            Do you want to <span className="text-primary">convert</span> to a
+            Combi boiler?
           </>
         );
       case "boilerCondition":
@@ -178,13 +187,15 @@ const PropertyOverviewContainer = () => {
       case "boilerAge":
         return (
           <>
-            Roughly how <span className="text-primary">old</span> is your boiler?
+            Roughly how <span className="text-primary">old</span> is your
+            boiler?
           </>
         );
       case "mountedOnWall":
         return (
           <>
-            Is your boiler <span className="text-primary">mounted on the wall</span>?
+            Is your boiler{" "}
+            <span className="text-primary">mounted on the wall</span>?
           </>
         );
       case "stayDuration":
@@ -197,14 +208,15 @@ const PropertyOverviewContainer = () => {
       case "waterFlowRate":
         return (
           <>
-            How <span className="text-primary">quickly</span> does your water come
-            out of your cold tap?
+            How <span className="text-primary">quickly</span> does your water
+            come out of your cold tap?
           </>
         );
       case "currentBoilerLocation":
         return (
           <>
-            Where&apos;s your <span className="text-primary">current boiler</span>?
+            Where&apos;s your{" "}
+            <span className="text-primary">current boiler</span>?
           </>
         );
       case "differentPlace":
@@ -217,26 +229,29 @@ const PropertyOverviewContainer = () => {
       case "newBoilerLocation":
         return (
           <>
-            Where do you want your <span className="text-primary">new boiler</span>?
+            Where do you want your{" "}
+            <span className="text-primary">new boiler</span>?
           </>
         );
       case "homeType":
         return (
           <>
-            Which of these best describes <span className="text-primary">your home</span>?
+            Which of these best describes{" "}
+            <span className="text-primary">your home</span>?
           </>
         );
       case "flatOnSecondFloor":
         return (
           <>
-            Is your <span className="text-[#F25B5B]">flat</span> on or above the second floor?
+            Is your <span className="text-[#F25B5B]">flat</span> on or above the
+            second floor?
           </>
         );
       case "accessEquipmentCharges":
         return (
           <>
-            <span className="text-[#F25B5B]">Do you accept</span> that there may be extra
-            charges for access equipment?
+            <span className="text-[#F25B5B]">Do you accept</span> that there may
+            be extra charges for access equipment?
           </>
         );
       case "bedrooms":
@@ -248,29 +263,30 @@ const PropertyOverviewContainer = () => {
       case "bathtubs":
         return (
           <>
-            How many <span className="text-primary">bathtubs</span> do you have, or plan
-            to have in the future?
+            How many <span className="text-primary">bathtubs</span> do you have,
+            or plan to have in the future?
           </>
         );
       case "showers":
         return (
           <>
-            How many <span className="text-primary">separate showers</span> do you have,
-            or plan to have in the future?
+            How many <span className="text-primary">separate showers</span> do
+            you have, or plan to have in the future?
           </>
         );
       case "radiators":
         return (
           <>
-            How many <span className="text-primary">radiators</span> do you have?
+            How many <span className="text-primary">radiators</span> do you
+            have?
           </>
         );
       case "trv":
         return (
           <>
             Do you have{" "}
-            <span className="text-primary">Thermostatic Radiator Valves</span> on all
-            your radiators?
+            <span className="text-primary">Thermostatic Radiator Valves</span>{" "}
+            on all your radiators?
           </>
         );
       case "waterMeter":
@@ -288,20 +304,22 @@ const PropertyOverviewContainer = () => {
       case "roofType":
         return (
           <>
-            Is your flue in a <span className="text-primary">sloped roof</span> or a{" "}
-            <span className="text-primary">flat roof</span> ?
+            Is your flue in a <span className="text-primary">sloped roof</span>{" "}
+            or a <span className="text-primary">flat roof</span> ?
           </>
         );
       case "roofPosition":
         return (
           <>
-            Where on the roof is it <span className="text-primary">positioned</span>?
+            Where on the roof is it{" "}
+            <span className="text-primary">positioned</span>?
           </>
         );
       case "flueWallDistance":
         return (
           <>
-            How far is your current boiler from an <span className="text-primary">outside wall</span>?
+            How far is your current boiler from an{" "}
+            <span className="text-primary">outside wall</span>?
           </>
         );
       case "flueShape":
@@ -314,21 +332,23 @@ const PropertyOverviewContainer = () => {
       case "flueGroundDistance":
         return (
           <>
-            How close to the <span className="text-primary">ground</span> is your flue?
+            How close to the <span className="text-primary">ground</span> is
+            your flue?
           </>
         );
       case "fluePropertyDistance":
         return (
           <>
-            How close to <span className="text-primary">another property</span> is your
-            flue?
+            How close to <span className="text-primary">another property</span>{" "}
+            is your flue?
           </>
         );
       case "flueUnderStructure":
         return (
           <>
-            Is the flue under a <span className="text-primary">carport, balcony</span>{" "}
-            or other structure?
+            Is the flue under a{" "}
+            <span className="text-primary">carport, balcony</span> or other
+            structure?
           </>
         );
       case "flueDoorWindowDistance":
@@ -433,7 +453,11 @@ const PropertyOverviewContainer = () => {
         return;
       }
     }
-    if (step?.id === "homeType" && answers.differentPlace && answers.differentPlace !== "Yes") {
+    if (
+      step?.id === "homeType" &&
+      answers.differentPlace &&
+      answers.differentPlace !== "Yes"
+    ) {
       const differentPlaceStepIndex = propertyChoiceSteps.findIndex(
         (item) => item.id === "differentPlace",
       );
@@ -442,7 +466,11 @@ const PropertyOverviewContainer = () => {
         return;
       }
     }
-    if (step?.id === "bedrooms" && answers.homeType && answers.homeType !== "Flat") {
+    if (
+      step?.id === "bedrooms" &&
+      answers.homeType &&
+      answers.homeType !== "Flat"
+    ) {
       const homeTypeStepIndex = propertyChoiceSteps.findIndex(
         (item) => item.id === "homeType",
       );
@@ -727,9 +755,7 @@ const PropertyOverviewContainer = () => {
       <div className="mt-3 mb-2 md:mb-3 lg:mb-4">
         <div className="overflow-hidden rounded-[999px] ">
           <div className="bg-white h-14 rounded-full grid grid-cols-[auto_1fr_auto] items-stretch pl-0 pr-1">
-            <div
-              className="flex items-center gap-2 border-r border-[#E7ECF3] bg-primary "
-            >
+            <div className="flex items-center gap-2 border-r border-[#E7ECF3] bg-primary ">
               <button
                 type="button"
                 onClick={handlePrev}
@@ -737,13 +763,15 @@ const PropertyOverviewContainer = () => {
               >
                 <ArrowLeft className="h-7 w-7 text-[#2D3D4D]" />
               </button>
-              <Image
-                src="/assets/images/multi_step_logo.png"
-                alt="Multi Step Logo"
-                width={332}
-                height={332}
-                className="h-[36px] w-[126px] object-contain"
-              />
+              <Link href="/">
+                <Image
+                  src="/assets/images/multi_step_logo.png"
+                  alt="Multi Step Logo"
+                  width={332}
+                  height={332}
+                  className="h-[36px] w-[126px] object-contain"
+                />
+              </Link>
             </div>
 
             <div className="hidden min-w-0 grid-cols-4 md:grid ">
@@ -760,7 +788,9 @@ const PropertyOverviewContainer = () => {
                           ? "bg-[#FFF8DA] text-[#2D3D4D]"
                           : "text-[#2D3D4D]",
                     idx === topSteps.length - 1 && "border-r-0",
-                    item.id === 1 && activeTopStep > 1 && "bg-[#FFF8DA] text-[#2D3D4D]",
+                    item.id === 1 &&
+                      activeTopStep > 1 &&
+                      "bg-[#FFF8DA] text-[#2D3D4D]",
                   )}
                 >
                   {item.title}
@@ -797,13 +827,13 @@ const PropertyOverviewContainer = () => {
           ) : null}
           {isPostcodeStep ? (
             <p className="mx-auto mt-3 max-w-[640px] text-center text-sm md:text-base leading-[1.45] text-[#5F6C7B]">
-              We need this information to show the dates available for installation
-              (order by 3pm for next working day installation)
+              We need this information to show the dates available for
+              installation (order by 3pm for next working day installation)
             </p>
           ) : step?.id === "fluePropertyDistance" ? (
             <p className="mx-auto mt-3 max-w-[860px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
-              That&apos;s between your flue and the boundary of someone else&apos;s
-              land, even if it&apos;s just the garden fence.
+              That&apos;s between your flue and the boundary of someone
+              else&apos;s land, even if it&apos;s just the garden fence.
             </p>
           ) : step?.id === "flueUnderStructure" ? (
             <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
@@ -821,25 +851,31 @@ const PropertyOverviewContainer = () => {
             </p>
           ) : step?.id === "convertToCombi" ? (
             <p className="mx-auto mt-3 max-w-[900px] text-center text-[16px] md:text-[20px] leading-[1.45] text-[#2D3D4D]">
-              We&apos;ll remove and safely dispose of your hot water cylinder together
-              with re-configuring your current pipework to allow a combi boiler to be
-              installed. All this will be included in your fixed price.
+              We&apos;ll remove and safely dispose of your hot water cylinder
+              together with re-configuring your current pipework to allow a
+              combi boiler to be installed. All this will be included in your
+              fixed price.
             </p>
           ) : step?.id === "newBoilerLocation" ? (
             <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
-              Big moves will cost a bit more. For a loft, you&apos;ll need a ladder and a light up there.
+              Big moves will cost a bit more. For a loft, you&apos;ll need a
+              ladder and a light up there.
             </p>
           ) : step?.id === "flatOnSecondFloor" ? (
             <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
-              If your lowest floor is more than one storey off the ground, answer Yes.
+              If your lowest floor is more than one storey off the ground,
+              answer Yes.
             </p>
           ) : step?.id === "accessEquipmentCharges" ? (
             <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
-              We will ask for photos after you checkout, and advise you if access equipment is required.
+              We will ask for photos after you checkout, and advise you if
+              access equipment is required.
             </p>
           ) : null}
 
-          {!isPostcodeStep && step?.id === "currentBoilerLocation" && isOtherRoomPrompt ? (
+          {!isPostcodeStep &&
+          step?.id === "currentBoilerLocation" &&
+          isOtherRoomPrompt ? (
             <div className="mx-auto mt-7 w-full max-w-[760px]">
               <label className="block text-[26px] font-medium text-[#5A6675]">
                 Room name
@@ -862,9 +898,7 @@ const PropertyOverviewContainer = () => {
               </div>
             </div>
           ) : !isPostcodeStep ? (
-            <div
-              className="mt-7 flex  flex-wrap items-stretch justify-center gap-4  "
-            >
+            <div className="mt-7 flex  flex-wrap items-stretch justify-center gap-4  ">
               {stepOptions.map((option) => {
                 const selected = answers[step.id] === option.value;
                 const Icon = option.icon;
@@ -884,16 +918,16 @@ const PropertyOverviewContainer = () => {
                     className={cn(
                       "group relative rounded-[12px] px-3 py-3 text-[#2D3D4D] transition ",
                       isConvertStep || isWaterFlowStep
-                          ? "h-[400px]"
-                          : "h-[400px]",
+                        ? "h-[400px]"
+                        : "h-[400px]",
                       optionCardWidthClass,
                       selected
-                          ? isNewBoilerLocationStep
-                            ? "bg-white border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
-                            : "bg-white border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
-                          : isNewBoilerLocationStep
-                            ? "border-[2px] border-[#8AA6C2] bg-white hover:border-[#6E90B3]"
-                            : "border-[2px] border-[#AEB7C2] bg-white hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.2)]"
+                        ? isNewBoilerLocationStep
+                          ? "bg-white border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
+                          : "bg-white border-[3px] border-primary shadow-[0_0_0_1px_rgba(255,222,89,0.85)]"
+                        : isNewBoilerLocationStep
+                          ? "border-[2px] border-[#8AA6C2] bg-white hover:border-[#6E90B3]"
+                          : "border-[2px] border-[#AEB7C2] bg-white hover:border-primary hover:shadow-[0_0_0_1px_rgba(255,222,89,0.2)]",
                     )}
                   >
                     {isNewBoilerLocationStep && option.priceTag ? (
@@ -916,7 +950,9 @@ const PropertyOverviewContainer = () => {
                       ) : Icon ? (
                         <Icon
                           className={cn(
-                            isConvertStep || isWaterFlowStep ? "h-24 w-24" : "h-10 w-10",
+                            isConvertStep || isWaterFlowStep
+                              ? "h-24 w-24"
+                              : "h-10 w-10",
                             isConvertStep || isWaterFlowStep
                               ? "text-[#2D3D4D]"
                               : "text-[#8A97A7]",
@@ -927,7 +963,7 @@ const PropertyOverviewContainer = () => {
                         className={cn(
                           "text-center text-lg md:text-xl leading-normal font-semibold transition-colors duration-200",
                           selected ? "text-primary" : "text-[#2D3D4D]",
-                          !selected && "group-hover:text-primary"
+                          !selected && "group-hover:text-primary",
                         )}
                       >
                         {option.label}
@@ -954,7 +990,7 @@ const PropertyOverviewContainer = () => {
                             : "opacity-100 group-hover:opacity-0",
                         )}
                       >
-                        <Info  className="h-8 w-8" strokeWidth={1.5} />
+                        <Info className="h-8 w-8" strokeWidth={1.5} />
                       </div>
                     ) : null}
                     {isWaterFlowStep ? (
@@ -975,7 +1011,7 @@ const PropertyOverviewContainer = () => {
                         "absolute bottom-0 left-0 flex h-14 w-full items-center justify-center rounded-b-[8px] text-base md:text-lg font-medium leading-normal transition-colors duration-200",
                         selected
                           ? "bg-primary text-[#2D3D4D]"
-                          : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]"
+                          : "bg-transparent text-transparent group-hover:bg-primary group-hover:text-[#2D3D4D]",
                       )}
                     >
                       {selected ? "Selected" : "Select"}
