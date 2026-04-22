@@ -222,7 +222,6 @@ function PriceSummary({
   installDateLabel,
   installedAtLabel,
   isLoading,
-  quotePriceItem,
 }: {
   product: ApiProductFull | null;
   payTodayTotal: number;
