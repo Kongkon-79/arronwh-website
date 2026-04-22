@@ -12,6 +12,7 @@ export type PersonalInfo = {
 type ApiQuizAnswer = {
   question: string;
   answer: string;
+  price?: number;
 };
 
 type SubmitResponse = {
