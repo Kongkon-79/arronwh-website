@@ -22,6 +22,10 @@ import {
   useQuoteById,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useQuoteById";
 import { useProductById } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useProductById";
+import {
+  getPrimaryQuotePriceAdjustmentItem,
+  getQuotePriceAdjustmentTotal,
+} from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
 
 function stripHtml(value?: string) {
   return (
@@ -161,12 +165,17 @@ function ProductDetailsPageContent() {
     selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0
       ? selectedExtra.price
       : 0;
+  const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
+  const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
 
   const payTodayTotal = product
-    ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.payablePrice ?? product.price ?? 0) +
+      selectedControllerPrice +
+      selectedExtraPrice +
+      quotePriceAdjustment
     : 0;
   const originalTotal = product
-    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice + quotePriceAdjustment
     : 0;
   const monthlyCost = payTodayTotal > 0 ? payTodayTotal / 12 : 0;
 
@@ -365,6 +374,17 @@ function ProductDetailsPageContent() {
                     -{formatMoney(product.discountPrice ?? 0)}
                   </span>
                 </div>
+
+                {quotePriceItem ? (
+                  <div className="mt-3 rounded-[6px] bg-white px-2.5 py-2">
+                    <div className="flex items-center justify-between gap-3 border-b border-dotted border-[#A7B1BB] pb-1.5">
+                      <span className="text-[13px] text-[#2D3D4D]">{quotePriceItem.label}</span>
+                      <span className="text-[13px] font-semibold text-[#2D3D4D]">
+                        {formatMoney(quotePriceItem.price)}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
 
                 <Button
                   className="mt-4 h-[46px] w-full rounded-[6px] bg-[#00A56F] text-[15px] sm:text-[16px] font-medium text-white hover:bg-[#009562]"

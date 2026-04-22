@@ -21,6 +21,11 @@ import {
   type ApiQuoteExtra,
   useQuoteById,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useQuoteById";
+import {
+  type QuotePriceAdjustmentItem,
+  getPrimaryQuotePriceAdjustmentItem,
+  getQuotePriceAdjustmentTotal,
+} from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
 
 function getOrdinalDay(day: number): string {
   const remainder10 = day % 10;
@@ -119,6 +124,7 @@ function PriceSummary({
   installDateLabel,
   installedAtLabel,
   isLoading,
+  quotePriceItem,
 }: {
   product: ApiProductFull | null;
   payTodayTotal: number;
@@ -126,6 +132,7 @@ function PriceSummary({
   installDateLabel: string;
   installedAtLabel: string;
   isLoading: boolean;
+  quotePriceItem: QuotePriceAdjustmentItem | null;
 }) {
   if (isLoading) {
     return (
@@ -206,6 +213,8 @@ function PriceSummary({
             <span className="text-[18px] text-[#2D3D4D]">Installed at</span>
             <span className="text-right text-[18px] font-semibold text-[#2D3D4D]">{installedAtLabel}</span>
           </div>
+
+        
         </div>
       </div>
     </aside>
@@ -418,12 +427,17 @@ function BoilerCardPaymentCloneContent() {
     selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0
       ? selectedExtra.price
       : 0;
+  const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
+  const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
 
   const payTodayTotal = product
-    ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.payablePrice ?? product.price ?? 0) +
+      selectedControllerPrice +
+      selectedExtraPrice +
+      quotePriceAdjustment
     : 0;
   const originalTotal = product
-    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice + quotePriceAdjustment
     : 0;
 
   const installDateRaw = (quote as unknown as Record<string, unknown> | null)?.installDate;
@@ -454,6 +468,7 @@ function BoilerCardPaymentCloneContent() {
               installDateLabel={installDateLabel}
               installedAtLabel={installedAtLabel}
               isLoading={isLoading}
+              quotePriceItem={quotePriceItem}
             />
           </div>
         </div>

@@ -13,6 +13,11 @@ import {
   useQuoteById,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useQuoteById";
 import {
+  type QuotePriceAdjustmentItem,
+  getPrimaryQuotePriceAdjustmentItem,
+  getQuotePriceAdjustmentTotal,
+} from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
+import {
   BadgePercent,
   CalendarDays,
   CheckCircle2,
@@ -426,12 +431,14 @@ function PriceSummary({
   originalTotal,
   installDateLabel,
   installedAtLabel,
+  quotePriceItem,
 }: {
   product: ApiProductFull;
   payTodayTotal: number;
   originalTotal: number;
   installDateLabel: string;
   installedAtLabel: string;
+  quotePriceItem: QuotePriceAdjustmentItem | null;
 }) {
   return (
     <aside className="h-fit rounded-[8px] bg-white p-3 shadow-sm xl:sticky xl:top-5">
@@ -488,6 +495,15 @@ function PriceSummary({
               {installedAtLabel}
             </span>
           </div>
+
+          {quotePriceItem ? (
+            <div className="flex items-start justify-between gap-3 border-t border-dotted border-[#A7B1BB] pt-2">
+              <span className="text-[18px] text-[#2D3D4D]">{quotePriceItem.label}</span>
+              <span className="text-right text-[18px] font-semibold text-[#2D3D4D]">
+                {formatMoney(quotePriceItem.price)}
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
     </aside>
@@ -733,11 +749,18 @@ function BoilerAddressDetailsCloneContent() {
       : 0;
   const selectedExtraPrice =
     selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0 ? selectedExtra.price : 0;
+  const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
+  const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
 
   const payTodayTotal = product
-    ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.payablePrice ?? product.price ?? 0) +
+      selectedControllerPrice +
+      selectedExtraPrice +
+      quotePriceAdjustment
     : 0;
-  const originalTotal = product ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice : 0;
+  const originalTotal = product
+    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice + quotePriceAdjustment
+    : 0;
 
   const installDateRaw = (quote as unknown as Record<string, unknown> | null)?.installDate;
   const installDateLabel = formatInstallDateLabel(typeof installDateRaw === "string" ? installDateRaw : null);
@@ -924,6 +947,7 @@ function BoilerAddressDetailsCloneContent() {
                   originalTotal={originalTotal}
                   installDateLabel={installDateLabel}
                   installedAtLabel={installedAtLabel}
+                  quotePriceItem={quotePriceItem}
                 />
               </div>
             </div>

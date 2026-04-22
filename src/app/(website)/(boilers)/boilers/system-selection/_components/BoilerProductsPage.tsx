@@ -3,11 +3,12 @@
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ProductCard, ProductItem } from "./ProductCard";
 import BoilerProductsPageSkeleton from "./BoilerProductsPageSkeleton";
 import { useQuoteById } from "../_hooks/useQuoteById";
+import { getQuotePriceAdjustmentTotal } from "../_utils/quote-price-adjustment";
 import { usePropertyOverviewStore } from "@/app/(website)/(boilers)/boilers/property-overview/_store/use-property-overview-store";
 
 type ApiBoilerFeature = {
@@ -46,11 +47,17 @@ type ProductsApiResponse = {
   data: ApiProduct[];
 };
 
+type QuoteQuizAnswer = {
+  question?: string;
+  answer?: string;
+  price?: number | null;
+};
+
 const DEFAULT_FILTER_TEXT = "0-5 radiators, 1 bedroom, 0 showers, 0 bathtubs";
 const FALLBACK_IMAGE = "/product.png";
 
 const answerByKeywords = (
-  quizAnswers: Array<{ question?: string; answer?: string }> | undefined,
+  quizAnswers: QuoteQuizAnswer[] | undefined,
   keywords: string[]
 ) => {
   const answers = quizAnswers ?? [];
@@ -64,7 +71,7 @@ const answerByKeywords = (
 };
 
 const buildSelectedFilterText = (
-  quizAnswers: Array<{ question?: string; answer?: string }> | undefined
+  quizAnswers: QuoteQuizAnswer[] | undefined
 ) => {
   if (!quizAnswers?.length) {
     return DEFAULT_FILTER_TEXT;
@@ -76,21 +83,6 @@ const buildSelectedFilterText = (
   const bathtubs = answerByKeywords(quizAnswers, ["bathtubs"]) || "0 bathtubs";
 
   return `${radiators}, ${bedrooms}, ${showers}, ${bathtubs}`;
-};
-
-const buildQuoteHighlights = (
-  quizAnswers: Array<{ question?: string; answer?: string }> | undefined
-) => {
-  if (!quizAnswers?.length) {
-    return [];
-  }
-
-  const propertyType = answerByKeywords(quizAnswers, ["describes your home"]);
-  const currentBoilerPlace = answerByKeywords(quizAnswers, ["where's your current boiler"]);
-  const plannedBoilerPlace = answerByKeywords(quizAnswers, ["different place"]);
-  const fluePosition = answerByKeywords(quizAnswers, ["where does your flue come out"]);
-
-  return [propertyType, currentBoilerPlace, plannedBoilerPlace, fluePosition].filter(Boolean);
 };
 
 const resetPropertyOverviewStore = () => {
@@ -152,13 +144,20 @@ const fetchProducts = async (): Promise<ApiProduct[]> => {
   return result?.data ?? [];
 };
 
-const toProductCardItem = (product: ApiProduct): ProductItem => {
+const toProductCardItem = (
+  product: ApiProduct,
+  quizPriceAdjustment = 0
+): ProductItem => {
   const title = stripHtml(product.title) || product.title;
   const boilerAbility = stripHtml(product.boilerAbility) || title;
   const tags = (product.badges ?? []).map((tag) => tag.trim()).filter(Boolean);
   const images = (product.images ?? []).map(normalizeImage);
   const description = stripHtml(product.description);
   const summaryTitle = stripHtml(product.shortDescription) || title;
+  const normalizedQuizPriceAdjustment =
+    Number.isFinite(quizPriceAdjustment) && quizPriceAdjustment > 0
+      ? quizPriceAdjustment
+      : 0;
 
   const summaryPoints = [description, stripHtml(product.boilerAbility), stripHtml(product.boilerIncludedData)]
     .filter(
@@ -183,21 +182,31 @@ const toProductCardItem = (product: ApiProduct): ProductItem => {
     })
     .filter((feature) => feature.label && feature.value);
 
-  const payToday = formatMoney(product.payablePrice) || formatMoney(product.price) || "£0";
+  const payablePriceBase =
+    typeof product.payablePrice === "number"
+      ? product.payablePrice
+      : typeof product.price === "number"
+        ? product.price
+        : 0;
+  const adjustedPayablePrice = payablePriceBase + normalizedQuizPriceAdjustment;
+  const adjustedOriginalPrice =
+    typeof product.price === "number"
+      ? product.price + normalizedQuizPriceAdjustment
+      : undefined;
+  const payToday = formatMoney(adjustedPayablePrice) || "£0";
   const payTodayOld =
-    typeof product.price === "number" &&
-    typeof product.payablePrice === "number" &&
-    product.price > product.payablePrice
-      ? `was ${formatMoney(product.price)}`
+    typeof adjustedOriginalPrice === "number" &&
+    adjustedOriginalPrice > adjustedPayablePrice
+      ? `was ${formatMoney(adjustedOriginalPrice)}`
       : "";
 
   const monthlyPriceNumber =
     typeof product.monthlyPrice === "number" && product.monthlyPrice > 0
       ? product.monthlyPrice
-      : typeof product.payablePrice === "number" && product.payablePrice > 0
-        ? product.payablePrice / 12
-        : typeof product.price === "number" && product.price > 0
-          ? product.price / 12
+      : adjustedPayablePrice > 0
+        ? adjustedPayablePrice / 12
+        : typeof adjustedOriginalPrice === "number" && adjustedOriginalPrice > 0
+          ? adjustedOriginalPrice / 12
           : 0;
   const monthlyCost = monthlyPriceNumber > 0 ? `${formatMoney(monthlyPriceNumber)}/mo` : "£0/mo";
 
@@ -224,13 +233,8 @@ const toProductCardItem = (product: ApiProduct): ProductItem => {
     monthlyCostOld: "",
     discountTitle: `${title} Discount`,
     discountValue: discountAmount > 0 ? `-£${discountAmount.toLocaleString("en-US")}` : "£0",
-    payablePriceValue:
-      typeof product.payablePrice === "number"
-        ? product.payablePrice
-        : typeof product.price === "number"
-          ? product.price
-          : 0,
-    priceValue: typeof product.price === "number" ? product.price : 0,
+    payablePriceValue: adjustedPayablePrice,
+    priceValue: adjustedOriginalPrice ?? 0,
     discountAmountValue: discountAmount,
     monthlyPriceValue:
       monthlyPriceNumber > 0
@@ -256,7 +260,14 @@ export default function BoilerProductsPage() {
     queryFn: fetchProducts,
   });
 
-  const products = productsData.map(toProductCardItem);
+  const quotePriceAdjustment = useMemo(
+    () => getQuotePriceAdjustmentTotal(quote?.quizAnswers),
+    [quote?.quizAnswers]
+  );
+  const products = useMemo(
+    () => productsData.map((product) => toProductCardItem(product, quotePriceAdjustment)),
+    [productsData, quotePriceAdjustment]
+  );
   const selectedFilter = useMemo(() => {
     if (!quoteId) {
       return DEFAULT_FILTER_TEXT;
@@ -268,24 +279,6 @@ export default function BoilerProductsPage() {
 
     return buildSelectedFilterText(quote?.quizAnswers);
   }, [quote?.quizAnswers, isQuoteLoading, quoteId]);
-  const quoteHighlights = useMemo(
-    () => buildQuoteHighlights(quote?.quizAnswers).slice(0, 4),
-    [quote?.quizAnswers]
-  );
-  const quoteOwner = useMemo(() => {
-    if (!quote?.personalInfo) {
-      return "";
-    }
-
-    return [
-      quote.personalInfo.title,
-      quote.personalInfo.fastName,
-      quote.personalInfo.sureName,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .trim();
-  }, [quote?.personalInfo]);
 
   const handleResetAnswers = () => {
     resetPropertyOverviewStore();

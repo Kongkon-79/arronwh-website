@@ -39,6 +39,7 @@ export interface ApiQuoteExtra {
 export interface ApiQuoteQuizAnswer {
   question: string;
   answer: string;
+  price?: number | null;
 }
 
 export interface ApiQuotePersonalInfo {

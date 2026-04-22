@@ -13,6 +13,11 @@ import {
   useQuoteById,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useQuoteById";
 import {
+  type QuotePriceAdjustmentItem,
+  getPrimaryQuotePriceAdjustmentItem,
+  getQuotePriceAdjustmentTotal,
+} from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
+import {
   BadgePercent,
   CalendarDays,
   CreditCard,
@@ -412,12 +417,14 @@ function PriceSummary({
   originalTotal,
   installDateLabel,
   installedAtLabel,
+  quotePriceItem,
 }: {
   product: ApiProductFull;
   payTodayTotal: number;
   originalTotal: number;
   installDateLabel: string;
   installedAtLabel: string;
+  quotePriceItem: QuotePriceAdjustmentItem | null;
 }) {
   return (
     <aside className="h-fit rounded-[8px] bg-white p-3 shadow-sm xl:sticky xl:top-5">
@@ -480,6 +487,8 @@ function PriceSummary({
               {installedAtLabel}
             </span>
           </div>
+
+      
         </div>
       </div>
     </aside>
@@ -709,12 +718,17 @@ function BoilerAddressPageContent() {
     selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0
       ? selectedExtra.price
       : 0;
+  const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
+  const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
 
   const payTodayTotal = product
-    ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.payablePrice ?? product.price ?? 0) +
+      selectedControllerPrice +
+      selectedExtraPrice +
+      quotePriceAdjustment
     : 0;
   const originalTotal = product
-    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice + quotePriceAdjustment
     : 0;
 
   const isLoading = (quoteId ? quoteLoading : false) || (resolvedProductId ? productLoading : false);
@@ -785,6 +799,7 @@ function BoilerAddressPageContent() {
                   originalTotal={originalTotal}
                   installDateLabel={installDateLabel}
                   installedAtLabel={installedAtLabel}
+                  quotePriceItem={quotePriceItem}
                 />
               </div>
             </div>

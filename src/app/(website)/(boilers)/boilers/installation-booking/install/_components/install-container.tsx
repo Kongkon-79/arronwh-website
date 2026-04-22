@@ -11,6 +11,11 @@ import {
   useQuoteById,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_hooks/useQuoteById";
 import {
+  type QuotePriceAdjustmentItem,
+  getPrimaryQuotePriceAdjustmentItem,
+  getQuotePriceAdjustmentTotal,
+} from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
+import {
   BadgePercent,
   CalendarDays,
   ChevronDown,
@@ -236,10 +241,12 @@ function PriceSummary({
   product,
   payTodayTotal,
   originalTotal,
+  quotePriceItem,
 }: {
   product: ApiProductFull;
   payTodayTotal: number;
   originalTotal: number;
+  quotePriceItem: QuotePriceAdjustmentItem | null;
 }) {
   return (
     <aside className="h-fit rounded-[8px] bg-white p-3 shadow-sm xl:sticky xl:top-5">
@@ -290,6 +297,8 @@ function PriceSummary({
               ) : null}
             </div>
           </div>
+
+      
         </div>
       </div>
     </aside>
@@ -596,15 +605,20 @@ export default function InstallContainer() {
     selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0
       ? selectedExtra.price
       : 0;
+  const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
+  const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
 
   const [selectedInstallDate, setSelectedInstallDate] = React.useState<string | null>(null);
   const selectedDateSurcharge = isSaturdayDateKey(selectedInstallDate) ? SATURDAY_SURCHARGE : 0;
 
   const payTodayTotalBase = product
-    ? (product.payablePrice ?? product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.payablePrice ?? product.price ?? 0) +
+      selectedControllerPrice +
+      selectedExtraPrice +
+      quotePriceAdjustment
     : 0;
   const originalTotalBase = product
-    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice
+    ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice + quotePriceAdjustment
     : 0;
   const payTodayTotal = payTodayTotalBase + selectedDateSurcharge;
   const originalTotal = originalTotalBase + selectedDateSurcharge;
@@ -700,7 +714,12 @@ export default function InstallContainer() {
               </section>
 
               <div>
-                <PriceSummary product={product} payTodayTotal={payTodayTotal} originalTotal={originalTotal} />
+                <PriceSummary
+                  product={product}
+                  payTodayTotal={payTodayTotal}
+                  originalTotal={originalTotal}
+                  quotePriceItem={quotePriceItem}
+                />
               </div>
             </div>
           )}
