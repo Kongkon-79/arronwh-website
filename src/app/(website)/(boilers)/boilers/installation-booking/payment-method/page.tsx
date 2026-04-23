@@ -332,11 +332,13 @@ function PaymentOption({
   title,
   right,
   onClick,
+  active = false,
   disabled = false,
 }: {
   title: string;
   right?: React.ReactNode;
   onClick?: () => void;
+  active?: boolean;
   disabled?: boolean;
 }) {
   return (
@@ -344,10 +346,16 @@ function PaymentOption({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex w-full items-center justify-between rounded-[6px] border border-[#8f99a6] bg-white px-3 py-4 text-left transition hover:bg-[#fbfbfc] disabled:cursor-not-allowed disabled:opacity-70"
+      className={`flex w-full items-center justify-between rounded-[6px] border px-3 py-4 text-left transition ${
+        active ? "border-[#00aa63] bg-[#f7fffb]" : "border-[#8f99a6] bg-white hover:bg-[#fbfbfc]"
+      } disabled:cursor-not-allowed disabled:opacity-70`}
     >
       <div className="flex items-center gap-3">
-        <Circle className="h-[18px] w-[18px] text-[#344255]" />
+        <Circle
+          className={`h-[18px] w-[18px] ${
+            active ? "fill-[#00aa63] text-[#00aa63]" : "text-[#344255]"
+          }`}
+        />
         <span className="text-[14px] font-medium text-[#2f3b4a]">{title}</span>
       </div>
       {right ? <div className="ml-3 shrink-0">{right}</div> : null}
@@ -375,10 +383,12 @@ function CardBadges() {
 function PaymentSection({
   onSelectCard,
   onSelectMonthly,
+  activePaymentType,
   isUpdatingMethod,
 }: {
   onSelectCard: () => void;
   onSelectMonthly: () => void;
+  activePaymentType: "card" | "monthly" | null;
   isUpdatingMethod: boolean;
 }) {
   return (
@@ -393,8 +403,19 @@ function PaymentSection({
       </p>
 
       <div className="mt-4 space-y-3">
-        <PaymentOption title="Pay by card" right={<CardBadges />} onClick={onSelectCard} disabled={isUpdatingMethod} />
-        <PaymentOption title="Pay monthly" onClick={onSelectMonthly} disabled={isUpdatingMethod} />
+        <PaymentOption
+          title="Pay by card"
+          active={activePaymentType === "card"}
+          right={<CardBadges />}
+          onClick={onSelectCard}
+          disabled={isUpdatingMethod}
+        />
+        <PaymentOption
+          title="Pay monthly"
+          active={activePaymentType === "monthly"}
+          onClick={onSelectMonthly}
+          disabled={isUpdatingMethod}
+        />
       </div>
 
       <div className="mt-4 rounded-[6px] bg-[#edf0f2] px-4 py-3 text-center text-[18px] font-medium text-[#2D3D4D]">
@@ -422,6 +443,7 @@ function BoilerPaymentCloneContent() {
   const searchParams = useSearchParams();
   const quoteId = searchParams.get("quoteId");
   const productIdFromQuery = searchParams.get("productId");
+  const [selectedPaymentType, setSelectedPaymentType] = React.useState<"card" | "monthly" | null>(null);
   const { mutateAsync: mutatePaymentMethod, isPending: isUpdatingPaymentMethod } = useMutation({
     mutationKey: ["update-quote-payment-method"],
     mutationFn: updateQuotePaymentMethod,
@@ -443,6 +465,7 @@ function BoilerPaymentCloneContent() {
       : "/boilers/installation-booking/payment";
   }, [searchParams]);
   const handleSelectMonthly = React.useCallback(async () => {
+    setSelectedPaymentType("monthly");
     if (!quoteId) {
       router.push(monthlyPaymentUrl);
       return;
@@ -464,6 +487,13 @@ function BoilerPaymentCloneContent() {
   }, [monthlyPaymentUrl, mutatePaymentMethod, queryClient, quoteId, router]);
 
   const { data: quote, isLoading: quoteLoading } = useQuoteById(quoteId);
+  const quotePaymentType = React.useMemo(() => {
+    const quoteRecord = quote as unknown as Record<string, unknown> | null;
+    if (quoteRecord?.payByCard === true) return "card";
+    if (quoteRecord?.payMounthly === true || quoteRecord?.payMonthly === true) return "monthly";
+    return null;
+  }, [quote]);
+  const activePaymentType = selectedPaymentType ?? quotePaymentType;
   const quoteProductId =
     typeof quote?.productId === "string" ? quote.productId : quote?.productId?._id ?? null;
   const resolvedProductId = productIdFromQuery ?? quoteProductId;
@@ -513,6 +543,7 @@ function BoilerPaymentCloneContent() {
   const installedAtLabel = extractInstallAddressLabel(quote) || "Not selected";
   const isLoading = (quoteId ? quoteLoading : false) || (resolvedProductId ? productLoading : false);
   const handleSelectCard = React.useCallback(async () => {
+    setSelectedPaymentType("card");
     if (!quoteId) {
       router.push(paymentPageUrl);
       return;
@@ -568,6 +599,7 @@ function BoilerPaymentCloneContent() {
               <PaymentSection
                 onSelectCard={handleSelectCard}
                 onSelectMonthly={handleSelectMonthly}
+                activePaymentType={activePaymentType}
                 isUpdatingMethod={isUpdatingPaymentMethod || isCreatingBooking}
               />
               <FooterDisclaimer />

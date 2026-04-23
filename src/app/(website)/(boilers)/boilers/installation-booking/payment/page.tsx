@@ -373,7 +373,11 @@ function PaymentOption({
       } disabled:cursor-not-allowed disabled:opacity-70`}
     >
       <div className="flex items-center gap-3">
-        <Circle className="h-[18px] w-[18px] text-[#344255]" />
+        <Circle
+          className={`h-[18px] w-[18px] ${
+            active ? "fill-[#00aa63] text-[#00aa63]" : "text-[#344255]"
+          }`}
+        />
         <span className="text-[14px] font-medium text-[#2f3b4a]">{title}</span>
       </div>
       {right ? <div className="ml-3 shrink-0">{right}</div> : null}

@@ -316,35 +316,47 @@ function PriceSummary({
 function CalendarCell({
   day,
   blocked,
+  restrictedBySurveyDate,
   discount,
   isSelected,
   onSelect,
+  onRestrictedSelect,
 }: {
   day?: number;
   blocked?: boolean;
+  restrictedBySurveyDate?: boolean;
   discount?: string;
   isSelected?: boolean;
   onSelect?: (day: number) => void;
+  onRestrictedSelect?: () => void;
 }) {
   if (!day) {
     return <div className="h-[52px] sm:h-[54px]" />;
   }
 
   const isBlocked = Boolean(blocked);
+  const isSurveyRestricted = Boolean(restrictedBySurveyDate);
 
   return (
     <button
       type="button"
       onClick={() => {
-        if (!isBlocked) {
-          onSelect?.(day);
+        if (isBlocked) {
+          return;
         }
+        if (isSurveyRestricted) {
+          onRestrictedSelect?.();
+          return;
+        }
+        onSelect?.(day);
       }}
       disabled={isBlocked}
-      aria-pressed={isBlocked ? undefined : isSelected}
+      aria-pressed={isBlocked || isSurveyRestricted ? undefined : isSelected}
       className={`group flex h-[52px] w-full flex-col items-center justify-center rounded-[6px] text-center transition sm:h-[54px] ${
         isBlocked
           ? "cursor-not-allowed bg-[#f6a9a8] text-[#364254]"
+          : isSurveyRestricted
+            ? "cursor-not-allowed bg-[#e6ebf0] text-[#5e6c7a]"
           : isSelected
             ? "bg-[#27384d] text-white"
             : "bg-white text-[#364254] hover:bg-[#27384d] hover:text-white"
@@ -354,7 +366,11 @@ function CalendarCell({
       {discount ? (
         <span
           className={`mt-1 text-[11px] font-semibold ${
-            isSelected ? "text-white" : "text-[#00b26f] group-hover:text-white"
+            isSelected
+              ? "text-white"
+              : isSurveyRestricted
+                ? "text-[#7b8794]"
+                : "text-[#00b26f] group-hover:text-white"
           }`}
         >
           {discount}
@@ -366,12 +382,14 @@ function CalendarCell({
 
 function InstallSection({
   blockedDateKeys,
+  surveyDateKey,
   isBookingDatesLoading,
   isSubmittingInstallDate,
   onSubmitInstallDate,
   onSelectedDateChange,
 }: {
   blockedDateKeys: ReadonlySet<string>;
+  surveyDateKey?: string | null;
   isBookingDatesLoading: boolean;
   isSubmittingInstallDate: boolean;
   onSubmitInstallDate: (installDate: string | null) => void;
@@ -519,14 +537,31 @@ function InstallSection({
               ))}
 
               {calendarRows.flat().map((cell, idx) => (
-                <CalendarCell
-                  key={idx}
-                  day={cell?.day}
-                  blocked={cell?.blocked}
-                  discount={cell?.discount}
-                  isSelected={selectedDay === cell?.day}
-                  onSelect={setSelectedDay}
-                />
+                (() => {
+                  const cellDateKey = cell?.day
+                    ? `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-${String(cell.day).padStart(2, "0")}`
+                    : null;
+                  const isRestrictedBySurveyDate = Boolean(
+                    surveyDateKey && cellDateKey && cellDateKey <= surveyDateKey
+                  );
+
+                  return (
+                    <CalendarCell
+                      key={idx}
+                      day={cell?.day}
+                      blocked={cell?.blocked}
+                      restrictedBySurveyDate={isRestrictedBySurveyDate}
+                      discount={cell?.discount}
+                      isSelected={selectedDay === cell?.day}
+                      onSelect={setSelectedDay}
+                      onRestrictedSelect={() =>
+                        toast.error(
+                          "Please choose a date after your survey date. Need it earlier? Call us and we will see if we can install sooner."
+                        )
+                      }
+                    />
+                  );
+                })()
               ))}
             </div>
           </div>
@@ -581,6 +616,7 @@ export default function InstallContainer() {
   const searchParams = useSearchParams();
   const quoteId = searchParams.get("quoteId");
   const productIdFromQuery = searchParams.get("productId");
+  const surveyDateFromQuery = searchParams.get("surveyDate");
   const { mutateAsync: mutateInstallDate, isPending: isUpdatingInstallDate } = useMutation({
     mutationKey: ["update-quote-install-date"],
     mutationFn: updateQuoteInstallDate,
@@ -594,6 +630,10 @@ export default function InstallContainer() {
   });
 
   const { data: quote, isLoading: quoteLoading } = useQuoteById(quoteId);
+  const surveyDateKey = React.useMemo(
+    () => getDateKeyFromIso(surveyDateFromQuery ?? quote?.surveyDate ?? null),
+    [quote?.surveyDate, surveyDateFromQuery]
+  );
   const quoteProductId =
     typeof quote?.productId === "string" ? quote.productId : quote?.productId?._id ?? null;
   const resolvedProductId = productIdFromQuery ?? quoteProductId;
@@ -669,6 +709,14 @@ export default function InstallContainer() {
       return;
     }
 
+    const installDateKey = getDateKeyFromIso(installDate);
+    if (surveyDateKey && installDateKey && installDateKey <= surveyDateKey) {
+      toast.error(
+        "Please choose a date after your survey date. Need it earlier? Call us and we will see if we can install sooner."
+      );
+      return;
+    }
+
     try {
       await mutateInstallDate({
         quoteId,
@@ -714,6 +762,7 @@ export default function InstallContainer() {
 
                 <InstallSection
                   blockedDateKeys={blockedInstallDateKeys}
+                  surveyDateKey={surveyDateKey}
                   isBookingDatesLoading={installSurveyDataLoading}
                   isSubmittingInstallDate={isUpdatingInstallDate}
                   onSubmitInstallDate={handleSubmitInstallDate}

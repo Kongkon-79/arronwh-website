@@ -95,7 +95,7 @@ const ExploreOurHeating = () => {
         <div className="">
           <div className="pb-4">
             <h2 className="heading text-center">
-              Explore our heating & energy solutions
+              Explore our boiler & energy solutions
             </h2>
             <p className="desc text-center mt-3">
               Get instant prices for boilers, air conditioning, solar, and more

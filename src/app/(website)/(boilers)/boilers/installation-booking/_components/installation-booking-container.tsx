@@ -688,6 +688,7 @@ export default function InstallationBookingContainer() {
         params.set("productId", resolvedProductId);
       }
       params.set("quoteId", quoteId);
+      params.set("surveyDate", surveyDate);
 
       const query = params.toString();
       router.push(

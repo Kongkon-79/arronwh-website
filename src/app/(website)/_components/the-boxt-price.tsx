@@ -18,12 +18,12 @@ const TheBoxtPrice = () => {
                 mind.
               </p>
 
-              <button
+              {/* <button
                 type="button"
                 className="mt-5 inline-flex h-[42px] items-center justify-center rounded-[8px] bg-white px-6 text-[13px] font-medium text-[#2D3D4D] leading-normal transition-colors hover:bg-[#F8FAFC]"
               >
                 Find Out more
-              </button>
+              </button> */}
             </div>
 
             <div className="mx-auto flex w-full justify-center lg:justify-end">
