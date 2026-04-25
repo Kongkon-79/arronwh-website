@@ -55,18 +55,18 @@ import FourteenSixteen from "../../../../../../../public/assets/images/boilers/f
 import SeventeenPlus from "../../../../../../../public/assets/images/boilers/seventeen-plus.svg";
 import TRVYes from "../../../../../../../public/assets/images/boilers/trv-yes.svg";
 import TRVNo from "../../../../../../../public/assets/images/boilers/trv-no.svg";
-import Roof from "../../../../../../../public/assets/images/boilers/roof.svg";
-import Wall from "../../../../../../../public/assets/images/boilers/wall.svg";
-import SlopedRoof from "../../../../../../../public/assets/images/boilers/sloped-roof.svg";
-import FlatRoof from "../../../../../../../public/assets/images/boilers/flat-roof-flue.svg";
-import HighestThird from "../../../../../../../public/assets/images/boilers/highest-third.svg";
-import LowestThird from "../../../../../../../public/assets/images/boilers/lowest-third.svg";
-import Under1m from "../../../../../../../public/assets/images/boilers/under-one-metre.svg";
-import OneTwoM from "../../../../../../../public/assets/images/boilers/one-to-two-metres.svg";
-import TwoThreeM from "../../../../../../../public/assets/images/boilers/two-to-three-metres.svg";
-import ThreePlusM from "../../../../../../../public/assets/images/boilers/three-plus-metres.svg";
-import FlueSquare from "../../../../../../../public/assets/images/boilers/square.svg";
-import FlueRound from "../../../../../../../public/assets/images/boilers/round.svg";
+// import Roof from "../../../../../../../public/assets/images/boilers/roof.svg";
+// import Wall from "../../../../../../../public/assets/images/boilers/wall.svg";
+// import SlopedRoof from "../../../../../../../public/assets/images/boilers/sloped-roof.svg";
+// import FlatRoof from "../../../../../../../public/assets/images/boilers/flat-roof-flue.svg";
+// import HighestThird from "../../../../../../../public/assets/images/boilers/highest-third.svg";
+// import LowestThird from "../../../../../../../public/assets/images/boilers/lowest-third.svg";
+// import Under1m from "../../../../../../../public/assets/images/boilers/under-one-metre.svg";
+// import OneTwoM from "../../../../../../../public/assets/images/boilers/one-to-two-metres.svg";
+// import TwoThreeM from "../../../../../../../public/assets/images/boilers/two-to-three-metres.svg";
+// import ThreePlusM from "../../../../../../../public/assets/images/boilers/three-plus-metres.svg";
+// import FlueSquare from "../../../../../../../public/assets/images/boilers/square.svg";
+// import FlueRound from "../../../../../../../public/assets/images/boilers/round.svg";
 import FlueMoreThanTwoMetres from "../../../../../../../public/assets/images/boilers/flue-more-than-two-metres.svg";
 import FlueLessThanTwoMetres from "../../../../../../../public/assets/images/boilers/flue-less-than-two-metres.svg";
 import FlueMoreThanTwoMetresProperty from "../../../../../../../public/assets/images/boilers/flue-more-than-two-metres-property.svg";
@@ -491,53 +491,53 @@ export const propertyChoiceSteps: ChoiceStep[] = [
       { label: "No", value: "No", image: No },
     ],
   },
-  {
-    id: "flueOut",
-    question: "Where does your flue come out?",
-    cols: "md:grid-cols-2",
-    options: [
-      { label: "Roof", value: "Roof", image: Roof },
-      { label: "Wall", value: "Wall", image: Wall },
-    ],
-  },
-  {
-    id: "roofType",
-    question: "Is your flue in a sloped roof or a flat roof?",
-    cols: "md:grid-cols-2",
-    options: [
-      { label: "Sloped", value: "Sloped", image: SlopedRoof },
-      { label: "Flat", value: "Flat", image: FlatRoof },
-    ],
-  },
-  {
-    id: "roofPosition",
-    question: "Where on the roof is it positioned?",
-    cols: "md:grid-cols-2",
-    options: [
-      { label: "Highest two-thirds", value: "Highest two-thirds", image: HighestThird },
-      { label: "Lowest third", value: "Lowest third", image: LowestThird },
-    ],
-  },
-  {
-    id: "flueWallDistance",
-    question: "How far is your current boiler from an outside wall?",
-    cols: "md:grid-cols-2",
-    options: [
-      { label: "Under 1 metre", value: "Under 1m", image: Under1m },
-      { label: "1-2 metres", value: "1-2m", image: OneTwoM },
-      { label: "2-3 metres", value: "2-3m", image: TwoThreeM },
-      { label: "3+ metres", value: "3m+", image: ThreePlusM },
-    ],
-  },
-  {
-    id: "flueShape",
-    question: "Is your current flue square or round?",
-    cols: "md:grid-cols-2",
-    options: [
-      { label: "Square", value: "Square", image: FlueSquare },
-      { label: "Round", value: "Round", image: FlueRound },
-    ],
-  },
+  // {
+  //   id: "flueOut",
+  //   question: "Where does your flue come out?",
+  //   cols: "md:grid-cols-2",
+  //   options: [
+  //     { label: "Roof", value: "Roof", image: Roof },
+  //     { label: "Wall", value: "Wall", image: Wall },
+  //   ],
+  // },
+  // {
+  //   id: "roofType",
+  //   question: "Is your flue in a sloped roof or a flat roof?",
+  //   cols: "md:grid-cols-2",
+  //   options: [
+  //     { label: "Sloped", value: "Sloped", image: SlopedRoof },
+  //     { label: "Flat", value: "Flat", image: FlatRoof },
+  //   ],
+  // },
+  // {
+  //   id: "roofPosition",
+  //   question: "Where on the roof is it positioned?",
+  //   cols: "md:grid-cols-2",
+  //   options: [
+  //     { label: "Highest two-thirds", value: "Highest two-thirds", image: HighestThird },
+  //     { label: "Lowest third", value: "Lowest third", image: LowestThird },
+  //   ],
+  // },
+  // {
+  //   id: "flueWallDistance",
+  //   question: "How far is your current boiler from an outside wall?",
+  //   cols: "md:grid-cols-2",
+  //   options: [
+  //     { label: "Under 1 metre", value: "Under 1m", image: Under1m },
+  //     { label: "1-2 metres", value: "1-2m", image: OneTwoM },
+  //     { label: "2-3 metres", value: "2-3m", image: TwoThreeM },
+  //     { label: "3+ metres", value: "3m+", image: ThreePlusM },
+  //   ],
+  // },
+  // {
+  //   id: "flueShape",
+  //   question: "Is your current flue square or round?",
+  //   cols: "md:grid-cols-2",
+  //   options: [
+  //     { label: "Square", value: "Square", image: FlueSquare },
+  //     { label: "Round", value: "Round", image: FlueRound },
+  //   ],
+  // },
   {
     id: "flueGroundDistance",
     question: "How close to the ground is your flue?",
