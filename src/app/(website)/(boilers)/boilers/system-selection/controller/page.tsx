@@ -20,6 +20,10 @@ import {
   getPrimaryQuotePriceAdjustmentItem,
   getQuotePriceAdjustmentTotal,
 } from "../_utils/quote-price-adjustment";
+import {
+  getBrowserPageUrl,
+  sendQuoteEmail,
+} from "../_utils/quote-email";
 
 function formatControllerPrice(price: number): string {
   if (price <= 0) return "Included";
@@ -32,12 +36,6 @@ function formatMoney(value: number): string {
 }
 
 type UpdateControllerResponse = {
-  success?: boolean;
-  status?: boolean;
-  message?: string;
-};
-
-type EmailQuoteResponse = {
   success?: boolean;
   status?: boolean;
   message?: string;
@@ -90,24 +88,6 @@ async function updateQuoteController({
   return result ?? {};
 }
 
-async function emailQuote({ quoteId }: { quoteId: string }): Promise<EmailQuoteResponse> {
-  const response = await fetch(
-    `${resolveQuoteEndpoint()}/${encodeURIComponent(quoteId)}/email`,
-    {
-      method: "POST",
-    }
-  );
-
-  const result = (await response.json().catch(() => null)) as EmailQuoteResponse | null;
-  const hasExplicitFailure = result?.success === false || result?.status === false;
-
-  if (!response.ok || hasExplicitFailure) {
-    throw new Error(result?.message || "Failed to send quote email.");
-  }
-
-  return result ?? {};
-}
-
 function ChooseControlsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -126,7 +106,7 @@ function ChooseControlsPage() {
   });
   const { mutateAsync: mutateEmailQuote, isPending: isEmailingQuote } = useMutation({
     mutationKey: ["email-quote"],
-    mutationFn: emailQuote,
+    mutationFn: sendQuoteEmail,
   });
 
   const [selectedControllerId, setSelectedControllerId] = useState<string | null>(null);
@@ -244,7 +224,11 @@ function ChooseControlsPage() {
     }
 
     try {
-      const result = await mutateEmailQuote({ quoteId });
+      const result = await mutateEmailQuote({
+        quoteId,
+        pageUrl: getBrowserPageUrl(),
+        price: payTodayTotal,
+      });
       toast.success(result.message || "Quote email sent successfully.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to send quote email.");

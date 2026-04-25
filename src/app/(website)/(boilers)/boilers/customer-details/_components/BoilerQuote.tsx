@@ -35,6 +35,10 @@ import {
   getPrimaryQuotePriceAdjustmentItem,
   getQuotePriceAdjustmentTotal,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
+import {
+  getBrowserPageUrl,
+  sendQuoteEmail,
+} from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-email";
 
 type IncludedItem = {
   icon: ElementType;
@@ -54,40 +58,6 @@ const accordions = [
   { icon: MapPin, label: "Where are we visiting?" },
   { icon: CreditCard, label: "How would you like to pay?" },
 ];
-
-type EmailQuoteResponse = {
-  success?: boolean;
-  status?: boolean;
-  message?: string;
-};
-
-function resolveQuoteEndpoint(): string {
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return `${process.env.NEXT_PUBLIC_API_BASE_URL}/quote`;
-  }
-  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
-    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/quote`;
-  }
-  return "/quote";
-}
-
-async function emailQuote({ quoteId }: { quoteId: string }): Promise<EmailQuoteResponse> {
-  const response = await fetch(
-    `${resolveQuoteEndpoint()}/${encodeURIComponent(quoteId)}/email`,
-    {
-      method: "POST",
-    }
-  );
-
-  const result = (await response.json().catch(() => null)) as EmailQuoteResponse | null;
-  const hasExplicitFailure = result?.success === false || result?.status === false;
-
-  if (!response.ok || hasExplicitFailure) {
-    throw new Error(result?.message || "Failed to send quote email.");
-  }
-
-  return result ?? {};
-}
 
 function formatMoney(value: number): string {
   if (value % 1 === 0) return `£${value.toLocaleString("en-US")}`;
@@ -356,7 +326,7 @@ export default function BoilerQuote() {
   const productIdFromQuery = searchParams.get("productId");
   const { mutateAsync: mutateEmailQuote, isPending: isEmailingQuote } = useMutation({
     mutationKey: ["email-quote"],
-    mutationFn: emailQuote,
+    mutationFn: sendQuoteEmail,
   });
 
   const { data: quote, isLoading: quoteLoading } = useQuoteById(quoteId);
@@ -423,7 +393,11 @@ export default function BoilerQuote() {
     }
 
     try {
-      const result = await mutateEmailQuote({ quoteId });
+      const result = await mutateEmailQuote({
+        quoteId,
+        pageUrl: getBrowserPageUrl(),
+        price: payTodayTotal,
+      });
       toast.success(result.message || "Quote email sent successfully.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to send quote email.");

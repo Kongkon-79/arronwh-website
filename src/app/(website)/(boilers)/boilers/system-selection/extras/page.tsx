@@ -16,14 +16,12 @@ import {
   getPrimaryQuotePriceAdjustmentItem,
   getQuotePriceAdjustmentTotal,
 } from "../_utils/quote-price-adjustment";
+import {
+  getBrowserPageUrl,
+  sendQuoteEmail,
+} from "../_utils/quote-email";
 
 type UpdateExtraResponse = {
-  success?: boolean;
-  status?: boolean;
-  message?: string;
-};
-
-type EmailQuoteResponse = {
   success?: boolean;
   status?: boolean;
   message?: string;
@@ -73,24 +71,6 @@ async function updateQuoteExtra({
   return result ?? {};
 }
 
-async function emailQuote({ quoteId }: { quoteId: string }): Promise<EmailQuoteResponse> {
-  const response = await fetch(
-    `${resolveQuoteEndpoint()}/${encodeURIComponent(quoteId)}/email`,
-    {
-      method: "POST",
-    }
-  );
-
-  const result = (await response.json().catch(() => null)) as EmailQuoteResponse | null;
-  const hasExplicitFailure = result?.success === false || result?.status === false;
-
-  if (!response.ok || hasExplicitFailure) {
-    throw new Error(result?.message || "Failed to send quote email.");
-  }
-
-  return result ?? {};
-}
-
 function formatMoney(value: number): string {
   if (value % 1 === 0) return `£${value.toLocaleString("en-US")}`;
   return `£${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -112,7 +92,7 @@ function ExtrasPageContent() {
   });
   const { mutateAsync: mutateEmailQuote, isPending: isEmailingQuote } = useMutation({
     mutationKey: ["email-quote"],
-    mutationFn: emailQuote,
+    mutationFn: sendQuoteEmail,
   });
 
   const { data: extras = [], isLoading: extrasLoading } = useExtras();
@@ -235,7 +215,11 @@ function ExtrasPageContent() {
     }
 
     try {
-      const result = await mutateEmailQuote({ quoteId });
+      const result = await mutateEmailQuote({
+        quoteId,
+        pageUrl: getBrowserPageUrl(),
+        price: payTodayTotal,
+      });
       toast.success(result.message || "Quote email sent successfully.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to send quote email.");
