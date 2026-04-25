@@ -13,11 +13,11 @@ const Footer = () => {
           <div className="max-w-[260px]">
             <Link href="/" className="inline-flex">
               <Image
-                src="/assets/images/footer-logo.png"
+                src="/assets/images/logo.png"
                 alt="Yolo Heat logo"
                 width={180}
                 height={72}
-                className="h-auto w-[96px] object-contain"
+                className="h-auto w-[200px] object-contain"
               />
             </Link>
 

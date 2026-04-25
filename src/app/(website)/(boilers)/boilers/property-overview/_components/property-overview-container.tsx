@@ -229,6 +229,12 @@ const PropertyOverviewContainer = () => {
             <span className="text-primary">different place</span>?
           </>
         );
+      case "airingCupboardLocation":
+        return (
+          <>
+            Where is your <span className="text-primary">airing cupboard</span>?
+          </>
+        );
       case "newBoilerLocation":
         return (
           <>
@@ -243,17 +249,24 @@ const PropertyOverviewContainer = () => {
             <span className="text-primary">your home</span>?
           </>
         );
+      case "bungalowFloors":
+        return (
+          <>
+            Is your <span className="text-primary">bungalow</span> on one or
+            two floors?
+          </>
+        );
       case "flatOnSecondFloor":
         return (
           <>
-            Is your <span className="text-[#F25B5B]">flat</span> on or above the
+            Is your <span className="text-primary">flat</span> on or above the
             second floor?
           </>
         );
       case "accessEquipmentCharges":
         return (
           <>
-            <span className="text-[#F25B5B]">Do you accept</span> that there may
+            <span className="text-primary">Do you accept</span> that there may
             be extra charges for access equipment?
           </>
         );
@@ -270,11 +283,38 @@ const PropertyOverviewContainer = () => {
             or plan to have in the future?
           </>
         );
+      case "bathtubShowerOver":
+        return (
+          <>
+            Do any of your <span className="text-primary">bathtubs</span> have
+            showers over them?
+          </>
+        );
       case "showers":
         return (
           <>
             How many <span className="text-primary">separate showers</span> do
             you have, or plan to have in the future?
+          </>
+        );
+      case "electricShower":
+        return (
+          <>
+            Do you have an <span className="text-primary">electric shower</span>
+            ?
+          </>
+        );
+      case "powerShower":
+        return (
+          <>
+            Is it a <span className="text-primary">power shower</span>?
+          </>
+        );
+      case "pumpSeparatedFromShower":
+        return (
+          <>
+            Is the <span className="text-primary">pump</span> separated from
+            the shower?
           </>
         );
       case "radiators":
@@ -412,7 +452,7 @@ const PropertyOverviewContainer = () => {
     }
     if (
       step?.id === "currentBoilerLocation" &&
-      answers.differentPlace === "Yes" &&
+      answers.differentPlace === "Move somewhere else" &&
       answers.newBoilerLocation &&
       answers.newBoilerLocation !== "Airing cupboard" &&
       answers.newBoilerLocation !== "Somewhere else"
@@ -457,15 +497,55 @@ const PropertyOverviewContainer = () => {
       }
     }
     if (
+      (step?.id === "flatOnSecondFloor" ||
+        step?.id === "accessEquipmentCharges") &&
+      answers.homeType === "Flat"
+    ) {
+      const homeTypeStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "homeType",
+      );
+      if (homeTypeStepIndex >= 0) {
+        goToStep(homeTypeStepIndex);
+        return;
+      }
+    }
+    if (
       step?.id === "homeType" &&
       answers.differentPlace &&
-      answers.differentPlace !== "Yes"
+      answers.differentPlace !== "Move somewhere else"
     ) {
+      if (
+        answers.differentPlace === "Move to airing cupboard" ||
+        (answers.differentPlace === "No" &&
+          answers.currentBoilerLocation === "Airing cupboard")
+      ) {
+        const airingCupboardLocationStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "airingCupboardLocation",
+        );
+        if (airingCupboardLocationStepIndex >= 0) {
+          goToStep(airingCupboardLocationStepIndex);
+          return;
+        }
+      }
+
       const differentPlaceStepIndex = propertyChoiceSteps.findIndex(
         (item) => item.id === "differentPlace",
       );
       if (differentPlaceStepIndex >= 0) {
         goToStep(differentPlaceStepIndex);
+        return;
+      }
+    }
+    if (
+      step?.id === "bedrooms" &&
+      answers.homeType === "Bungalow" &&
+      answers.bungalowFloors
+    ) {
+      const bungalowFloorsStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "bungalowFloors",
+      );
+      if (bungalowFloorsStepIndex >= 0) {
+        goToStep(bungalowFloorsStepIndex);
         return;
       }
     }
@@ -495,6 +575,55 @@ const PropertyOverviewContainer = () => {
         return;
       }
     }
+    if (step?.id === "radiators" && answers.showers === "0 showers") {
+      const showersStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "showers",
+      );
+      if (showersStepIndex >= 0) {
+        goToStep(showersStepIndex);
+        return;
+      }
+    }
+    if (step?.id === "radiators" && answers.electricShower === "No") {
+      const electricShowerStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "electricShower",
+      );
+      if (electricShowerStepIndex >= 0) {
+        goToStep(electricShowerStepIndex);
+        return;
+      }
+    }
+    if (step?.id === "radiators" && answers.powerShower === "No") {
+      const powerShowerStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "powerShower",
+      );
+      if (powerShowerStepIndex >= 0) {
+        goToStep(powerShowerStepIndex);
+        return;
+      }
+    }
+    if (
+      step?.id === "radiators" &&
+      answers.powerShower === "Yes" &&
+      answers.pumpSeparatedFromShower
+    ) {
+      const pumpSeparatedStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "pumpSeparatedFromShower",
+      );
+      if (pumpSeparatedStepIndex >= 0) {
+        goToStep(pumpSeparatedStepIndex);
+        return;
+      }
+    }
+    if (step?.id === "showers" && answers.bathtubs === "0 bathtubs") {
+      const bathtubsStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "bathtubs",
+      );
+      if (bathtubsStepIndex >= 0) {
+        goToStep(bathtubsStepIndex);
+        return;
+      }
+    }
     prevStep();
   };
 
@@ -504,7 +633,7 @@ const PropertyOverviewContainer = () => {
     setAnswer("otherRoomName", roomName);
     setIsOtherRoomPrompt(false);
     const shouldRouteToHomeTypeAfterCurrentLocation =
-      answers.differentPlace === "Yes" &&
+      answers.differentPlace === "Move somewhere else" &&
       answers.newBoilerLocation &&
       answers.newBoilerLocation !== "Airing cupboard" &&
       answers.newBoilerLocation !== "Somewhere else";
@@ -590,9 +719,10 @@ const PropertyOverviewContainer = () => {
           answers.differentPlace === "Move to airing cupboard"
         ) {
           setAnswer("differentPlace", "");
+          setAnswer("airingCupboardLocation", "");
         }
         const shouldRouteToHomeTypeAfterCurrentLocation =
-          answers.differentPlace === "Yes" &&
+          answers.differentPlace === "Move somewhere else" &&
           answers.newBoilerLocation &&
           answers.newBoilerLocation !== "Airing cupboard" &&
           answers.newBoilerLocation !== "Somewhere else";
@@ -617,7 +747,8 @@ const PropertyOverviewContainer = () => {
       }
     }
     if (step.id === "differentPlace") {
-      if (value === "Yes") {
+      if (value === "Move somewhere else") {
+        setAnswer("airingCupboardLocation", "");
         const newBoilerLocationStepIndex = propertyChoiceSteps.findIndex(
           (item) => item.id === "newBoilerLocation",
         );
@@ -625,8 +756,33 @@ const PropertyOverviewContainer = () => {
           goToStep(newBoilerLocationStepIndex);
           return;
         }
+      } else if (value === "Move to airing cupboard") {
+        setAnswer("newBoilerLocation", "");
+        const airingCupboardLocationStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "airingCupboardLocation",
+        );
+        if (airingCupboardLocationStepIndex >= 0) {
+          goToStep(airingCupboardLocationStepIndex);
+          return;
+        }
       } else {
         setAnswer("newBoilerLocation", "");
+        const shouldRouteToAiringCupboardLocation =
+          value === "No" && answers.currentBoilerLocation === "Airing cupboard";
+        if (!shouldRouteToAiringCupboardLocation) {
+          setAnswer("airingCupboardLocation", "");
+        }
+
+        if (shouldRouteToAiringCupboardLocation) {
+          const airingCupboardLocationStepIndex = propertyChoiceSteps.findIndex(
+            (item) => item.id === "airingCupboardLocation",
+          );
+          if (airingCupboardLocationStepIndex >= 0) {
+            goToStep(airingCupboardLocationStepIndex);
+            return;
+          }
+        }
+
         const homeTypeStepIndex = propertyChoiceSteps.findIndex(
           (item) => item.id === "homeType",
         );
@@ -636,9 +792,50 @@ const PropertyOverviewContainer = () => {
         }
       }
     }
+    if (step.id === "airingCupboardLocation") {
+      const homeTypeStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "homeType",
+      );
+      if (homeTypeStepIndex >= 0) {
+        goToStep(homeTypeStepIndex);
+        return;
+      }
+    }
     if (step.id === "homeType" && value !== "Flat") {
+      if (value === "Bungalow") {
+        setAnswer("flatOnSecondFloor", "");
+        setAnswer("accessEquipmentCharges", "");
+        const bungalowFloorsStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "bungalowFloors",
+        );
+        if (bungalowFloorsStepIndex >= 0) {
+          goToStep(bungalowFloorsStepIndex);
+          return;
+        }
+      }
+
       setAnswer("flatOnSecondFloor", "");
       setAnswer("accessEquipmentCharges", "");
+      setAnswer("bungalowFloors", "");
+      const bedroomsStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "bedrooms",
+      );
+      if (bedroomsStepIndex >= 0) {
+        goToStep(bedroomsStepIndex);
+        return;
+      }
+    }
+    if (step.id === "homeType" && value === "Flat") {
+      setAnswer("bungalowFloors", "");
+      const flatOnSecondFloorStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "flatOnSecondFloor",
+      );
+      if (flatOnSecondFloorStepIndex >= 0) {
+        goToStep(flatOnSecondFloorStepIndex);
+        return;
+      }
+    }
+    if (step.id === "bungalowFloors") {
       const bedroomsStepIndex = propertyChoiceSteps.findIndex(
         (item) => item.id === "bedrooms",
       );
@@ -648,7 +845,18 @@ const PropertyOverviewContainer = () => {
       }
     }
     if (step.id === "flatOnSecondFloor") {
-      if (value === "No") {
+      if (value === "Yes") {
+        const accessEquipmentStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "accessEquipmentCharges",
+        );
+        if (accessEquipmentStepIndex >= 0) {
+          goToStep(accessEquipmentStepIndex);
+          return;
+        }
+      }
+
+      // For "No" (and any unexpected value), continue directly to bedrooms.
+      if (value !== "Yes") {
         setAnswer("accessEquipmentCharges", "");
         const bedroomsStepIndex = propertyChoiceSteps.findIndex(
           (item) => item.id === "bedrooms",
@@ -658,18 +866,108 @@ const PropertyOverviewContainer = () => {
           return;
         }
       }
-
-      const accessEquipmentStepIndex = propertyChoiceSteps.findIndex(
-        (item) => item.id === "accessEquipmentCharges",
-      );
-      if (accessEquipmentStepIndex >= 0) {
-        goToStep(accessEquipmentStepIndex);
-        return;
-      }
     }
     if (step.id === "accessEquipmentCharges" && value === "No") {
       router.push("/boilers/callout");
       return;
+    }
+    if (step.id === "bathtubs") {
+      if (value === "0 bathtubs") {
+        setAnswer("bathtubShowerOver", "");
+        const showersStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "showers",
+        );
+        if (showersStepIndex >= 0) {
+          goToStep(showersStepIndex);
+          return;
+        }
+      }
+
+      const bathtubShowerOverStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "bathtubShowerOver",
+      );
+      if (bathtubShowerOverStepIndex >= 0) {
+        goToStep(bathtubShowerOverStepIndex);
+        return;
+      }
+    }
+    if (step.id === "bathtubShowerOver") {
+      const showersStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "showers",
+      );
+      if (showersStepIndex >= 0) {
+        goToStep(showersStepIndex);
+        return;
+      }
+    }
+    if (step.id === "showers") {
+      if (value === "0 showers") {
+        setAnswer("electricShower", "");
+        const radiatorsStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "radiators",
+        );
+        if (radiatorsStepIndex >= 0) {
+          goToStep(radiatorsStepIndex);
+          return;
+        }
+      }
+
+      const electricShowerStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "electricShower",
+      );
+      if (electricShowerStepIndex >= 0) {
+        goToStep(electricShowerStepIndex);
+        return;
+      }
+    }
+    if (step.id === "electricShower") {
+      if (value === "Yes") {
+        const powerShowerStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "powerShower",
+        );
+        if (powerShowerStepIndex >= 0) {
+          goToStep(powerShowerStepIndex);
+          return;
+        }
+      }
+
+      setAnswer("powerShower", "");
+      const radiatorsStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "radiators",
+      );
+      if (radiatorsStepIndex >= 0) {
+        goToStep(radiatorsStepIndex);
+        return;
+      }
+    }
+    if (step.id === "powerShower") {
+      if (value === "Yes") {
+        const pumpSeparatedStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "pumpSeparatedFromShower",
+        );
+        if (pumpSeparatedStepIndex >= 0) {
+          goToStep(pumpSeparatedStepIndex);
+          return;
+        }
+      }
+
+      setAnswer("pumpSeparatedFromShower", "");
+      const radiatorsStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "radiators",
+      );
+      if (radiatorsStepIndex >= 0) {
+        goToStep(radiatorsStepIndex);
+        return;
+      }
+    }
+    if (step.id === "pumpSeparatedFromShower") {
+      const radiatorsStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "radiators",
+      );
+      if (radiatorsStepIndex >= 0) {
+        goToStep(radiatorsStepIndex);
+        return;
+      }
     }
     if (step.id === "newBoilerLocation") {
       if (value === "Somewhere else") {
@@ -678,20 +976,21 @@ const PropertyOverviewContainer = () => {
       }
 
       if (value === "Airing cupboard") {
-        const homeTypeStepIndex = propertyChoiceSteps.findIndex(
-          (item) => item.id === "homeType",
+        const airingCupboardLocationStepIndex = propertyChoiceSteps.findIndex(
+          (item) => item.id === "airingCupboardLocation",
         );
-        if (homeTypeStepIndex >= 0) {
-          goToStep(homeTypeStepIndex);
+        if (airingCupboardLocationStepIndex >= 0) {
+          goToStep(airingCupboardLocationStepIndex);
           return;
         }
       }
 
-      const currentBoilerLocationStepIndex = propertyChoiceSteps.findIndex(
-        (item) => item.id === "currentBoilerLocation",
+      setAnswer("airingCupboardLocation", "");
+      const homeTypeStepIndex = propertyChoiceSteps.findIndex(
+        (item) => item.id === "homeType",
       );
-      if (currentBoilerLocationStepIndex >= 0) {
-        goToStep(currentBoilerLocationStepIndex);
+      if (homeTypeStepIndex >= 0) {
+        goToStep(homeTypeStepIndex);
         return;
       }
     }
@@ -772,7 +1071,7 @@ const PropertyOverviewContainer = () => {
                   alt="Multi Step Logo"
                   width={332}
                   height={332}
-                  className="h-[36px] w-[126px] object-contain"
+                  className="h-[46px] w-[200px] object-contain"
                 />
               </Link>
             </div>
@@ -869,12 +1168,26 @@ const PropertyOverviewContainer = () => {
               combi boiler to be installed. All this will be included in your
               fixed price.
             </p>
-          ) : step?.id === "newBoilerLocation" ? (
+          ) : step?.id === "electricShower" ? (
             <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
-              Big moves will cost a bit more. For a loft, you&apos;ll need a
-              ladder and a light up there.
+              Electric showers heat water themselves, rather than getting hot
+              water from the boiler.
             </p>
-          ) : step?.id === "flatOnSecondFloor" ? (
+          ) : step?.id === "powerShower" ? (
+            <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
+              It uses a pump to increase your water pressure, making a loud
+              noise when you turn it on
+            </p>
+          )
+          
+          // : step?.id === "newBoilerLocation" ? (
+          //   <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
+          //     Big moves will cost a bit more. For a loft, you&apos;ll need a
+          //     ladder and a light up there.
+          //   </p>
+          // )
+          
+          : step?.id === "flatOnSecondFloor" ? (
             <p className="mx-auto mt-3 max-w-[900px] text-center text-sm md:text-base leading-[1.45] text-[#2D3D4D]">
               If your lowest floor is more than one storey off the ground,
               answer Yes.
@@ -917,11 +1230,17 @@ const PropertyOverviewContainer = () => {
                 const Icon = option.icon;
                 const optionImage = option.image;
                 const isHoverDescriptionCard =
-                  step.id === "fuelType" || step.id === "boilerType";
+                  step.id === "fuelType" ||
+                  step.id === "boilerType" ||
+                  step.id === "homeType" ||
+                  step.id === "airingCupboardLocation" ||
+                  step.id === "bungalowFloors";
                 const isConvertStep = step.id === "convertToCombi";
                 const isWaterFlowStep = step.id === "waterFlowRate";
                 const isFuelTypeCard = step.id === "fuelType";
                 const isNewBoilerLocationStep = step.id === "newBoilerLocation";
+                const isAiringCupboardLocationStep =
+                  step.id === "airingCupboardLocation";
 
                 return (
                   <button
@@ -944,7 +1263,14 @@ const PropertyOverviewContainer = () => {
                     )}
                   >
                     {isNewBoilerLocationStep && option.priceTag ? (
-                      <div className="absolute top-0 right-0 rounded-bl-[10px] rounded-tr-[10px] bg-[#24384B] px-3 py-1 text-sm font-bold text-white">
+                      <div
+                        className={cn(
+                          "absolute top-2 right-2 rounded-[10px] px-3 py-1 text-sm font-bold text-white",
+                          option.priceTag === "Free"
+                            ? "bg-primary"
+                            : "bg-[#24384B]",
+                        )}
+                      >
                         {option.priceTag}
                       </div>
                     ) : null}
@@ -1006,7 +1332,7 @@ const PropertyOverviewContainer = () => {
                         <Info className="h-8 w-8" strokeWidth={1.5} />
                       </div>
                     ) : null}
-                    {isWaterFlowStep ? (
+                    {isWaterFlowStep || isAiringCupboardLocationStep ? (
                       <div
                         className={cn(
                           "pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 text-[#2D3D4D] transition-opacity duration-200",

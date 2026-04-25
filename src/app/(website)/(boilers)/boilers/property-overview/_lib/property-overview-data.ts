@@ -75,9 +75,13 @@ import FlueCarportYes from "../../../../../../../public/assets/images/boilers/fl
 import FlueCarportNo from "../../../../../../../public/assets/images/boilers/flue-carport-no.svg";
 import FlueUnderThirtyCm from "../../../../../../../public/assets/images/boilers/flue-under-thirty-cm.svg";
 import FlueOverThirtyCm from "../../../../../../../public/assets/images/boilers/flue-over-thirty-cm.svg";
-import SameRoom from "../../../../../../../public/assets/images/boilers/same-room.svg";
+// import SameRoom from "../../../../../../../public/assets/images/boilers/same-room.svg";
 import Bedroom from "../../../../../../../public/assets/images/boilers/bedroom.svg";
 import LoftAttic from "../../../../../../../public/assets/images/boilers/loft.svg";
+import MiddleOfTheHouse from "../../../../../../../public/assets/images/boilers/middle.svg";
+import OnAnOutSideWall from "../../../../../../../public/assets/images/boilers/outside-wall.svg";
+import Bathroom from "../../../../../../../public/assets/images/boilers/bathroom.svg";
+
 
 export type Option = {
   label: string;
@@ -285,7 +289,6 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     cols: "md:grid-cols-3",
     options: [
       { label: "No", value: "No", image: No },
-      { label: "Yes", value: "Yes", image: Yes },
       {
         label: "Move to airing cupboard",
         value: "Move to airing cupboard",
@@ -299,23 +302,42 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     ],
   },
   {
+    id: "airingCupboardLocation",
+    question: "Where is your airing cupboard?",
+    cols: "md:grid-cols-2",
+    options: [
+      {
+        label: "Middle of the house",
+        value: "Middle of the house",
+        image: MiddleOfTheHouse,
+        hoverDescription: "Surrounded by other rooms."
+      },
+      {
+        label: "On an outside wall",
+        value: "On an outside wall",
+        image: OnAnOutSideWall,
+        hoverDescription: "At least one of the cupboard's walls runs along the outside of the house."
+      },
+    ],
+  },
+  {
     id: "newBoilerLocation",
     question: "Where do you want your new boiler?",
     cols: "md:grid-cols-4",
     options: [
-      { label: "Same room", value: "Same room", image: SameRoom, priceTag: "+£1,100" },
+      {
+        label: "Conversion to airing cupboard",
+        value: "Airing cupboard",
+        image: AiringCupboard,
+        priceTag: "Free",
+      },
       { label: "Utility room", value: "Utility room", image: UtilityRoom, priceTag: "+£1,300" },
       { label: "Kitchen", value: "Kitchen", image: Kitchen, priceTag: "+£1,300" },
       { label: "Garage", value: "Garage", image: Garage, priceTag: "+£1,300" },
-      {
-        label: "Airing cupboard",
-        value: "Airing cupboard",
-        image: AiringCupboard,
-        priceTag: "+£1,300",
-      },
+      { label: "Bathroom", value: "Bathroom", image: Bathroom, priceTag: "+£1,300" },
       { label: "Bedroom", value: "Bedroom", image: Bedroom, priceTag: "+£1,300" },
       { label: "Loft or attic", value: "Loft or attic", image: LoftAttic, priceTag: "+£1,500" },
-      { label: "Somewhere else", value: "Somewhere else", image: Other },
+      { label: "Other", value: "Somewhere else", image: Other },
     ],
   },
   {
@@ -323,11 +345,30 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     question: "Which of these best describes your home?",
     cols: "md:grid-cols-5",
     options: [
-      { label: "Detached", value: "Detached", image: Detached },
-      { label: "Semi Detached", value: "Semi Detached", image: SemiDetached },
-      { label: "Terraced", value: "Terraced", image: Terraced },
-      { label: "Flat", value: "Flat", image: Flat },
-      { label: "Bungalow", value: "Bungalow", image: Bungalow },
+      { label: "Detached", value: "Detached", image: Detached, hoverDescription: "The house stands on its own, and isn't attached to any other buildings." },
+      { label: "Semi Detached", value: "Semi Detached", image: SemiDetached, hoverDescription: "Your house is one of a pair that share a single common wall." },
+      { label: "Terraced", value: "Terraced", image: Terraced, hoverDescription: "Your house is one of a row. You've got walls on either side shared with neighbours' houses." },
+      { label: "Flat", value: "Flat", image: Flat, hoverDescription: "You're in an apartment block, or part of a larger house." },
+      { label: "Bungalow", value: "Bungalow", image: Bungalow, hoverDescription: "You have a detached house that is all or mostly on the ground floor." },
+    ],
+  },
+  {
+    id: "bungalowFloors",
+    question: "Is your bungalow on one or two floors?",
+    cols: "md:grid-cols-2",
+    options: [
+      {
+        label: "One floor",
+        value: "One floor",
+        image: Bungalow,
+        hoverDescription: "It's a single-storey bungalow.",
+      },
+      {
+        label: "Two floors",
+        value: "Two floors",
+        image: Detached,
+        hoverDescription: "You've got some upstairs space - even if it's just an attic room.",
+      },
     ],
   },
   {
@@ -373,6 +414,15 @@ export const propertyChoiceSteps: ChoiceStep[] = [
     ],
   },
   {
+    id: "bathtubShowerOver",
+    question: "Do any of your bathtubs have showers over them?",
+    cols: "md:grid-cols-2",
+    options: [
+      { label: "Yes", value: "Yes", image: Yes },
+      { label: "No", value: "No", image: No },
+    ],
+  },
+  {
     id: "showers",
     question:
       "How many separate showers do you have, or plan to have in the future?",
@@ -381,6 +431,34 @@ export const propertyChoiceSteps: ChoiceStep[] = [
       { label: "0 showers", value: "0 showers", image: Zero },
       { label: "1 shower", value: "1 shower", image: One },
       { label: "2+ showers", value: "2+ showers", image: TwoPlus },
+    ],
+  },
+  {
+    id: "electricShower",
+    question: "Do you have an electric shower?",
+    cols: "md:grid-cols-2",
+    options: [
+      { label: "Yes", value: "Yes", image: Yes },
+      { label: "No", value: "No", image: No },
+    ],
+  },
+  {
+    id: "powerShower",
+    question: "Is it a power shower?",
+    cols: "md:grid-cols-2",
+    options: [
+      { label: "Yes", value: "Yes", image: Yes },
+      { label: "No", value: "No", image: No },
+    ],
+  },
+  {
+    id: "pumpSeparatedFromShower",
+    question: "Is the pump separated from the shower?",
+    cols: "md:grid-cols-3",
+    options: [
+      { label: "Yes", value: "Yes", image: Yes },
+      { label: "No", value: "No", image: No },
+      { label: "I don't know", value: "I don't know", image: Other },
     ],
   },
   {
