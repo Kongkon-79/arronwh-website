@@ -6,6 +6,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Check, Mail } from "lucide-react";
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
 import { getQuotePriceAdjustmentItems } from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
+import {
+  getBrowserPageUrl,
+  sendQuoteEmail,
+  type EmailQuoteResponse,
+} from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-email";
 import { toast } from "sonner";
 
 type BookingProductFeature = {
@@ -79,12 +84,6 @@ type InstallSurveyDateApiResponse = {
   message?: string;
 };
 
-type EmailQuoteResponse = {
-  success?: boolean;
-  status?: boolean;
-  message?: string;
-};
-
 type DetailRow = {
   label: string;
   value: string;
@@ -122,7 +121,15 @@ async function fetchBookingById(id: string): Promise<BookingDetails> {
   return result.data;
 }
 
-async function sendQuoteEmailFromSuccessPage(quoteId: string): Promise<EmailQuoteResponse> {
+async function sendQuoteEmailFromSuccessPage({
+  quoteId,
+  pageUrl,
+  price,
+}: {
+  quoteId: string;
+  pageUrl: string;
+  price: number;
+}): Promise<EmailQuoteResponse> {
   const installSurveyResponse = await fetch(`${resolveQuoteEndpoint()}/install-survey-data`);
   const installSurveyResult = (await installSurveyResponse.json().catch(() => null)) as InstallSurveyDateApiResponse | null;
   const installSurveyFailed =
@@ -134,18 +141,11 @@ async function sendQuoteEmailFromSuccessPage(quoteId: string): Promise<EmailQuot
     throw new Error(installSurveyResult?.message || "Failed to fetch install/survey data.");
   }
 
-  const emailResponse = await fetch(`${resolveQuoteEndpoint()}/${encodeURIComponent(quoteId)}/email`, {
-    method: "POST",
+  return sendQuoteEmail({
+    quoteId,
+    pageUrl,
+    price,
   });
-  const emailResult = (await emailResponse.json().catch(() => null)) as EmailQuoteResponse | null;
-  const emailFailed =
-    !emailResponse.ok || emailResult?.success === false || emailResult?.status === false;
-
-  if (emailFailed) {
-    throw new Error(emailResult?.message || "Failed to send quote email.");
-  }
-
-  return emailResult ?? {};
 }
 
 function formatMoney(value: number): string {
@@ -338,12 +338,16 @@ export default function BookingPaymentSuccessContainer() {
     }
 
     try {
-      const result = await mutateSendQuoteEmail(quoteId);
+      const result = await mutateSendQuoteEmail({
+        quoteId,
+        pageUrl: getBrowserPageUrl(),
+        price: totalPrice,
+      });
       toast.success(result.message || "Quote email sent successfully.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to send quote email.");
     }
-  }, [mutateSendQuoteEmail, quoteId]);
+  }, [mutateSendQuoteEmail, quoteId, totalPrice]);
 
   return (
     <BoilerFlowShell activeStep={4}>

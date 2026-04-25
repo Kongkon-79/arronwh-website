@@ -3,7 +3,9 @@
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import FinanceCalculatorModal from "./FinanceCalculatorModal";
 import {
   ChevronRight,
@@ -15,6 +17,7 @@ import {
   CircleDollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getBrowserPageUrl, sendQuoteEmail } from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-email";
 
 export type ProductSpec = {
   label: string;
@@ -90,7 +93,12 @@ export function ProductCard({ product }: { product: ProductItem }) {
   const searchParams = useSearchParams();
   const [activeImage, setActiveImage] = useState(0);
   const [isFinanceCalculatorOpen, setIsFinanceCalculatorOpen] = useState(false);
+  const { mutateAsync: mutateEmailQuote, isPending: isEmailingQuote } = useMutation({
+    mutationKey: ["email-quote", String(product.id)],
+    mutationFn: sendQuoteEmail,
+  });
   const quoteId = searchParams.get("quoteId");
+  const payTodayPrice = product.payablePriceValue ?? product.priceValue ?? 0;
   const activeImageSrc = product.images[activeImage] || product.images[0] || "/product.png";
   const headingTitle = product.boilerAbility || product.title;
   const discountLabel = formatBoilerAbilityShort(
@@ -125,6 +133,24 @@ export function ProductCard({ product }: { product: ProductItem }) {
         ? `/boilers/system-selection/product-details?${query}`
         : "/boilers/system-selection/product-details"
     );
+  };
+
+  const handleSaveQuote = async () => {
+    if (!quoteId) {
+      toast.error("Quote ID not found. Please start again.");
+      return;
+    }
+
+    try {
+      const result = await mutateEmailQuote({
+        quoteId,
+        pageUrl: getBrowserPageUrl(),
+        price: payTodayPrice,
+      });
+      toast.success(result.message || "Quote email sent successfully.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send quote email.");
+    }
   };
 
   return (
@@ -290,9 +316,11 @@ export function ProductCard({ product }: { product: ProductItem }) {
 
             <Button
               variant="outline"
+              disabled={isEmailingQuote}
+              onClick={handleSaveQuote}
               className="mt-3 h-[46px] w-full rounded-[6px] border border-[#F5D64E] bg-transparent text-[15px] sm:text-[16px] font-medium text-[#F5C842] hover:bg-transparent"
             >
-              Save this quote
+              {isEmailingQuote ? "Sending..." : "Save this quote"}
             </Button>
           </div>
         </div>
