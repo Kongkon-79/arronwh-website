@@ -7,10 +7,15 @@ import {
   CardCvcElement,
   CardExpiryElement,
   CardNumberElement,
+  PaymentRequestButtonElement,
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
+import {
+  loadStripe,
+  type PaymentRequest as StripePaymentRequest,
+  type PaymentRequestPaymentMethodEvent,
+} from "@stripe/stripe-js";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -390,6 +395,8 @@ type CardPaymentStatus = {
   message: string;
 } | null;
 
+type CardCheckoutMethod = "card" | "applePay";
+
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return <label className="mb-2 block text-[18px] font-medium text-[#2D3D4D]">{children}</label>;
 }
@@ -424,6 +431,11 @@ const stripeElementOptions = {
   },
 };
 
+function toMinorCurrencyUnits(amount: number): number {
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  return Math.round(amount * 100);
+}
+
 function StripeCardForm({
   clientSecret,
   amount,
@@ -442,6 +454,141 @@ function StripeCardForm({
   const [isExpiryComplete, setIsExpiryComplete] = React.useState(false);
   const [isCvcComplete, setIsCvcComplete] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [checkoutMethod, setCheckoutMethod] = React.useState<CardCheckoutMethod>("card");
+  const [applePayRequest, setApplePayRequest] = React.useState<StripePaymentRequest | null>(null);
+  const [isCheckingApplePay, setIsCheckingApplePay] = React.useState(false);
+
+  const reportPaymentResult = React.useCallback(
+    (status: string | undefined, paymentIntentId?: string) => {
+      if (status === "succeeded" || status === "processing" || status === "requires_capture") {
+        onStatusChange({
+          type: "success",
+          message:
+            status === "succeeded"
+              ? "Payment successful. Your booking is now being confirmed."
+              : "Payment submitted successfully. We are finalizing your booking.",
+        });
+        if (paymentIntentId) {
+          onPaymentSuccess?.(paymentIntentId, status);
+        }
+        return true;
+      }
+
+      onStatusChange({
+        type: "error",
+        message: "Payment could not be completed. Please try again.",
+      });
+      return false;
+    },
+    [onPaymentSuccess, onStatusChange]
+  );
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    if (!stripe || amount <= 0) {
+      setApplePayRequest(null);
+      setIsCheckingApplePay(false);
+      setCheckoutMethod("card");
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    setIsCheckingApplePay(true);
+    const paymentRequest = stripe.paymentRequest({
+      country: "GB",
+      currency: "gbp",
+      total: {
+        label: "Boiler installation",
+        amount: toMinorCurrencyUnits(amount),
+      },
+      requestPayerName: true,
+      requestPayerEmail: true,
+    });
+
+    const handleApplePayPayment = async (event: PaymentRequestPaymentMethodEvent) => {
+      onStatusChange(null);
+
+      const initialConfirmation = await stripe.confirmCardPayment(
+        clientSecret,
+        { payment_method: event.paymentMethod.id },
+        { handleActions: false }
+      );
+
+      if (initialConfirmation.error) {
+        event.complete("fail");
+        onStatusChange({
+          type: "error",
+          message:
+            initialConfirmation.error.message ||
+            "Apple Pay payment failed. Please try again or use card payment.",
+        });
+        return;
+      }
+
+      event.complete("success");
+
+      const initialStatus = initialConfirmation.paymentIntent?.status;
+      if (initialStatus === "requires_action") {
+        const followUpConfirmation = await stripe.confirmCardPayment(clientSecret);
+
+        if (followUpConfirmation.error) {
+          onStatusChange({
+            type: "error",
+            message:
+              followUpConfirmation.error.message ||
+              "Additional verification failed. Please try card payment instead.",
+          });
+          return;
+        }
+
+        reportPaymentResult(
+          followUpConfirmation.paymentIntent?.status,
+          followUpConfirmation.paymentIntent?.id
+        );
+        return;
+      }
+
+      reportPaymentResult(initialStatus, initialConfirmation.paymentIntent?.id);
+    };
+
+    paymentRequest.on("paymentmethod", handleApplePayPayment);
+
+    void paymentRequest
+      .canMakePayment()
+      .then((result) => {
+        if (!isMounted) return;
+
+        if (result?.applePay) {
+          setApplePayRequest(paymentRequest);
+          setCheckoutMethod((current) => (current === "applePay" ? "applePay" : "card"));
+        } else {
+          setApplePayRequest(null);
+          setCheckoutMethod("card");
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setApplePayRequest(null);
+        setCheckoutMethod("card");
+      })
+      .finally(() => {
+        if (!isMounted) return;
+        setIsCheckingApplePay(false);
+      });
+
+    return () => {
+      isMounted = false;
+      paymentRequest.off("paymentmethod", handleApplePayPayment);
+    };
+  }, [amount, clientSecret, onStatusChange, reportPaymentResult, stripe]);
+
+  React.useEffect(() => {
+    if (checkoutMethod === "applePay" && !applePayRequest) {
+      setCheckoutMethod("card");
+    }
+  }, [applePayRequest, checkoutMethod]);
 
   const handleSubmit = React.useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -490,92 +637,168 @@ function StripeCardForm({
 
       const status = paymentIntent?.status;
       if (status === "succeeded" || status === "processing" || status === "requires_capture") {
-        onStatusChange({
-          type: "success",
-          message:
-            status === "succeeded"
-              ? "Payment successful. Your booking is now being confirmed."
-              : "Payment submitted successfully. We are finalizing your booking.",
-        });
         setIsSubmitting(false);
-        if (paymentIntent?.id) {
-          onPaymentSuccess?.(paymentIntent.id, status);
-        }
+        reportPaymentResult(status, paymentIntent?.id);
         return;
       }
 
-      onStatusChange({
-        type: "error",
-        message: "Payment could not be completed. Please try again.",
-      });
       setIsSubmitting(false);
+      reportPaymentResult(status);
     },
-    [clientSecret, elements, onPaymentSuccess, onStatusChange, stripe, zip]
+    [clientSecret, elements, onStatusChange, reportPaymentResult, stripe, zip]
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-4">
       <div>
-        <FieldLabel>Card number</FieldLabel>
-        <StripeInputField right={<CardBadges />}>
-          <CardNumberElement
-            options={{
-              ...stripeElementOptions,
-              placeholder: "1234 1234 1234 1234",
+        <FieldLabel>Payment method</FieldLabel>
+        <div className="overflow-hidden rounded-[8px] border border-[#c9d1d8]">
+          <button
+            type="button"
+            onClick={() => {
+              setCheckoutMethod("card");
+              onStatusChange(null);
             }}
-            onChange={(event) => setIsCardNumberComplete(event.complete)}
-          />
-        </StripeInputField>
+            className={`flex w-full items-center justify-between px-4 py-3 text-left transition ${
+              checkoutMethod === "card" ? "bg-[#f2f6f9]" : "bg-white hover:bg-[#fbfbfc]"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Circle
+                className={`h-[18px] w-[18px] ${
+                  checkoutMethod === "card" ? "fill-[#00aa63] text-[#00aa63]" : "text-[#7a8895]"
+                }`}
+              />
+              <span className="text-[18px] font-medium text-[#2D3D4D]">Card</span>
+            </div>
+            <CardBadges />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (!applePayRequest) return;
+              setCheckoutMethod("applePay");
+              onStatusChange(null);
+            }}
+            disabled={!applePayRequest}
+            className={`flex w-full items-center justify-between border-t border-[#e6ebef] px-4 py-3 text-left transition ${
+              checkoutMethod === "applePay" ? "bg-[#f2f6f9]" : "bg-white hover:bg-[#fbfbfc]"
+            } disabled:cursor-not-allowed disabled:opacity-60`}
+          >
+            <div className="flex items-center gap-3">
+              <Circle
+                className={`h-[18px] w-[18px] ${
+                  checkoutMethod === "applePay" ? "fill-[#00aa63] text-[#00aa63]" : "text-[#7a8895]"
+                }`}
+              />
+              <span className="text-[18px] font-medium text-[#2D3D4D]">Apple Pay</span>
+            </div>
+            <span className="rounded-[6px] bg-black px-3 py-1 text-[16px] font-medium text-white">Apple Pay</span>
+          </button>
+        </div>
+
+        {!applePayRequest && !isCheckingApplePay ? (
+          <p className="mt-2 text-[13px] text-[#5f6977]">
+            Apple Pay is available only on supported Apple devices and browsers.
+          </p>
+        ) : null}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <FieldLabel>Expiry date</FieldLabel>
-          <StripeInputField>
-            <CardExpiryElement
-              options={stripeElementOptions}
-              onChange={(event) => setIsExpiryComplete(event.complete)}
-            />
-          </StripeInputField>
+      {checkoutMethod === "applePay" ? (
+        <div className="space-y-3">
+          {applePayRequest ? (
+            <div className="rounded-[8px] border border-[#c9d1d8] bg-white p-3">
+              <PaymentRequestButtonElement
+                options={{
+                  paymentRequest: applePayRequest,
+                  style: {
+                    paymentRequestButton: {
+                      type: "buy",
+                      theme: "dark",
+                      height: "48px",
+                    },
+                  },
+                }}
+              />
+            </div>
+          ) : (
+            <div className="rounded-[6px] border border-[#f0b4b4] bg-[#fff6f6] px-3 py-3 text-[14px] text-[#b42318]">
+              Apple Pay is not available right now. Please choose card payment.
+            </div>
+          )}
+
+          <p className="text-center text-[13px] text-[#2D3D4D] sm:text-[15px]">
+            Amount to pay today: {formatMoney(amount)}
+          </p>
         </div>
-        <div>
-          <FieldLabel>Security Code</FieldLabel>
-          <StripeInputField>
-            <CardCvcElement
-              options={stripeElementOptions}
-              onChange={(event) => setIsCvcComplete(event.complete)}
-            />
-          </StripeInputField>
-        </div>
-      </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <FieldLabel>Card number</FieldLabel>
+            <StripeInputField right={<CardBadges />}>
+              <CardNumberElement
+                options={{
+                  ...stripeElementOptions,
+                  placeholder: "1234 1234 1234 1234",
+                }}
+                onChange={(event) => setIsCardNumberComplete(event.complete)}
+              />
+            </StripeInputField>
+          </div>
 
-      <div>
-        <FieldLabel>Zip Code</FieldLabel>
-        <div className="flex h-[48px] items-center rounded-[6px] border border-[#8f99a6] bg-white px-3">
-          <input
-            value={zip}
-            onChange={(event) => setZip(event.target.value)}
-            placeholder="12345"
-            className="h-full w-full bg-transparent text-[13px] text-[#2f3b4a] outline-none placeholder:text-[#667281]"
-          />
-        </div>
-      </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <FieldLabel>Expiry date</FieldLabel>
+              <StripeInputField>
+                <CardExpiryElement
+                  options={stripeElementOptions}
+                  onChange={(event) => setIsExpiryComplete(event.complete)}
+                />
+              </StripeInputField>
+            </div>
+            <div>
+              <FieldLabel>Security Code</FieldLabel>
+              <StripeInputField>
+                <CardCvcElement
+                  options={stripeElementOptions}
+                  onChange={(event) => setIsCvcComplete(event.complete)}
+                />
+              </StripeInputField>
+            </div>
+          </div>
 
-      <button type="button" className="w-full rounded-[6px] bg-[#edf0f2] px-4 py-3 text-[16px] font-medium text-[#465260]">
-        Start finance application
-      </button>
+          <div>
+            <FieldLabel>Zip Code</FieldLabel>
+            <div className="flex h-[48px] items-center rounded-[6px] border border-[#8f99a6] bg-white px-3">
+              <input
+                value={zip}
+                onChange={(event) => setZip(event.target.value)}
+                placeholder="12345"
+                className="h-full w-full bg-transparent text-[13px] text-[#2f3b4a] outline-none placeholder:text-[#667281]"
+              />
+            </div>
+          </div>
 
-      <button
-        type="submit"
-        disabled={!stripe || !elements || isSubmitting || !isCardNumberComplete || !isExpiryComplete || !isCvcComplete}
-        className="flex h-[48px] w-full items-center justify-center gap-2 rounded-[6px] bg-[#0cab63] px-4 text-[16px] font-medium text-white transition hover:bg-[#099656] disabled:cursor-not-allowed disabled:opacity-70"
-      >
-        <Lock className="h-4 w-4" />
-        <span>{isSubmitting ? "Processing payment..." : "Book installation"}</span>
-      </button>
+          <button type="button" className="w-full rounded-[6px] bg-[#edf0f2] px-4 py-3 text-[16px] font-medium text-[#465260]">
+            Start finance application
+          </button>
 
-      <p className="text-center text-[13px] text-[#2D3D4D] sm:text-[15px]">Amount to pay today: {formatMoney(amount)}</p>
-    </form>
+          <button
+            type="submit"
+            disabled={!stripe || !elements || isSubmitting || !isCardNumberComplete || !isExpiryComplete || !isCvcComplete}
+            className="flex h-[48px] w-full items-center justify-center gap-2 rounded-[6px] bg-[#0cab63] px-4 text-[16px] font-medium text-white transition hover:bg-[#099656] disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            <Lock className="h-4 w-4" />
+            <span>{isSubmitting ? "Processing payment..." : "Book installation"}</span>
+          </button>
+
+          <p className="text-center text-[13px] text-[#2D3D4D] sm:text-[15px]">
+            Amount to pay today: {formatMoney(amount)}
+          </p>
+        </form>
+      )}
+    </div>
   );
 }
 
