@@ -455,6 +455,7 @@ function StripeCardForm({
   const [isExpiryComplete, setIsExpiryComplete] = React.useState(false);
   const [isCvcComplete, setIsCvcComplete] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isApplePaySubmitting, setIsApplePaySubmitting] = React.useState(false);
   const [checkoutMethod, setCheckoutMethod] = React.useState<CardCheckoutMethod>("card");
   const [applePayRequest, setApplePayRequest] = React.useState<StripePaymentRequest | null>(null);
   const [isCheckingApplePay, setIsCheckingApplePay] = React.useState(false);
@@ -490,6 +491,7 @@ function StripeCardForm({
     if (!stripe || amount <= 0) {
       setApplePayRequest(null);
       setIsCheckingApplePay(false);
+      setIsApplePaySubmitting(false);
       setCheckoutMethod("card");
       return () => {
         isMounted = false;
@@ -509,52 +511,68 @@ function StripeCardForm({
     });
 
     const handleApplePayPayment = async (event: PaymentRequestPaymentMethodEvent) => {
+      setIsApplePaySubmitting(true);
       onStatusChange(null);
 
-      const initialConfirmation = await stripe.confirmCardPayment(
-        clientSecret,
-        { payment_method: event.paymentMethod.id },
-        { handleActions: false }
-      );
+      try {
+        const initialConfirmation = await stripe.confirmCardPayment(
+          clientSecret,
+          { payment_method: event.paymentMethod.id },
+          { handleActions: false }
+        );
 
-      if (initialConfirmation.error) {
-        event.complete("fail");
-        onStatusChange({
-          type: "error",
-          message:
-            initialConfirmation.error.message ||
-            "Apple Pay payment failed. Please try again or use card payment.",
-        });
-        return;
-      }
-
-      event.complete("success");
-
-      const initialStatus = initialConfirmation.paymentIntent?.status;
-      if (initialStatus === "requires_action") {
-        const followUpConfirmation = await stripe.confirmCardPayment(clientSecret);
-
-        if (followUpConfirmation.error) {
+        if (initialConfirmation.error) {
+          event.complete("fail");
           onStatusChange({
             type: "error",
             message:
-              followUpConfirmation.error.message ||
-              "Additional verification failed. Please try card payment instead.",
+              initialConfirmation.error.message ||
+              "Apple Pay payment failed. Please try again or use card payment.",
           });
           return;
         }
 
-        reportPaymentResult(
-          followUpConfirmation.paymentIntent?.status,
-          followUpConfirmation.paymentIntent?.id
-        );
-        return;
-      }
+        event.complete("success");
 
-      reportPaymentResult(initialStatus, initialConfirmation.paymentIntent?.id);
+        const initialStatus = initialConfirmation.paymentIntent?.status;
+        if (initialStatus === "requires_action") {
+          const followUpConfirmation = await stripe.confirmCardPayment(clientSecret);
+
+          if (followUpConfirmation.error) {
+            onStatusChange({
+              type: "error",
+              message:
+                followUpConfirmation.error.message ||
+                "Additional verification failed. Please try card payment instead.",
+            });
+            return;
+          }
+
+          reportPaymentResult(
+            followUpConfirmation.paymentIntent?.status,
+            followUpConfirmation.paymentIntent?.id
+          );
+          return;
+        }
+
+        reportPaymentResult(initialStatus, initialConfirmation.paymentIntent?.id);
+      } finally {
+        if (isMounted) {
+          setIsApplePaySubmitting(false);
+        }
+      }
+    };
+    const handleApplePayCancel = () => {
+      if (!isMounted) return;
+      setIsApplePaySubmitting(false);
+      onStatusChange({
+        type: "error",
+        message: "Apple Pay was cancelled. You can try again or choose card payment.",
+      });
     };
 
     paymentRequest.on("paymentmethod", handleApplePayPayment);
+    paymentRequest.on("cancel", handleApplePayCancel);
 
     void paymentRequest
       .canMakePayment()
@@ -582,6 +600,7 @@ function StripeCardForm({
     return () => {
       isMounted = false;
       paymentRequest.off("paymentmethod", handleApplePayPayment);
+      paymentRequest.off("cancel", handleApplePayCancel);
     };
   }, [amount, clientSecret, onStatusChange, reportPaymentResult, stripe]);
 
@@ -592,6 +611,8 @@ function StripeCardForm({
   }, [applePayRequest, checkoutMethod]);
 
   const handleApplePayClick = React.useCallback(() => {
+    setCheckoutMethod("applePay");
+
     if (!applePayRequest) {
       onStatusChange({
         type: "error",
@@ -600,7 +621,10 @@ function StripeCardForm({
       return;
     }
 
-    setCheckoutMethod("applePay");
+    if (isApplePaySubmitting) {
+      return;
+    }
+
     onStatusChange(null);
 
     try {
@@ -613,7 +637,7 @@ function StripeCardForm({
         message: "Unable to open Apple Pay. Please try again.",
       });
     }
-  }, [applePayRequest, onStatusChange]);
+  }, [applePayRequest, isApplePaySubmitting, onStatusChange]);
 
   const handleSubmit = React.useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -704,10 +728,9 @@ function StripeCardForm({
             onClick={() => {
               handleApplePayClick();
             }}
-            disabled={!applePayRequest}
             className={`flex w-full items-center justify-between border-t border-[#e6ebef] px-4 py-3 text-left transition ${
               checkoutMethod === "applePay" ? "bg-[#f2f6f9]" : "bg-white hover:bg-[#fbfbfc]"
-            } disabled:cursor-not-allowed disabled:opacity-60`}
+            }`}
           >
             <div className="flex items-center gap-3">
               <Circle
@@ -731,20 +754,30 @@ function StripeCardForm({
       {checkoutMethod === "applePay" ? (
         <div className="space-y-3">
           {applePayRequest ? (
-            <div className="rounded-[8px] border border-[#c9d1d8] bg-white p-3">
-              <PaymentRequestButtonElement
-                options={{
-                  paymentRequest: applePayRequest,
-                  style: {
-                    paymentRequestButton: {
-                      type: "default",
-                      theme: "dark",
-                      height: "48px",
+            <>
+              <div className="rounded-[8px] border border-[#c9d1d8] bg-white p-3">
+                <PaymentRequestButtonElement
+                  options={{
+                    paymentRequest: applePayRequest,
+                    style: {
+                      paymentRequestButton: {
+                        type: "default",
+                        theme: "dark",
+                        height: "48px",
+                      },
                     },
-                  },
-                }}
-              />
-            </div>
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleApplePayClick}
+                disabled={isApplePaySubmitting}
+                className="w-full rounded-[6px] bg-black px-4 py-3 text-[16px] font-medium text-white transition hover:bg-[#222] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isApplePaySubmitting ? "Processing Apple Pay..." : "Pay with Apple Pay"}
+              </button>
+            </>
           ) : (
             <div className="rounded-[6px] border border-[#f0b4b4] bg-[#fff6f6] px-3 py-3 text-[14px] text-[#b42318]">
               Apple Pay is not available right now. Please choose card payment.
@@ -896,7 +929,7 @@ function PaymentSection({
       {paymentType === "card" ? (
         <div className="mt-5">
           <h3 className="text-center text-[28px] font-semibold tracking-[-0.02em] text-[#334155] sm:text-[30px]">
-            Enter your card details below
+            Complete your payment below
           </h3>
 
           <div className="mt-6">
