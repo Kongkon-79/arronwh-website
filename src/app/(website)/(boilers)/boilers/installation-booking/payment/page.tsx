@@ -41,6 +41,7 @@ import {
   getPrimaryQuotePriceAdjustmentItem,
   getQuotePriceAdjustmentTotal,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
+import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
 
 const fallbackStripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim() ?? "";
 const stripePromiseCache = new Map<string, ReturnType<typeof loadStripe>>();
@@ -590,6 +591,30 @@ function StripeCardForm({
     }
   }, [applePayRequest, checkoutMethod]);
 
+  const handleApplePayClick = React.useCallback(() => {
+    if (!applePayRequest) {
+      onStatusChange({
+        type: "error",
+        message: "Apple Pay is not available on this device/browser.",
+      });
+      return;
+    }
+
+    setCheckoutMethod("applePay");
+    onStatusChange(null);
+
+    try {
+      if (!applePayRequest.isShowing()) {
+        applePayRequest.show();
+      }
+    } catch {
+      onStatusChange({
+        type: "error",
+        message: "Unable to open Apple Pay. Please try again.",
+      });
+    }
+  }, [applePayRequest, onStatusChange]);
+
   const handleSubmit = React.useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -677,9 +702,7 @@ function StripeCardForm({
           <button
             type="button"
             onClick={() => {
-              if (!applePayRequest) return;
-              setCheckoutMethod("applePay");
-              onStatusChange(null);
+              handleApplePayClick();
             }}
             disabled={!applePayRequest}
             className={`flex w-full items-center justify-between border-t border-[#e6ebef] px-4 py-3 text-left transition ${
@@ -714,7 +737,7 @@ function StripeCardForm({
                   paymentRequest: applePayRequest,
                   style: {
                     paymentRequestButton: {
-                      type: "buy",
+                      type: "default",
                       theme: "dark",
                       height: "48px",
                     },
@@ -1041,46 +1064,48 @@ function BoilerCardPaymentCloneContent() {
   const isLoading = (quoteId ? quoteLoading : false) || (resolvedProductId ? productLoading : false);
 
   return (
-    <div className="min-h-screen bg-[#eef0f2]">
-      <div className="mx-auto container px-4 py-6 sm:px-6 lg:px-0">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
-          <div className="space-y-4">
-            <TopBanner
-              payTodayTotal={payTodayTotal}
-              isLoading={isLoading}
-              onViewDetails={() => router.push(customerDetailsUrl)}
-            />
-            <CollapsedStep label="When should we Survey?" />
-            <CollapsedStep label="When should we install?" />
-            <CollapsedStep label="Where are we visiting?" />
-            <PaymentSection
-              bookingId={bookingId}
-              paymentIntentInfo={paymentIntentInfo}
-              isLoadingPaymentIntent={isLoadingPaymentIntent || isFetchingPaymentIntent}
-              paymentIntentError={paymentIntentError}
-              onRetryPaymentIntent={() => {
-                void refetchPaymentIntent();
-              }}
-              onSelectMonthly={handleSelectMonthly}
-              onPaymentSuccess={handlePaymentSuccess}
-            />
-            <FooterDisclaimer />
-          </div>
+    <BoilerFlowShell activeStep={4}>
+      <div className="py-12">
+        <div className="mx-auto container">
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
+            <div className="space-y-4">
+              <TopBanner
+                payTodayTotal={payTodayTotal}
+                isLoading={isLoading}
+                onViewDetails={() => router.push(customerDetailsUrl)}
+              />
+              <CollapsedStep label="When should we Survey?" />
+              <CollapsedStep label="When should we install?" />
+              <CollapsedStep label="Where are we visiting?" />
+              <PaymentSection
+                bookingId={bookingId}
+                paymentIntentInfo={paymentIntentInfo}
+                isLoadingPaymentIntent={isLoadingPaymentIntent || isFetchingPaymentIntent}
+                paymentIntentError={paymentIntentError}
+                onRetryPaymentIntent={() => {
+                  void refetchPaymentIntent();
+                }}
+                onSelectMonthly={handleSelectMonthly}
+                onPaymentSuccess={handlePaymentSuccess}
+              />
+              <FooterDisclaimer />
+            </div>
 
-          <div>
-            <PriceSummary
-              product={product ?? null}
-              payTodayTotal={payTodayTotal}
-              originalTotal={originalTotal}
-              installDateLabel={installDateLabel}
-              installedAtLabel={installedAtLabel}
-              isLoading={isLoading}
-              quotePriceItem={quotePriceItem}
-            />
+            <div>
+              <PriceSummary
+                product={product ?? null}
+                payTodayTotal={payTodayTotal}
+                originalTotal={originalTotal}
+                installDateLabel={installDateLabel}
+                installedAtLabel={installedAtLabel}
+                isLoading={isLoading}
+                quotePriceItem={quotePriceItem}
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </BoilerFlowShell>
   );
 }
 
