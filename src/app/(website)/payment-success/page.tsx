@@ -1,12 +1,14 @@
 import React, { Suspense } from 'react'
-import PaymentSuccessContainer from './_components/payment-success-container'
+import BookingPaymentSuccessContainer from './_components/payment-success-container'
+import Navbar from '@/components/shared/Navbar/Navbar'
 
 const PaymentSuccessPage = () => {
   return (
     <div>
-       <Suspense fallback={<div>Loading...</div>}>
-         <PaymentSuccessContainer />
-       </Suspense>
+      <Navbar/>
+       <Suspense fallback={null}>
+            <BookingPaymentSuccessContainer />
+          </Suspense>
     </div>
   )
 }
