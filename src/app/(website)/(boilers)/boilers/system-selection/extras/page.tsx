@@ -278,7 +278,7 @@ function ExtrasPageContent() {
   return (
     <BoilerFlowShell activeStep={2}>
    
-      <div className="min-h-screen bg-[#EEF2F5] px-3 py-5 sm:px-4 lg:px-6">
+      <div className="min-h-screen bg-[#EEF2F5] px-1 py-5 sm:px-0 lg:px-6">
         <div className="mx-auto max-w-[1440px]">
         {/* Header */}
         <div className="mb-6 text-center">

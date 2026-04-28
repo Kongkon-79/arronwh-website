@@ -238,11 +238,11 @@ function ChooseControlsPage() {
   return (
     <BoilerFlowShell activeStep={2}>
     
-      <div className="bg-[#EEF2F5] px-3 py-5 sm:px-4 lg:px-0">
+      <div className="bg-[#EEF2F5] px-0 py-5 sm:px-4 lg:px-0">
         <div className="mx-auto container">
           {/* Header */}
           <div className="mb-5 text-center">
-            <h1 className="text-[24px] sm:text-[30px] lg:text-[32px] font-bold leading-tight text-[#2D3D4D]">
+            <h1 className="text-[20px] sm:text-[30px] lg:text-[32px] font-bold leading-tight text-[#2D3D4D]">
               Choose controls for your{" "}
               {product?.boilerAbility ?? "Worcester Bosch Greenstar 4000 25kw"}
             </h1>
@@ -266,7 +266,7 @@ function ChooseControlsPage() {
 
                   <div className="grid grid-cols-1 gap-5 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center">
                     <div>
-                      <h2 className="text-[22px] sm:text-[24px] font-bold text-[#2D3D4D]">
+                      <h2 className="text-[20px] sm:text-[24px] font-bold text-[#2D3D4D]">
                         {controllers[0].title}
                       </h2>
 

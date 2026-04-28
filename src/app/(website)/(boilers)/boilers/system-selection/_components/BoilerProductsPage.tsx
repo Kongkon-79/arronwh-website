@@ -288,7 +288,7 @@ export default function BoilerProductsPage() {
   return (
     <BoilerFlowShell activeStep={2}>
    
-      <div className="bg-[#EEF2F5] px-3 py-4 sm:px-4 lg:px-0">
+      <div className="bg-[#EEF2F5] !px-0 py-4 sm:px-0 lg:px-0 ">
         <div className="mx-auto container">
           {/* Top Filter */}
           <div className="mb-5 flex flex-col items-end gap-2">

@@ -128,9 +128,7 @@ async function updateQuoteInstallDate({
 }
 
 function getDateKeyFromIso(isoDate: unknown): string | null {
-  if (typeof isoDate !== "string") {
-    return null;
-  }
+  if (typeof isoDate !== "string") return null;
 
   const trimmed = isoDate.trim();
   if (!trimmed) return null;
@@ -141,13 +139,12 @@ function getDateKeyFromIso(isoDate: unknown): string | null {
   }
 
   const parsed = new Date(trimmed);
-  if (Number.isNaN(parsed.getTime())) {
-    return null;
-  }
+  if (Number.isNaN(parsed.getTime())) return null;
 
   const year = parsed.getUTCFullYear();
   const month = String(parsed.getUTCMonth() + 1).padStart(2, "0");
   const day = String(parsed.getUTCDate()).padStart(2, "0");
+
   return `${year}-${month}-${day}`;
 }
 
@@ -183,6 +180,7 @@ function buildCalendarRows(
   }
 
   const rows: (CalendarDateCell | null)[][] = [];
+
   for (let i = 0; i < cells.length; i += 7) {
     rows.push(cells.slice(i, i + 7));
   }
@@ -192,27 +190,31 @@ function buildCalendarRows(
 
 function formatMoney(value: number): string {
   if (value % 1 === 0) return `£${value.toLocaleString("en-US")}`;
-  return `£${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  return `£${value.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 const SATURDAY_SURCHARGE = 100;
 
 function isSaturdayDateKey(dateKey: string | null): boolean {
-  if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
-    return false;
-  }
+  if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return false;
 
   const [year, month, day] = dateKey.split("-").map(Number);
-  if (!year || !month || !day) {
-    return false;
-  }
+  if (!year || !month || !day) return false;
 
   return new Date(year, month - 1, day).getDay() === 6;
 }
 
 function getWarrantyText(product: ApiProductFull): string | undefined {
-  const warrantyFeature = product.boilerFeatures.find((feature) => /warranty/i.test(feature.title));
+  const warrantyFeature = product.boilerFeatures.find((feature) =>
+    /warranty/i.test(feature.title)
+  );
+
   if (!warrantyFeature?.value) return undefined;
+
   return `with ${warrantyFeature.value} warranty`;
 }
 
@@ -227,18 +229,20 @@ function TopBanner({
     <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="w-full text-center">
-          <div className="flex items-center justify-center gap-2 text-[18px] font-semibold text-[#2D3D4D]">
-            <ShieldCheck className="h-4 w-4" />
+          <div className="flex items-center justify-center gap-2 text-[16px] font-semibold text-[#2D3D4D] sm:text-[18px]">
+            <ShieldCheck className="h-4 w-4 shrink-0" />
             <span>Your total price is {formatMoney(payTodayTotal)}</span>
           </div>
-          <p className="mt-2 text-[14px] text-[#2D3D4D] sm:text-[16px]">
+
+          <p className="mt-2 text-[13px] text-[#2D3D4D] sm:text-[16px]">
             Installation available from next working day- choose your install date below
           </p>
         </div>
+
         <button
           type="button"
           onClick={onViewDetails}
-          className="shrink-0 pt-1 text-[16px] font-bold text-[#FFDE59] underline underline-offset-2"
+          className="shrink-0 pt-1 text-[15px] font-bold text-[#FFDE59] underline underline-offset-2 sm:text-[16px]"
         >
           View
         </button>
@@ -259,19 +263,26 @@ function PriceSummary({
 }) {
   return (
     <aside className="h-fit rounded-[8px] bg-white p-3 shadow-sm xl:sticky xl:top-5">
-      <h3 className="text-[18px] font-semibold text-[#2D3D4D]">Total fixed price including VAT</h3>
+      <h3 className="text-[18px] font-semibold text-[#2D3D4D]">
+        Total fixed price including VAT
+      </h3>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
         <div className="rounded-[6px] bg-[#F0F3F6] p-2.5">
-          <p className="text-[18px] text-[#64748B]">Pay today</p>
-          <p className="mt-1 text-[18px] font-bold leading-none text-[#2D3D4D]">{formatMoney(payTodayTotal)}</p>
+          <p className="text-[14px] text-[#64748B] sm:text-[18px]">Pay today</p>
+          <p className="mt-1 text-[18px] font-bold leading-none text-[#2D3D4D]">
+            {formatMoney(payTodayTotal)}
+          </p>
+
           {originalTotal > payTodayTotal ? (
-            <p className="mt-1 text-[14px] font-medium text-[#00A56F] line-through">was {formatMoney(originalTotal)}</p>
+            <p className="mt-1 text-[12px] font-medium text-[#00A56F] line-through sm:text-[14px]">
+              was {formatMoney(originalTotal)}
+            </p>
           ) : null}
         </div>
 
         <div className="rounded-[6px] bg-[#F0F3F6] p-2.5">
-          <p className="text-[18px] text-[#64748B]">Monthly Cost</p>
+          <p className="text-[14px] text-[#64748B] sm:text-[18px]">Monthly Cost</p>
           <p className="mt-1 text-[18px] font-bold leading-none text-[#2D3D4D]">
             {formatMoney(payTodayTotal / 12)}/mo
           </p>
@@ -280,14 +291,17 @@ function PriceSummary({
 
       <div className="mt-3 flex min-h-[34px] items-center justify-center rounded-[6px] bg-[#F0F3F6] px-2 text-center">
         <BadgePercent className="mr-2 h-5 w-5 shrink-0 text-[#64748B]" />
-        <span className="text-[16px] font-semibold text-[#2D3D4D]">
+        <span className="text-[14px] font-semibold text-[#2D3D4D] sm:text-[16px]">
           {product.boilerAbility || product.title} Discount
         </span>
-        <span className="ml-2 text-[16px] font-semibold text-[#00A56F]">-{formatMoney(product.discountPrice)}</span>
+        <span className="ml-2 text-[14px] font-semibold text-[#00A56F] sm:text-[16px]">
+          -{formatMoney(product.discountPrice)}
+        </span>
       </div>
 
       <div className="mt-3">
         <h4 className="text-[18px] font-semibold text-[#2D3D4D]">Order Summary</h4>
+
         <div className="mt-2 space-y-2 rounded-[6px] bg-[#F0F3F6] p-2.5">
           <div className="flex items-center gap-3">
             <div className="h-[48px] w-[48px] overflow-hidden">
@@ -299,14 +313,19 @@ function PriceSummary({
                 className="h-[48px] w-[48px] object-contain"
               />
             </div>
+
             <div>
-              <p className="text-[16px] font-semibold text-[#2D3D4D]">{product.boilerAbility || product.title}</p>
+              <p className="text-[15px] font-semibold text-[#2D3D4D] sm:text-[16px]">
+                {product.boilerAbility || product.title}
+              </p>
+
               {getWarrantyText(product) ? (
-                <p className="text-[16px] text-[#2D3D4D]">{getWarrantyText(product)}</p>
+                <p className="text-[14px] text-[#2D3D4D] sm:text-[16px]">
+                  {getWarrantyText(product)}
+                </p>
               ) : null}
             </div>
           </div>
-
         </div>
       </div>
     </aside>
@@ -331,7 +350,7 @@ function CalendarCell({
   onRestrictedSelect?: () => void;
 }) {
   if (!day) {
-    return <div className="h-[52px] sm:h-[54px]" />;
+    return <div className="h-[38px] sm:h-[54px]" />;
   }
 
   const isBlocked = Boolean(blocked);
@@ -344,28 +363,33 @@ function CalendarCell({
         if (isBlocked) {
           return;
         }
+
         if (isSurveyRestricted) {
           onRestrictedSelect?.();
           return;
         }
+
         onSelect?.(day);
       }}
       disabled={isBlocked}
       aria-pressed={isBlocked || isSurveyRestricted ? undefined : isSelected}
-      className={`group flex h-[52px] w-full flex-col items-center justify-center rounded-[6px] text-center transition sm:h-[54px] ${
+      className={`group flex h-[38px] w-full flex-col items-center justify-center rounded-[8px] text-center transition sm:h-[54px] sm:rounded-[6px] ${
         isBlocked
           ? "cursor-not-allowed bg-[#f6a9a8] text-[#364254]"
           : isSurveyRestricted
             ? "cursor-not-allowed bg-[#e6ebf0] text-[#5e6c7a]"
-          : isSelected
-            ? "bg-[#27384d] text-white"
-            : "bg-white text-[#364254] hover:bg-[#27384d] hover:text-white"
+            : isSelected
+              ? "bg-[#27384d] text-white shadow-md"
+              : "bg-white text-[#364254] shadow-sm hover:bg-[#27384d] hover:text-white"
       }`}
     >
-      <span className="text-[13px] font-medium leading-none">{day}</span>
+      <span className="text-[12px] font-semibold leading-none sm:text-[13px] sm:font-medium">
+        {day}
+      </span>
+
       {discount ? (
         <span
-          className={`mt-1 text-[11px] font-semibold ${
+          className={`mt-0.5 text-[8px] font-semibold leading-none sm:mt-1 sm:text-[11px] ${
             isSelected
               ? "text-white"
               : isSurveyRestricted
@@ -399,10 +423,12 @@ function InstallSection({
   const [selectedMonth, setSelectedMonth] = React.useState(() => new Date().getMonth());
   const [selectedYear, setSelectedYear] = React.useState(() => new Date().getFullYear());
   const [isMonthYearOpen, setIsMonthYearOpen] = React.useState(false);
+
   const calendarRows = React.useMemo(
     () => buildCalendarRows(selectedMonth, selectedYear, blockedDateKeys),
     [selectedMonth, selectedYear, blockedDateKeys]
   );
+
   const yearOptions = React.useMemo(
     () => Array.from({ length: 11 }, (_, index) => selectedYear - 5 + index),
     [selectedYear]
@@ -418,6 +444,7 @@ function InstallSection({
         setSelectedYear((prevYear) => prevYear - 1);
         return 11;
       }
+
       return prevMonth - 1;
     });
   };
@@ -428,6 +455,7 @@ function InstallSection({
         setSelectedYear((prevYear) => prevYear + 1);
         return 0;
       }
+
       return prevMonth + 1;
     });
   };
@@ -444,41 +472,47 @@ function InstallSection({
     <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4">
       <div className="flex items-center justify-center gap-3 text-center">
         <CalendarDays className="h-4 w-4 text-[#2f3b4a]" />
-        <h2 className="text-[16px] font-semibold text-[#2D3D4D] sm:text-[18px]">When should we install?</h2>
+        <h2 className="text-[16px] font-semibold text-[#2D3D4D] sm:text-[18px]">
+          When should we install?
+        </h2>
       </div>
 
       <p className="mt-3 text-center text-[13px] text-[#2D3D4D] sm:text-[16px]">
         Your installation will take 1 day and your engineer will arrive between 7.30am-9.30am.
       </p>
 
-      <div className="mt-4 rounded-[12px] bg-[#f0f2f4] px-3 py-4 sm:px-5 sm:py-5">
-        <p className="text-center text-[13px] font-medium text-[#374151]">
+      <div className="mt-4 rounded-[12px] bg-[#f0f2f4] px-2 py-3 sm:px-5 sm:py-5">
+        <p className="text-center text-[12px] font-medium text-[#374151] sm:text-[13px]">
           {isBookingDatesLoading
             ? "Loading installation dates..."
             : "Already booked dates are marked in red. Saturday selections include +£100."}
         </p>
 
-        <div className="mt-2 flex items-center justify-center gap-3 text-[#2f3b4a]">
+        <div className="mt-3 flex items-center justify-center gap-1.5 text-[#2f3b4a] sm:mt-2 sm:gap-3">
           <button
             type="button"
             onClick={goToPreviousMonth}
             className="rounded-md p-1 text-[#697586] transition hover:bg-[#e5e8eb]"
             aria-label="Previous month"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
 
           <button
             type="button"
             onClick={() => setIsMonthYearOpen((prev) => !prev)}
-            className="flex items-center justify-center gap-2 rounded-md px-2 py-1 text-[18px] font-semibold text-[#2D3D4D] transition hover:bg-[#e5e8eb]"
+            className="flex items-center justify-center gap-1.5 rounded-md px-2 py-1 text-[15px] font-semibold text-[#2D3D4D] transition hover:bg-[#e5e8eb] sm:gap-2 sm:text-[18px]"
             aria-expanded={isMonthYearOpen}
             aria-label="Choose month and year"
           >
             <span>
               {monthNames[selectedMonth]} {selectedYear}
             </span>
-            <ChevronDown className={`h-4 w-4 transition-transform ${isMonthYearOpen ? "rotate-180" : ""}`} />
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${
+                isMonthYearOpen ? "rotate-180" : ""
+              }`}
+            />
           </button>
 
           <button
@@ -487,7 +521,7 @@ function InstallSection({
             className="rounded-md p-1 text-[#697586] transition hover:bg-[#e5e8eb]"
             aria-label="Next month"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
 
@@ -527,42 +561,45 @@ function InstallSection({
           </div>
         ) : null}
 
-        <div className="mt-5 overflow-x-auto">
-          <div className="min-w-[640px]">
-            <div className="grid grid-cols-7 gap-x-7 gap-y-3 px-2">
+        <div className="mt-4 sm:mt-5">
+          <div className="w-full">
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-x-7 sm:gap-y-3 sm:px-2">
               {weekDays.map((day) => (
-                <div key={day} className="text-center text-[16px] font-medium text-[#374151]">
-                  {day}
+                <div
+                  key={day}
+                  className="text-center text-[10px] font-semibold text-[#374151] sm:text-[16px] sm:font-medium"
+                >
+                  <span className="sm:hidden">{day.slice(0, 3)}</span>
+                  <span className="hidden sm:inline">{day}</span>
                 </div>
               ))}
 
-              {calendarRows.flat().map((cell, idx) => (
-                (() => {
-                  const cellDateKey = cell?.day
-                    ? `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-${String(cell.day).padStart(2, "0")}`
-                    : null;
-                  const isRestrictedBySurveyDate = Boolean(
-                    surveyDateKey && cellDateKey && cellDateKey <= surveyDateKey
-                  );
+              {calendarRows.flat().map((cell, idx) => {
+                const cellDateKey = cell?.day
+                  ? `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-${String(cell.day).padStart(2, "0")}`
+                  : null;
 
-                  return (
-                    <CalendarCell
-                      key={idx}
-                      day={cell?.day}
-                      blocked={cell?.blocked}
-                      restrictedBySurveyDate={isRestrictedBySurveyDate}
-                      discount={cell?.discount}
-                      isSelected={selectedDay === cell?.day}
-                      onSelect={setSelectedDay}
-                      onRestrictedSelect={() =>
-                        toast.error(
-                          "Please choose a date after your survey date. Need it earlier? Call us and we will see if we can install sooner."
-                        )
-                      }
-                    />
-                  );
-                })()
-              ))}
+                const isRestrictedBySurveyDate = Boolean(
+                  surveyDateKey && cellDateKey && cellDateKey <= surveyDateKey
+                );
+
+                return (
+                  <CalendarCell
+                    key={idx}
+                    day={cell?.day}
+                    blocked={cell?.blocked}
+                    restrictedBySurveyDate={isRestrictedBySurveyDate}
+                    discount={cell?.discount}
+                    isSelected={selectedDay === cell?.day}
+                    onSelect={setSelectedDay}
+                    onRestrictedSelect={() =>
+                      toast.error(
+                        "Please choose a date after your survey date. Need it earlier? Call us and we will see if we can install sooner."
+                      )
+                    }
+                  />
+                );
+              })}
             </div>
           </div>
         </div>
@@ -578,8 +615,10 @@ function InstallSection({
       </button>
 
       <p className="mt-3 text-center text-[12px] text-[#384555] sm:text-[16px]">
-        Don&apos;t see the date you&apos;re after? call us on{' '}
-        <span className="font-medium text-[#d3a323] underline underline-offset-2">112233445566</span>{' '}
+        Don&apos;t see the date you&apos;re after? call us on{" "}
+        <span className="font-medium text-[#d3a323] underline underline-offset-2">
+          112233445566
+        </span>{" "}
         and we&apos;ll see if we can install sooner.
       </p>
     </div>
@@ -617,10 +656,12 @@ export default function InstallContainer() {
   const quoteId = searchParams.get("quoteId");
   const productIdFromQuery = searchParams.get("productId");
   const surveyDateFromQuery = searchParams.get("surveyDate");
+
   const { mutateAsync: mutateInstallDate, isPending: isUpdatingInstallDate } = useMutation({
     mutationKey: ["update-quote-install-date"],
     mutationFn: updateQuoteInstallDate,
   });
+
   const {
     data: installSurveyData,
     isLoading: installSurveyDataLoading,
@@ -630,22 +671,30 @@ export default function InstallContainer() {
   });
 
   const { data: quote, isLoading: quoteLoading } = useQuoteById(quoteId);
+
   const surveyDateKey = React.useMemo(
     () => getDateKeyFromIso(surveyDateFromQuery ?? quote?.surveyDate ?? null),
     [quote?.surveyDate, surveyDateFromQuery]
   );
+
   const quoteProductId =
     typeof quote?.productId === "string" ? quote.productId : quote?.productId?._id ?? null;
+
   const resolvedProductId = productIdFromQuery ?? quoteProductId;
+
   const customerDetailsUrl = React.useMemo(() => {
     const params = new URLSearchParams(searchParams.toString());
+
     if (resolvedProductId) {
       params.set("productId", resolvedProductId);
     }
+
     if (quoteId) {
       params.set("quoteId", quoteId);
     }
+
     const query = params.toString();
+
     return query ? `/boilers/customer-details?${query}` : "/boilers/customer-details";
   }, [quoteId, resolvedProductId, searchParams]);
 
@@ -653,6 +702,7 @@ export default function InstallContainer() {
 
   const selectedController: ApiQuoteController | null =
     quote?.controller && typeof quote.controller !== "string" ? quote.controller : null;
+
   const selectedExtra: ApiQuoteExtra | null =
     quote?.extra && typeof quote.extra !== "string" ? quote.extra : null;
 
@@ -660,10 +710,12 @@ export default function InstallContainer() {
     selectedController && typeof selectedController.price === "number" && selectedController.price > 0
       ? selectedController.price
       : 0;
+
   const selectedExtraPrice =
     selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0
       ? selectedExtra.price
       : 0;
+
   const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
   const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
 
@@ -676,20 +728,25 @@ export default function InstallContainer() {
       selectedExtraPrice +
       quotePriceAdjustment
     : 0;
+
   const originalTotalBase = product
     ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice + quotePriceAdjustment
     : 0;
+
   const payTodayTotal = payTodayTotalBase + selectedDateSurcharge;
   const originalTotal = originalTotalBase + selectedDateSurcharge;
 
   const blockedInstallDateKeys = React.useMemo(() => {
     const keys = new Set<string>();
+
     (installSurveyData?.installDate ?? []).forEach((isoDate) => {
       const key = getDateKeyFromIso(isoDate);
+
       if (key) {
         keys.add(key);
       }
     });
+
     return keys;
   }, [installSurveyData]);
 
@@ -710,6 +767,7 @@ export default function InstallContainer() {
     }
 
     const installDateKey = getDateKeyFromIso(installDate);
+
     if (surveyDateKey && installDateKey && installDateKey <= surveyDateKey) {
       toast.error(
         "Please choose a date after your survey date. Need it earlier? Call us and we will see if we can install sooner."
@@ -724,12 +782,15 @@ export default function InstallContainer() {
       });
 
       const params = new URLSearchParams(searchParams.toString());
+
       if (resolvedProductId) {
         params.set("productId", resolvedProductId);
       }
+
       params.set("quoteId", quoteId);
 
       const query = params.toString();
+
       router.push(
         query
           ? `/boilers/installation-booking/address?${query}`
@@ -742,10 +803,12 @@ export default function InstallContainer() {
 
   return (
     <BoilerFlowShell activeStep={4}>
-      <div className="py-12">
+      <div className="py-8 sm:py-12">
         <div className="mx-auto container">
           {isLoading ? (
-            <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">Loading installation page...</div>
+            <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">
+              Loading installation page...
+            </div>
           ) : !product ? (
             <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">
               Product details not found. Please go back and select your boiler again.
