@@ -1,4 +1,5 @@
 'use client';
+
 import React from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -312,8 +313,6 @@ function PriceSummary({
               ) : null}
             </div>
           </div>
-
-         
         </div>
       </div>
     </aside>
@@ -334,7 +333,7 @@ function CalendarCell({
   onSelect?: (day: number) => void;
 }) {
   if (!day) {
-    return <div className="h-[52px] sm:h-[54px]" />;
+    return <div className="h-[38px] sm:h-[54px]" />;
   }
 
   const isBlocked = Boolean(blocked);
@@ -349,18 +348,21 @@ function CalendarCell({
       }}
       disabled={isBlocked}
       aria-pressed={isBlocked ? undefined : isSelected}
-      className={`group flex h-[52px] w-full flex-col items-center justify-center rounded-[6px] text-center transition sm:h-[54px] ${
+      className={`group flex h-[38px] w-full flex-col items-center justify-center rounded-[8px] text-center transition sm:h-[54px] sm:rounded-[6px] ${
         isBlocked
           ? "cursor-not-allowed bg-[#f6a9a8] text-[#364254]"
           : isSelected
-            ? "bg-[#27384d] text-white"
-            : "bg-white text-[#364254] hover:bg-[#27384d] hover:text-white"
+            ? "bg-[#27384d] text-white shadow-md"
+            : "bg-white text-[#364254] shadow-sm hover:bg-[#27384d] hover:text-white"
       }`}
     >
-      <span className="text-[13px] font-medium leading-none">{day}</span>
+      <span className="text-[12px] font-semibold leading-none sm:text-[13px] sm:font-medium">
+        {day}
+      </span>
+
       {discount ? (
         <span
-          className={`mt-1 text-[11px] font-semibold ${
+          className={`mt-0.5 text-[8px] font-semibold leading-none sm:mt-1 sm:text-[11px] ${
             isSelected ? "text-white" : "text-[#00b26f] group-hover:text-white"
           }`}
         >
@@ -388,10 +390,12 @@ function SurveySection({
   const [selectedMonth, setSelectedMonth] = React.useState(() => new Date().getMonth());
   const [selectedYear, setSelectedYear] = React.useState(() => new Date().getFullYear());
   const [isMonthYearOpen, setIsMonthYearOpen] = React.useState(false);
+
   const calendarRows = React.useMemo(
     () => buildCalendarRows(selectedMonth, selectedYear, blockedDateKeys),
     [selectedMonth, selectedYear, blockedDateKeys]
   );
+
   const yearOptions = React.useMemo(
     () => Array.from({ length: 11 }, (_, index) => selectedYear - 5 + index),
     [selectedYear]
@@ -440,27 +444,27 @@ function SurveySection({
         Your Survey will take 1 day and your engineer will arrive between 7.30am-9.30am.
       </p>
 
-      <div className="mt-4 rounded-[12px] bg-[#f0f2f4] px-3 py-4 sm:px-5 sm:py-5">
-        <p className="text-center text-[13px] font-medium text-[#374151]">
+      <div className="mt-4 rounded-[12px] bg-[#f0f2f4] px-2 py-3 sm:px-5 sm:py-5">
+        <p className="text-center text-[12px] font-medium text-[#374151] sm:text-[13px]">
           {isBookingDatesLoading
             ? "Loading already booked dates..."
             : "Already booked dates are marked in red. Saturday selections include +£100."}
         </p>
 
-        <div className="mt-2 flex items-center justify-center gap-3 text-[#2f3b4a]">
+        <div className="mt-3 flex items-center justify-center gap-1.5 text-[#2f3b4a] sm:gap-3">
           <button
             type="button"
             onClick={goToPreviousMonth}
             className="rounded-md p-1 text-[#697586] transition hover:bg-[#e5e8eb]"
             aria-label="Previous month"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
 
           <button
             type="button"
             onClick={() => setIsMonthYearOpen((prev) => !prev)}
-            className="flex items-center justify-center gap-2 rounded-md px-2 py-1 text-[18px] font-semibold text-[#2D3D4D] transition hover:bg-[#e5e8eb]"
+            className="flex items-center justify-center gap-1.5 rounded-md px-2 py-1 text-[15px] font-semibold text-[#2D3D4D] transition hover:bg-[#e5e8eb] sm:gap-2 sm:text-[18px]"
             aria-expanded={isMonthYearOpen}
             aria-label="Choose month and year"
           >
@@ -476,7 +480,7 @@ function SurveySection({
             className="rounded-md p-1 text-[#697586] transition hover:bg-[#e5e8eb]"
             aria-label="Next month"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
 
@@ -516,12 +520,16 @@ function SurveySection({
           </div>
         ) : null}
 
-        <div className="mt-5 overflow-x-auto">
-          <div className="min-w-[640px]">
-            <div className="grid grid-cols-7 gap-x-7 gap-y-3 px-2">
+        <div className="mt-4 sm:mt-5">
+          <div className="w-full">
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-x-7 sm:gap-y-3 sm:px-2">
               {weekDays.map((day) => (
-                <div key={day} className="text-center text-[16px] font-medium text-[#374151]">
-                  {day}
+                <div
+                  key={day}
+                  className="text-center text-[10px] font-semibold text-[#374151] sm:text-[16px] sm:font-medium"
+                >
+                  <span className="sm:hidden">{day.slice(0, 3)}</span>
+                  <span className="hidden sm:inline">{day}</span>
                 </div>
               ))}
 
@@ -550,8 +558,8 @@ function SurveySection({
       </button>
 
       <p className="mt-3 text-center text-[12px] text-[#384555] sm:text-[16px]">
-        Don&apos;t see the date you&apos;re after? call us on{' '}
-        <span className="font-medium text-[#d3a323] underline underline-offset-2">112233445566</span>{' '}
+        Don&apos;t see the date you&apos;re after? call us on{" "}
+        <span className="font-medium text-[#d3a323] underline underline-offset-2">112233445566</span>{" "}
         and well see if we can install sooner.
       </p>
     </div>
@@ -583,10 +591,12 @@ export default function InstallationBookingContainer() {
   const searchParams = useSearchParams();
   const quoteId = searchParams.get("quoteId");
   const productIdFromQuery = searchParams.get("productId");
+
   const { mutateAsync: mutateSurveyDate, isPending: isUpdatingSurveyDate } = useMutation({
     mutationKey: ["update-quote-survey-date"],
     mutationFn: updateQuoteSurveyDate,
   });
+
   const {
     data: installSurveyData,
     isLoading: installSurveyDataLoading,
@@ -596,9 +606,12 @@ export default function InstallationBookingContainer() {
   });
 
   const { data: quote, isLoading: quoteLoading } = useQuoteById(quoteId);
+
   const quoteProductId =
     typeof quote?.productId === "string" ? quote.productId : quote?.productId?._id ?? null;
+
   const resolvedProductId = productIdFromQuery ?? quoteProductId;
+
   const customerDetailsUrl = React.useMemo(() => {
     const params = new URLSearchParams(searchParams.toString());
     if (resolvedProductId) {
@@ -615,6 +628,7 @@ export default function InstallationBookingContainer() {
 
   const selectedController: ApiQuoteController | null =
     quote?.controller && typeof quote.controller !== "string" ? quote.controller : null;
+
   const selectedExtra: ApiQuoteExtra | null =
     quote?.extra && typeof quote.extra !== "string" ? quote.extra : null;
 
@@ -622,10 +636,12 @@ export default function InstallationBookingContainer() {
     selectedController && typeof selectedController.price === "number" && selectedController.price > 0
       ? selectedController.price
       : 0;
+
   const selectedExtraPrice =
     selectedExtra && typeof selectedExtra.price === "number" && selectedExtra.price > 0
       ? selectedExtra.price
       : 0;
+
   const quotePriceAdjustment = getQuotePriceAdjustmentTotal(quote?.quizAnswers);
   const quotePriceItem = getPrimaryQuotePriceAdjustmentItem(quote?.quizAnswers);
 
@@ -638,9 +654,11 @@ export default function InstallationBookingContainer() {
       selectedExtraPrice +
       quotePriceAdjustment
     : 0;
+
   const originalTotalBase = product
     ? (product.price ?? 0) + selectedControllerPrice + selectedExtraPrice + quotePriceAdjustment
     : 0;
+
   const payTodayTotal = payTodayTotalBase + selectedDateSurcharge;
   const originalTotal = originalTotalBase + selectedDateSurcharge;
 
@@ -706,7 +724,9 @@ export default function InstallationBookingContainer() {
       <div className="py-12">
         <div className="mx-auto container">
           {isLoading ? (
-            <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">Loading installation booking...</div>
+            <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">
+              Loading installation booking...
+            </div>
           ) : !product ? (
             <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">
               Product details not found. Please go back and select your boiler again.
@@ -718,6 +738,7 @@ export default function InstallationBookingContainer() {
                   payTodayTotal={payTodayTotal}
                   onViewDetails={() => router.push(customerDetailsUrl)}
                 />
+
                 <SurveySection
                   blockedDateKeys={blockedDateKeys}
                   isBookingDatesLoading={installSurveyDataLoading}

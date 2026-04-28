@@ -62,7 +62,7 @@ const config: Config = {
       container: {
         center: true,
         padding: {
-          DEFAULT: "14px",
+          DEFAULT: "10px",
           lg: "20px",
         },
         screens: {
