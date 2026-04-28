@@ -141,7 +141,7 @@ function FeaturePill({ icon: Icon, text }: { icon: ElementType; text: string }) 
   return (
     <div className="flex min-h-[60px] items-center gap-2 rounded-[4px] bg-[#00A56F] px-3 text-white">
       <Icon className="h-5 w-5 shrink-0" />
-      <span className="text-[18px] font-medium leading-[1.2]">{text}</span>
+      <span className=" text-base lg:text-[18px] font-medium leading-[1.2]">{text}</span>
     </div>
   );
 }
@@ -168,7 +168,7 @@ function InstallItem({ item, showImage }: { item: IncludedItem; showImage: boole
       )}
 
       <div className="min-w-0">
-        <p className="text-[16px] font-medium text-[#2D3D4D]">{item.title}</p>
+        <p className="text-sm lg:text-[16px] font-medium text-[#2D3D4D]">{item.title}</p>
         {item.subtitle ? (
           <p className="mt-1 text-[14px] text-[#64748B]">{item.subtitle}</p>
         ) : null}
@@ -453,7 +453,7 @@ export default function BoilerQuote() {
                         setShowAllIncludedItems((prev) => !prev);
                       }
                     }}
-                    className="mt-6 flex w-full items-center justify-center gap-1.5 rounded-[4px] px-3 py-2 text-[18px] font-medium text-[#FFDE59]"
+                    className="mt-6 hover:underline flex w-full items-center justify-center gap-1.5 rounded-[4px] px-3 py-2 text-sm lg:text-[18px] font-medium text-[#FFDE59]"
                   >
                     <span className="text-sm leading-none">
                       {hasMoreIncludedItems && showAllIncludedItems ? "-" : "+"}
@@ -491,7 +491,7 @@ export default function BoilerQuote() {
                   ))}
                 </div>
 
-                <p className="px-0.5 text-[16px] leading-5 text-[#2D3D4D]">
+                <p className="px-0.5  text-sm lg:text-[16px] leading-5 text-[#2D3D4D]">
                   *Representative example for 120 month order: £3,099 purchase. Deposit £0. Annual rate of interest
                   9.48% p.a. Representative APR: 9.9% APR. Total amount of credit £3,099 paid over 120 months as
                   120 monthly payments of £40.07 at 9.48% p.a. Cost of finance £1,709.40. Total amount payable
