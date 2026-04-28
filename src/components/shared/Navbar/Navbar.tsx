@@ -94,7 +94,7 @@ const Navbar = () => {
                   alt="Yolo Heat logo"
                   width={1000}
                   height={1000}
-                  className="h-[54px] w-auto object-contain md:h-[60px]"
+                  className="h-[52px] w-[200px] md:w-auto object-contain md:h-[60px]"
                 />
               </Link>
 
@@ -132,7 +132,7 @@ const Navbar = () => {
             <button
               type="button"
               onClick={() => setIsOpen((prev) => !prev)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-[10px] border border-[#E2E8F0] text-[#2D3D4D] transition-colors hover:bg-[#F8FAFC] lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#E2E8F0] text-[#2D3D4D] transition-colors hover:bg-[#F8FAFC] lg:hidden"
               aria-label="Toggle menu"
               aria-expanded={isOpen}
             >
