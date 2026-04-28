@@ -7,15 +7,10 @@ import {
   CardCvcElement,
   CardExpiryElement,
   CardNumberElement,
-  PaymentRequestButtonElement,
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
-import {
-  loadStripe,
-  type PaymentRequest as StripePaymentRequest,
-  type PaymentRequestPaymentMethodEvent,
-} from "@stripe/stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -66,6 +61,7 @@ type CreatePaymentIntentResponse = {
     amount?: number;
     currency?: string;
     publishableKey?: string;
+    applePayUrl?: string;
   };
 };
 
@@ -75,6 +71,7 @@ type PaymentIntentInfo = {
   amount: number;
   currency: string;
   publishableKey: string;
+  applePayUrl: string | null;
 };
 
 function resolvePaymentEndpoint() {
@@ -113,6 +110,10 @@ async function createPaymentIntent(bookingId: string): Promise<PaymentIntentInfo
     typeof result?.data?.publishableKey === "string" && result.data.publishableKey.trim()
       ? result.data.publishableKey.trim()
       : fallbackStripePublishableKey;
+  const applePayUrl =
+    typeof result?.data?.applePayUrl === "string" && result.data.applePayUrl.trim()
+      ? result.data.applePayUrl.trim()
+      : null;
 
   if (!response.ok || hasExplicitFailure || !clientSecret || !paymentIntentId || !publishableKey) {
     throw new Error(result?.message || "Failed to create payment intent.");
@@ -124,6 +125,7 @@ async function createPaymentIntent(bookingId: string): Promise<PaymentIntentInfo
     amount,
     currency,
     publishableKey,
+    applePayUrl,
   };
 }
 
@@ -440,21 +442,16 @@ const stripeElementOptions = {
   },
 };
 
-function toMinorCurrencyUnits(amount: number): number {
-  if (!Number.isFinite(amount) || amount <= 0) return 0;
-  return Math.round(amount * 100);
-}
-
 function StripeCardForm({
   clientSecret,
   amount,
-  currency,
+  applePayUrl,
   onStatusChange,
   onPaymentSuccess,
 }: {
   clientSecret: string;
   amount: number;
-  currency: string;
+  applePayUrl: string | null;
   onStatusChange: (status: CardPaymentStatus) => void;
   onPaymentSuccess?: (paymentIntentId: string, status: string) => void;
 }) {
@@ -465,11 +462,8 @@ function StripeCardForm({
   const [isExpiryComplete, setIsExpiryComplete] = React.useState(false);
   const [isCvcComplete, setIsCvcComplete] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isApplePaySubmitting, setIsApplePaySubmitting] = React.useState(false);
+  const [isRedirectingToApplePay, setIsRedirectingToApplePay] = React.useState(false);
   const [checkoutMethod, setCheckoutMethod] = React.useState<CardCheckoutMethod>("card");
-  const [applePayRequest, setApplePayRequest] = React.useState<StripePaymentRequest | null>(null);
-  const [isCheckingApplePay, setIsCheckingApplePay] = React.useState(false);
-  const [applePaySupportMessage, setApplePaySupportMessage] = React.useState<string | null>(null);
 
   const reportPaymentResult = React.useCallback(
     (status: string | undefined, paymentIntentId?: string) => {
@@ -496,176 +490,24 @@ function StripeCardForm({
     [onPaymentSuccess, onStatusChange]
   );
 
-  React.useEffect(() => {
-    let isMounted = true;
-
-    if (!stripe || amount <= 0) {
-      setApplePayRequest(null);
-      setIsCheckingApplePay(false);
-      setIsApplePaySubmitting(false);
-      setCheckoutMethod("card");
-      setApplePaySupportMessage(null);
-      return () => {
-        isMounted = false;
-      };
-    }
-
-    if (typeof window !== "undefined" && !window.isSecureContext && window.location.hostname !== "localhost") {
-      setApplePayRequest(null);
-      setIsCheckingApplePay(false);
-      setIsApplePaySubmitting(false);
-      setCheckoutMethod("card");
-      setApplePaySupportMessage("Apple Pay requires an HTTPS connection.");
-      return () => {
-        isMounted = false;
-      };
-    }
-
-    setIsCheckingApplePay(true);
-    const paymentRequest = stripe.paymentRequest({
-      country: "GB",
-      currency,
-      total: {
-        label: "Boiler installation",
-        amount: toMinorCurrencyUnits(amount),
-      },
-      requestPayerName: true,
-      requestPayerEmail: true,
-    });
-
-    const handleApplePayPayment = async (event: PaymentRequestPaymentMethodEvent) => {
-      setIsApplePaySubmitting(true);
-      onStatusChange(null);
-
-      try {
-        const initialConfirmation = await stripe.confirmCardPayment(
-          clientSecret,
-          { payment_method: event.paymentMethod.id },
-          { handleActions: false }
-        );
-
-        if (initialConfirmation.error) {
-          event.complete("fail");
-          onStatusChange({
-            type: "error",
-            message:
-              initialConfirmation.error.message ||
-              "Apple Pay payment failed. Please try again or use card payment.",
-          });
-          return;
-        }
-
-        event.complete("success");
-
-        const initialStatus = initialConfirmation.paymentIntent?.status;
-        if (initialStatus === "requires_action") {
-          const followUpConfirmation = await stripe.confirmCardPayment(clientSecret);
-
-          if (followUpConfirmation.error) {
-            onStatusChange({
-              type: "error",
-              message:
-                followUpConfirmation.error.message ||
-                "Additional verification failed. Please try card payment instead.",
-            });
-            return;
-          }
-
-          reportPaymentResult(
-            followUpConfirmation.paymentIntent?.status,
-            followUpConfirmation.paymentIntent?.id
-          );
-          return;
-        }
-
-        reportPaymentResult(initialStatus, initialConfirmation.paymentIntent?.id);
-      } finally {
-        if (isMounted) {
-          setIsApplePaySubmitting(false);
-        }
-      }
-    };
-    const handleApplePayCancel = () => {
-      if (!isMounted) return;
-      setIsApplePaySubmitting(false);
-      onStatusChange({
-        type: "error",
-        message: "Apple Pay was cancelled. You can try again or choose card payment.",
-      });
-    };
-
-    paymentRequest.on("paymentmethod", handleApplePayPayment);
-    paymentRequest.on("cancel", handleApplePayCancel);
-
-    void paymentRequest
-      .canMakePayment()
-      .then((result) => {
-        if (!isMounted) return;
-
-        if (result?.applePay) {
-          setApplePayRequest(paymentRequest);
-          setCheckoutMethod((current) => (current === "applePay" ? "applePay" : "card"));
-          setApplePaySupportMessage(null);
-        } else {
-          setApplePayRequest(null);
-          setCheckoutMethod("card");
-          setApplePaySupportMessage(
-            "Apple Pay is available only in Safari on an Apple device with Wallet set up."
-          );
-        }
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        setApplePayRequest(null);
-        setCheckoutMethod("card");
-        setApplePaySupportMessage("Unable to check Apple Pay availability right now.");
-      })
-      .finally(() => {
-        if (!isMounted) return;
-        setIsCheckingApplePay(false);
-      });
-
-    return () => {
-      isMounted = false;
-      paymentRequest.off("paymentmethod", handleApplePayPayment);
-      paymentRequest.off("cancel", handleApplePayCancel);
-    };
-  }, [amount, clientSecret, currency, onStatusChange, reportPaymentResult, stripe]);
-
-  React.useEffect(() => {
-    if (checkoutMethod === "applePay" && !applePayRequest) {
-      setCheckoutMethod("card");
-    }
-  }, [applePayRequest, checkoutMethod]);
-
   const handleApplePayClick = React.useCallback(() => {
     setCheckoutMethod("applePay");
 
-    if (!applePayRequest) {
+    if (!applePayUrl) {
       onStatusChange({
         type: "error",
-        message: applePaySupportMessage || "Apple Pay is not available on this device/browser.",
+        message: "Apple Pay link is not available right now. Please use card payment.",
       });
-      return;
-    }
-
-    if (isApplePaySubmitting) {
       return;
     }
 
     onStatusChange(null);
+    setIsRedirectingToApplePay(true);
 
-    try {
-      if (!applePayRequest.isShowing()) {
-        applePayRequest.show();
-      }
-    } catch {
-      onStatusChange({
-        type: "error",
-        message: "Unable to open Apple Pay. Please try again.",
-      });
+    if (typeof window !== "undefined") {
+      window.location.assign(applePayUrl);
     }
-  }, [applePayRequest, applePaySupportMessage, isApplePaySubmitting, onStatusChange]);
+  }, [applePayUrl, onStatusChange]);
 
   const handleSubmit = React.useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -734,6 +576,7 @@ function StripeCardForm({
             type="button"
             onClick={() => {
               setCheckoutMethod("card");
+              setIsRedirectingToApplePay(false);
               onStatusChange(null);
             }}
             className={`flex w-full items-center justify-between px-4 py-3 text-left transition ${
@@ -753,10 +596,8 @@ function StripeCardForm({
 
           <button
             type="button"
-            onClick={() => {
-              handleApplePayClick();
-            }}
-            disabled={isCheckingApplePay || !applePayRequest}
+            onClick={handleApplePayClick}
+            disabled={!applePayUrl || isRedirectingToApplePay}
             className={`flex w-full items-center justify-between border-t border-[#e6ebef] px-4 py-3 text-left transition ${
               checkoutMethod === "applePay" ? "bg-[#f2f6f9]" : "bg-white hover:bg-[#fbfbfc]"
             } disabled:cursor-not-allowed disabled:opacity-70`}
@@ -773,45 +614,32 @@ function StripeCardForm({
           </button>
         </div>
 
-        {isCheckingApplePay ? (
-          <p className="mt-2 text-[13px] text-[#5f6977]">Checking Apple Pay availability...</p>
-        ) : !applePayRequest ? (
+        {!applePayUrl ? (
           <p className="mt-2 text-[13px] text-[#5f6977]">
-            {applePaySupportMessage || "Apple Pay is available only on supported Apple devices and browsers."}
+            Apple Pay link is not available right now. Please choose card payment.
           </p>
         ) : null}
       </div>
 
       {checkoutMethod === "applePay" ? (
         <div className="space-y-3">
-          {applePayRequest ? (
+          {applePayUrl ? (
             <>
-              <div className="rounded-[8px] border border-[#c9d1d8] bg-white p-3">
-                <PaymentRequestButtonElement
-                  options={{
-                    paymentRequest: applePayRequest,
-                    style: {
-                      paymentRequestButton: {
-                        type: "default",
-                        theme: "dark",
-                        height: "48px",
-                      },
-                    },
-                  }}
-                />
+              <div className="rounded-[8px] border border-[#c9d1d8] bg-white px-4 py-4 text-[14px] text-[#2D3D4D]">
+                You will be redirected to Apple Pay secure checkout.
               </div>
               <button
                 type="button"
                 onClick={handleApplePayClick}
-                disabled={isApplePaySubmitting}
+                disabled={isRedirectingToApplePay}
                 className="w-full rounded-[6px] bg-black px-4 py-3 text-[16px] font-medium text-white transition hover:bg-[#222] disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {isApplePaySubmitting ? "Processing Apple Pay..." : "Pay with Apple Pay"}
+                {isRedirectingToApplePay ? "Redirecting to Apple Pay..." : "Continue to Apple Pay"}
               </button>
             </>
           ) : (
             <div className="rounded-[6px] border border-[#f0b4b4] bg-[#fff6f6] px-3 py-3 text-[14px] text-[#b42318]">
-              {applePaySupportMessage || "Apple Pay is not available right now. Please choose card payment."}
+              Apple Pay link is not available right now. Please choose card payment.
             </div>
           )}
 
@@ -988,7 +816,7 @@ function PaymentSection({
                 <StripeCardForm
                   clientSecret={paymentIntentInfo.clientSecret}
                   amount={paymentIntentInfo.amount}
-                  currency={paymentIntentInfo.currency}
+                  applePayUrl={paymentIntentInfo.applePayUrl}
                   onStatusChange={setPaymentStatus}
                   onPaymentSuccess={onPaymentSuccess}
                 />
