@@ -37,7 +37,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
     countries.find((c) => c.code === "GB") || countries[0]
   );
   return (
-    <div className="mt-8 w-full container space-y-4 px-4 md:px-0">
+    <div className="mt-8 w-full container space-y-4 border-2 border-red-500">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Title */}
         <div className="space-y-1">
