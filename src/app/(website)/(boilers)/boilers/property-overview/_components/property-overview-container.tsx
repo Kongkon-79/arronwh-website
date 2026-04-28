@@ -1122,7 +1122,7 @@ const PropertyOverviewContainer = () => {
       </div>
 
       <div className="px-4 py-6  md:px-0">
-        <div className="rounded-[10px] bg-white px-1 md:px-6 lg:px-7 xl:px-8 py-7 md:py-9 lg:py-10 xl:py-12 border-2 border-red-500">
+        <div className="rounded-[10px] bg-white px-2 md:px-6 lg:px-7 xl:px-8 py-7 md:py-9 lg:py-10 xl:py-12 ">
           <h2 className="mx-auto max-w-[850px] text-center text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold leading-normal text-[#2D3D4D]">
             {headingText}
           </h2>
