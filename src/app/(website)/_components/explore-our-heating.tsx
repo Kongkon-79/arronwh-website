@@ -216,7 +216,7 @@ const ExploreOurHeating = () => {
                         <Link href="boilers/property-overview">
                           <button
                             type="button"
-                            className={`flex h-10 w-full items-center justify-center rounded-[8px] text-sm md:text-base font-medium leading-normal transition-colors bg-[#00A56F] text-white hover:bg-primary
+                            className={`flex h-12 w-full items-center justify-center rounded-[8px] text-sm md:text-base font-medium leading-normal transition-colors bg-[#00A56F] text-white hover:bg-[#00A56F]/90
                               `}
                           >
                             Get a fixed price
