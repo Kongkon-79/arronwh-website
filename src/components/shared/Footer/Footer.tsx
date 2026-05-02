@@ -7,13 +7,13 @@ const trustpilotStars = Array.from({ length: 5 });
 
 const Footer = () => {
   return (
-    <footer className="shadow-[0px_-2px_4px_0px_#0000001A] bg-white">
+    <footer className="shadow-[0px_-2px_4px_0px_#0000001A] bg-[#EAEBEC]">
       <div className="container mx-auto px-4 py-6 md:py-8 lg:py-10">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
           <div className="max-w-[260px]">
             <Link href="/" className="inline-flex">
               <Image
-                src="/assets/images/logo.png"
+                src="/assets/images/navlogo.png"
                 alt="Yolo Heat logo"
                 width={180}
                 height={72}
