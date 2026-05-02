@@ -42,32 +42,32 @@ body{
 
 @layer base {
   :root {
-    /* Primary Base (#FFDE59) */
-    --primary: 48 100% 67%;
+    /* Primary Base (#FBFF26) */
+    --primary: 62 100% 57%;
     --primary-foreground: 0 0% 0%;
 
     /* Primary Shades */
-    --primary-light: 48 100% 75%;
-    --primary-lighter: 48 100% 85%;
-    --primary-dark: 48 100% 55%;
-    --primary-darker: 48 100% 45%;
+    --primary-light: 62 100% 65%;
+    --primary-lighter: 62 100% 75%;
+    --primary-dark: 62 100% 50%;
+    --primary-darker: 62 100% 42%;
 
     /* Hover & Ring */
-    --primary-hover: 48 100% 60%;
-    --ring: 48 100% 67%;
+    --primary-hover: 62 100% 60%;
+    --ring: 62 100% 57%;
   }
 
   .dark {
     /* Dark Mode */
-    --primary: 48 100% 60%;
+    --primary: 62 100% 60%;
     --primary-foreground: 0 0% 0%;
 
-    --primary-light: 48 100% 70%;
-    --primary-lighter: 48 100% 80%;
-    --primary-dark: 48 100% 50%;
-    --primary-darker: 48 100% 40%;
+    --primary-light: 62 100% 68%;
+    --primary-lighter: 62 100% 78%;
+    --primary-dark: 62 100% 52%;
+    --primary-darker: 62 100% 45%;
 
-    --primary-hover: 48 100% 65%;
-    --ring: 48 100% 60%;
+    --primary-hover: 62 100% 63%;
+    --ring: 62 100% 60%;
   }
 }

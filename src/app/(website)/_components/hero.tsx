@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 const heroPoints = [
   "Instant quotes in 60 seconds",
@@ -9,10 +10,10 @@ const heroPoints = [
 const HeroSection = () => {
   return (
     <section className="overflow-hidden bg-[#FBFF26]">
-      <div className="container mx-auto px-1 py-2 md:py-16 lg:py-20">
+      <div className="container px-1 py-2 md:py-16 lg:py-20 ">
         <div className="grid items-center lg:grid-cols-2 gap-6 md:gap-8 lg:gap-8">
           {/* Left side: Text Content */}
-          <div className="order-2 md:order-1 mx-auto w-full max-w-[580px] p-6 md:p-8">
+          <div className="order-2 md:order-1 mx-auto w-full p-6 md:p-8">
             <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-8xl font-semibold leading-normal text-[#2D3D4D]">
               <span className="font-normal">New boiler?</span> <br /> No Worries.
             </h1>
@@ -27,9 +28,11 @@ const HeroSection = () => {
                 placeholder="Enter postcode"
                 className="px-4 py-2 w-1/2 rounded-full focus:outline-none "
               />
+            <Link href="boilers/property-overview" >
               <button className="px-6 py-[10px] bg-black text-white rounded-full">
                 Fix my price
               </button>
+            </Link>
             </div>
 
             <ul className="mt-6 space-y-2 text-lg">

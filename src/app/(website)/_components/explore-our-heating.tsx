@@ -20,10 +20,16 @@ type ExploreCard = {
   image: string;
 };
 
+// const themeClasses = {
+//   navy: "bg-[#2D3D4D] text-white",
+//   yellow: "bg-[#FFDE59] text-[#2D3D4D]",
+//   light: "bg-[#F0F3F6] text-[#2D3D4D]",
+// };
+
 const themeClasses = {
-  navy: "bg-[#2D3D4D] text-white",
-  yellow: "bg-[#FFDE59] text-[#2D3D4D]",
-  light: "bg-[#F0F3F6] text-[#2D3D4D]",
+  navy: "bg-[#0A4229] text-white",
+  yellow: "bg-[#0A4229] text-white",
+  light: "bg-[#0A4229] text-white",
 };
 
 const stripHtml = (value?: string) =>
@@ -90,7 +96,7 @@ const ExploreOurHeating = () => {
     !isLoading && !isError && !showAll && exploreCards.length > 6;
 
   return (
-    <section id="heating" className="bg-white py-12 md:py-16">
+    <section id="heating" className="bg-[#D0E7D5] py-12 md:py-16">
       <div className="container mx-auto px-4">
         <div className="">
           <div className="pb-4">
@@ -159,7 +165,7 @@ const ExploreOurHeating = () => {
                     key={`${card.title}-${index}`}
                     className={`overflow-hidden rounded-[24px] ${themeClasses[card.theme]} ${
                       isLarge
-                        ? "flex min-h-[318px] flex-col p-4 md:p-5 "
+                        ? "flex min-h-[318px] flex-col p-4 md:p-5 lg:p-7"
                         : "grid min-h-[148px] grid-cols-[96px_minmax(0,1fr)] gap-4 md:gap-5 lg:gap-6 p-4 md:grid-cols-[120px_minmax(0,1fr)] "
                     }`}
                   >
@@ -188,11 +194,7 @@ const ExploreOurHeating = () => {
                     >
                       <div>
                         <p
-                          className={`text-sm md:text-base font-medium leading-normal uppercase tracking-[0.16em] ${
-                            card.theme === "yellow"
-                              ? "text-[#2D3D4D]"
-                              : "text-[#FFDE59]"
-                          }`}
+                          className={`text-sm md:text-base font-medium leading-normal uppercase tracking-[0.16em] text-white`}
                         >
                           {card.badge}
                         </p>
@@ -204,11 +206,7 @@ const ExploreOurHeating = () => {
                         <p
                           className={`mt-2 ${
                             isLarge ? "max-w-[400px]" : "max-w-[255px]"
-                          } text-sm md:text-base font-normal leading-normal ${
-                            card.theme === "navy"
-                              ? "text-white"
-                              : "text-[#2D3D4D]"
-                          }`}
+                          } text-sm md:text-base font-normal leading-normal text-white`}
                         >
                           {card.description}
                         </p>
@@ -218,11 +216,8 @@ const ExploreOurHeating = () => {
                         <Link href="boilers/property-overview">
                           <button
                             type="button"
-                            className={`flex h-10 w-full items-center justify-center rounded-[8px] text-sm md:text-base font-medium leading-normal transition-colors ${
-                              card.theme === "navy"
-                                ? "bg-primary text-[#2D3D4D] hover:bg-[#F3CF43]"
-                                : "bg-[#00A56F] text-white hover:bg-[#0A965F]"
-                            }`}
+                            className={`flex h-10 w-full items-center justify-center rounded-[8px] text-sm md:text-base font-medium leading-normal transition-colors bg-[#00A56F] text-white hover:bg-primary
+                              `}
                           >
                             Get a fixed price
                           </button>

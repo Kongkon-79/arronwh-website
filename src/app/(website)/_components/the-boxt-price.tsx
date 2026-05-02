@@ -4,7 +4,7 @@ const TheBoxtPrice = () => {
   return (
     <section className="bg-white py-12 md:py-16">
       <div className="container mx-auto px-4">
-        <div className="mx-auto overflow-hidden rounded-[12px] bg-[#2D3D4D]">
+        <div className="mx-auto overflow-hidden rounded-[12px] bg-[#0A4229]">
           <div className="grid items-center gap-10 px-6 py-6 md:px-10 lg:grid-cols-[minmax(0,1fr)_340px] lg:px-16">
             <div className="max-w-[470px]">
               <h2 className="text-xl md:text-2xl lg:text-3xl font-bold leading-normal text-white">

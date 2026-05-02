@@ -125,7 +125,7 @@ const Reviews = () => {
                         <h3 className="text-sm md:text-base leading-normal font-bold text-[#2D3D4D]">
                           {review.name}
                         </h3>
-                        <span className="text-xs font-medium text-primary leading-normal">
+                        <span className="text-xs font-medium text-black leading-normal">
                           Verified customer
                         </span>
                       </div>

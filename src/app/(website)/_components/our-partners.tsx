@@ -19,7 +19,7 @@ const loopedPartnerLogos = [...partnerLogos, ...partnerLogos];
 
 const OurPartners = () => {
   return (
-    <section className="overflow-hidden bg-white py-7 md:py-8">
+    <section className="overflow-hidden bg-[#EAEBEC] py-7 md:py-8">
       <div className="container mx-auto px-0">
         <div className="flex flex-col items-center">
           <div className="flex flex-wrap items-center justify-center gap-2 px-4 text-center text-[9px] font-medium leading-none text-[#334155] md:text-[10px]">
@@ -46,8 +46,8 @@ const OurPartners = () => {
         </div>
 
         <div className="relative mt-8 w-full">
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-white to-transparent md:w-16" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-white to-transparent md:w-16" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8  md:w-16" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8  md:w-16" />
 
           <div className="partners-marquee group flex overflow-hidden">
             <div className="partners-track flex min-w-max items-center gap-12 pr-12 will-change-transform md:gap-16 md:pr-16">
@@ -61,7 +61,7 @@ const OurPartners = () => {
                     alt={partner.alt}
                     width={160}
                     height={52}
-                   className="w-[163px] h-[80px] object-cover"
+                   className="w-[163px] h-[80px] object-contain"
                   />
                 </div>
               ))}
