@@ -20,7 +20,7 @@ const loopedPartnerLogos = [...partnerLogos, ...partnerLogos];
 const OurPartners = () => {
   return (
     <section className="overflow-hidden bg-[#EAEBEC] py-7 md:py-8">
-      <div className="container mx-auto px-0">
+      <div className="px-0">
         <div className="flex flex-col items-center">
           <div className="flex flex-wrap items-center justify-center gap-2 px-4 text-center text-[9px] font-medium leading-none text-[#334155] md:text-[10px]">
             <span className="text-sm md:text-base leading-normal font-medium text-[#2D3D4D]">Excellent</span>
