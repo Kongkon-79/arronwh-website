@@ -145,17 +145,17 @@ export default function PrivacyPolicyContainer() {
             <span className="text-sm font-bold text-white"><Shield /></span>
           </div>
 
-          <h1 className="text-2xl md:text-[28px] lg:text-[32px] font-bold leading-normal text-[#2D3D4D] ">
+          <h1 className="text-2xl md:text-[28px] lg:text-[32px] font-bold leading-normal text-black ">
             Privacy Policy
           </h1>
 
-          <p className="mt-2 text-xs md:text-sm font-medium leading-normal text-[#2D3D4D]">Last updated : April 1, 2026</p>
+          <p className="mt-2 text-xs md:text-sm font-medium leading-normal text-black">Last updated : April 1, 2026</p>
         </div>
 
         <div className="space-y-8">
           {policySections.map((section) => (
             <section key={section.id}>
-              <h2 className="text-2xl md:text-[28px] lg:text-[32px] font-bold leading-normal text-[#2D3D4D] ">
+              <h2 className="text-2xl md:text-[28px] lg:text-[32px] font-bold leading-normal text-black ">
                 {section.title}
               </h2>
 
@@ -164,7 +164,7 @@ export default function PrivacyPolicyContainer() {
                   {section.content.map((paragraph, index) => (
                     <p
                       key={index}
-                      className="text-sm md:text-base font-medium leading-normal text-[#2D3D4D]"
+                      className="text-sm md:text-base font-medium leading-normal text-black"
                     >
                       {paragraph}
                     </p>
@@ -176,7 +176,7 @@ export default function PrivacyPolicyContainer() {
                 <div className="mt-4 space-y-5">
                   {section.subsections.map((subsection, index) => (
                     <div key={index}>
-                      <h3 className="text-base md:text-lg font-bold leading-normal text-[#2D3D4D]">
+                      <h3 className="text-base md:text-lg font-bold leading-normal text-black">
                         {subsection.heading}
                       </h3>
 
@@ -194,7 +194,7 @@ export default function PrivacyPolicyContainer() {
                       )}
 
                       {subsection.items && (
-                           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm md:text-base font-medium leading-normal text-[#2D3D4D]">
+                           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm md:text-base font-medium leading-normal text-black">
                           {subsection.items.map((item, i) => (
                             <li key={i}>{item}</li>
                           ))}
@@ -206,7 +206,7 @@ export default function PrivacyPolicyContainer() {
               )}
 
               {section.list && section.id !== "14" && (
-                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm md:text-base font-medium leading-normal text-[#2D3D4D]">
+                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm md:text-base font-medium leading-normal text-black">
                   {section.list.map((item, index) => (
                     <li key={index}>{item}</li>
                   ))}
@@ -215,17 +215,17 @@ export default function PrivacyPolicyContainer() {
 
               {section.id === "14" && section.list && (
                 <div className="mt-4 space-y-3">
-                  <div className="flex items-center gap-3 text-sm md:text-base font-medium leading-normal text-[#2D3D4D]">
+                  <div className="flex items-center gap-3 text-sm md:text-base font-medium leading-normal text-black">
                     <Phone className="h-5 w-5 text-[#24364B]" />
                     <span>{section.list[0]}</span>
                   </div>
 
-                  <div className="flex items-center gap-3 text-sm md:text-base font-medium leading-normal text-[#2D3D4D]">
+                  <div className="flex items-center gap-3 text-sm md:text-base font-medium leading-normal text-black">
                     <Mail className="h-5 w-5 text-[#24364B]" />
                     <span>{section.list[1]}</span>
                   </div>
 
-                  <div className="flex items-center gap-3 text-sm md:text-base font-medium leading-normal text-[#2D3D4D]">
+                  <div className="flex items-center gap-3 text-sm md:text-base font-medium leading-normal text-black">
                     <MapPin className="h-5 w-5 text-[#24364B]" />
                     <span>{section.list[2]}</span>
                   </div>

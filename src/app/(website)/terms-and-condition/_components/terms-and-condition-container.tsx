@@ -1,4 +1,4 @@
-import { Mail, MapPin, Phone } from "lucide-react";
+import { FileText, Mail, MapPin, Phone } from "lucide-react";
 
 type TermsSection = {
   id: string;
@@ -122,11 +122,7 @@ const termsSections: TermsSection[] = [
   {
     id: "14",
     title: "14. Contact Information",
-    list: [
-      "+44 0123 567 890",
-      "hello@youheat.co.uk",
-      "London, United Kingdom",
-    ],
+    list: ["+44 0123 567 890", "hello@youheat.co.uk", "London, United Kingdom"],
   },
 ];
 
@@ -135,24 +131,30 @@ export default function TermsConditionsContainer() {
     <main className="min-h-screen bg-white px-4 py-10 sm:px-6 md:px-8 md:py-12">
       <div className="container">
         <div className="mb-10 text-center">
-          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#F2C94C]">
-            <span className="text-sm font-bold text-white">i</span>
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary">
+            <span className="text-sm font-bold text-white">
+              <FileText />
+            </span>
           </div>
 
-          <h1 className="text-[22px] font-semibold leading-tight text-[#24364B] sm:text-[26px]">
+          <h1 className="text-2xl md:text-[28px] lg:text-[32px] font-bold leading-normal text-black ">
             Terms & Conditions
           </h1>
+          <p className="mt-2 text-xs md:text-sm font-medium leading-normal text-black">
+            Please read these terms carefully before using our services. By
+            accessing YOLO HEAT <br />
+            you agree to be bound by these terms and conditions.
+          </p>
 
-          <p className="mx-auto mt-2 max-w-[560px] text-[12px] leading-5 text-[#6B7280]">
-            Please read these Terms of Use carefully before using our service.
-            By accessing YOUHEAT services or website, you accept these terms.
+          <p className="mt-2 text-xs md:text-sm font-medium leading-normal text-black">
+            Last updated : April 1, 2026
           </p>
         </div>
 
         <div className="space-y-8">
           {termsSections.map((section) => (
             <section key={section.id}>
-              <h2 className="text-[18px] font-semibold leading-tight text-[#24364B] sm:text-[20px]">
+              <h2 className="text-2xl md:text-[28px] lg:text-[32px] font-bold leading-normal text-black ">
                 {section.title}
               </h2>
 
@@ -161,7 +163,7 @@ export default function TermsConditionsContainer() {
                   {section.content.map((paragraph, index) => (
                     <p
                       key={index}
-                      className="text-[13px] leading-6 text-[#4B5563] sm:text-[14px]"
+                      className="text-sm md:text-base font-medium leading-normal text-black"
                     >
                       {paragraph}
                     </p>
@@ -170,7 +172,7 @@ export default function TermsConditionsContainer() {
               )}
 
               {section.list && section.id !== "14" && (
-                <ul className="mt-3 list-disc space-y-1 pl-5 text-[13px] leading-6 text-[#4B5563] sm:text-[14px]">
+                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm md:text-base font-medium leading-normal text-black">
                   {section.list.map((item, index) => (
                     <li key={index}>{item}</li>
                   ))}
@@ -179,18 +181,18 @@ export default function TermsConditionsContainer() {
 
               {section.id === "14" && section.list && (
                 <div className="mt-4 space-y-3">
-                  <div className="flex items-center gap-3 text-[13px] text-[#4B5563] sm:text-[14px]">
-                    <Phone className="h-4 w-4 text-[#24364B]" />
+                  <div className="flex items-center gap-3 text-sm md:text-base font-medium leading-normal text-black">
+                    <Phone className="h-5 w-5 text-[#24364B]" />
                     <span>{section.list[0]}</span>
                   </div>
 
-                  <div className="flex items-center gap-3 text-[13px] text-[#4B5563] sm:text-[14px]">
-                    <Mail className="h-4 w-4 text-[#24364B]" />
+                  <div className="flex items-center gap-3 text-sm md:text-base font-medium leading-normal text-black">
+                    <Mail className="h-5 w-5 text-[#24364B]" />
                     <span>{section.list[1]}</span>
                   </div>
 
-                  <div className="flex items-center gap-3 text-[13px] text-[#4B5563] sm:text-[14px]">
-                    <MapPin className="h-4 w-4 text-[#24364B]" />
+                  <div className="flex items-center gap-3 text-sm md:text-base font-medium leading-normal text-black">
+                    <MapPin className="h-5 w-5 text-[#24364B]" />
                     <span>{section.list[2]}</span>
                   </div>
                 </div>
