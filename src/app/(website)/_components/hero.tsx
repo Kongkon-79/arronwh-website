@@ -48,7 +48,7 @@ const HeroSection = () => {
           </div>
 
           {/* Right side: Image */}
-          <div className="order-1 md:order-2 mx-auto flex flex-col w-full max-w-[560px] items-center justify-center lg:justify-end ">
+          <div className="hidden md:block order-1 md:order-2 mx-auto flex-col w-full max-w-[560px] items-center justify-center lg:justify-end ">
             <div className="relative w-full max-w-[520px]">
               <Image
                 src="/assets/images/hero.png"
