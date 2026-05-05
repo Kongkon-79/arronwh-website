@@ -27,14 +27,23 @@ import {
 } from "lucide-react";
 
 type PostcodeApiResponse = {
-  statusCode: number;
-  success: boolean;
-  message: string;
-  data?: {
-    postcode?: string;
-    locations?: string[];
-    total?: number;
-  };
+  statusCode?: number;
+  success?: boolean;
+  status?: boolean;
+  message?: string;
+  errorSources?: Array<{
+    path?: string;
+    message?: string;
+  }>;
+  data?:
+    | {
+        postcode?: string;
+        locations?: string[];
+        addresses?: string[];
+        total?: number;
+      }
+    | string[]
+    | null;
 };
 
 type UpdateInstallAddressResponse = {
@@ -60,7 +69,36 @@ function resolvePostcodeEndpoint() {
   if (process.env.NEXT_PUBLIC_BACKEND_URL) {
     return `${process.env.NEXT_PUBLIC_BACKEND_URL}/postcode`;
   }
-  return "/postcode";
+  return "/api/v1/postcode";
+}
+
+function normalizeLocationList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function extractLocationsFromPostcodeResponse(result: PostcodeApiResponse | null): string[] {
+  const data = result?.data;
+
+  if (Array.isArray(data)) {
+    return normalizeLocationList(data);
+  }
+
+  if (!data || typeof data !== "object") {
+    return [];
+  }
+
+  const objectData = data as Record<string, unknown>;
+  const addresses = normalizeLocationList(objectData.addresses);
+  if (addresses.length > 0) {
+    return addresses;
+  }
+
+  return normalizeLocationList(objectData.locations);
 }
 
 async function fetchPostcodeLocations(postcode: string): Promise<string[]> {
@@ -71,17 +109,23 @@ async function fetchPostcodeLocations(postcode: string): Promise<string[]> {
   }
 
   const response = await fetch(
-    `${resolvePostcodeEndpoint()}/${encodeURIComponent(normalizedPostcode)}`
+    `${resolvePostcodeEndpoint()}/${encodeURIComponent(normalizedPostcode)}/addresses`
   );
 
   const result = (await response.json().catch(() => null)) as PostcodeApiResponse | null;
-  const hasExplicitFailure = result?.success === false;
+  const hasExplicitFailure = result?.success === false || result?.status === false;
 
   if (!response.ok || hasExplicitFailure) {
-    throw new Error(result?.message || "Failed to fetch postcode locations.");
+    const firstErrorMessage = result?.errorSources?.find(
+      (source) => typeof source?.message === "string" && source.message.trim()
+    )?.message;
+
+    throw new Error(
+      firstErrorMessage || result?.message || "Failed to fetch postcode locations."
+    );
   }
 
-  return result?.data?.locations ?? [];
+  return extractLocationsFromPostcodeResponse(result);
 }
 
 async function updateQuoteInstallAddress({
@@ -349,15 +393,14 @@ function CollapsedStep({
   label: string;
 }) {
   return (
-    <button
-      type="button"
-      className="flex h-[70px] w-full items-center justify-center rounded-[8px] bg-white px-4 text-center shadow-sm transition hover:bg-[#F8FAFC]"
+    <div
+      className="flex h-[70px] w-full items-center justify-center rounded-[8px] bg-white px-4 text-center shadow-sm transition "
     >
       <div className="flex items-center justify-center gap-3 text-[#2D3D4D]">
         <Icon className="h-4 w-4 text-[#64748B]" />
-        <span className="text-[16px] font-medium">{label}</span>
+        <span className="text-[18px] font-medium">{label}</span>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -432,9 +475,9 @@ function AddressStep({
             </p>
           ) : postcodeLocations.length > 0 ? (
             <div className="space-y-2">
-              {postcodeLocations.map((location) => (
+              {postcodeLocations.map((location, index) => (
                 <button
-                  key={location}
+                  key={`${location}-${index}`}
                   type="button"
                   onClick={() => setSelectedAddress(location)}
                   className={`block w-full rounded-[6px] px-3 py-2 text-left text-[14px] transition ${
