@@ -49,7 +49,7 @@ async function updateQuoteExtra({
   extraId,
 }: {
   quoteId: string;
-  extraId: string;
+  extraId: string | null;
 }): Promise<UpdateExtraResponse> {
   const response = await fetch(`${resolveQuoteEndpoint()}/${encodeURIComponent(quoteId)}`, {
     method: "PATCH",
@@ -178,21 +178,20 @@ function ExtrasPageContent() {
   }
 
   const handleNextCheckout = async () => {
-    if (!selectedExtraId) {
-      toast.error("Please select an extra before continuing.");
-      return;
-    }
-
     if (!quoteId) {
       toast.error("Quote ID not found. Please start again.");
       return;
     }
 
     try {
-      await mutateExtra({
-        quoteId,
-        extraId: selectedExtraId,
-      });
+      const shouldPersistExtra = selectedExtraId !== preselectedExtraId;
+
+      if (shouldPersistExtra) {
+        await mutateExtra({
+          quoteId,
+          extraId: selectedExtraId,
+        });
+      }
 
       if (!resolvedProductId) {
         toast.error("Product ID not found. Please start again.");

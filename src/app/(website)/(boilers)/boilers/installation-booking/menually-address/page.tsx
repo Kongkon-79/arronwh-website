@@ -530,15 +530,14 @@ function CollapsedStep({
   label: string;
 }) {
   return (
-    <button
-      type="button"
-      className="flex h-[70px] w-full items-center justify-center rounded-[8px] bg-white px-4 text-center shadow-sm transition hover:bg-[#F8FAFC]"
+    <div
+      className="flex h-[70px] w-full items-center justify-center rounded-[8px] bg-white px-4 text-center shadow-sm transition "
     >
       <div className="flex items-center justify-center gap-3 text-[#2D3D4D]">
         <Icon className="h-4 w-4 text-[#64748B]" />
-        <span className="text-[16px] font-medium">{label}</span>
+        <span className="text-[18px] font-medium">{label}</span>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -717,7 +716,7 @@ function ManualAddressFormSection({
             type="button"
             onClick={onSubmit}
             disabled={isSubmitting}
-            className="mt-4 w-full rounded-[6px] bg-[#edf0f2] px-4 py-3 text-[16px] font-medium text-[#2f3b4a] disabled:opacity-60"
+            className="mt-4 w-full rounded-[6px] bg-[#00A56F] px-4 py-3 text-[16px] font-medium text-[white] hover:bg-[#00A56F] disabled:opacity-60"
           >
             {isSubmitting ? "Saving..." : "Next"}
           </button>

@@ -633,15 +633,14 @@ function AccordionRow({
   label: string;
 }) {
   return (
-    <button
-      type="button"
-      className="flex h-[70px] w-full items-center justify-center rounded-[8px] bg-white px-4 text-center shadow-sm transition hover:bg-[#F8FAFC]"
+    <div
+      className="flex h-[70px] w-full items-center justify-center rounded-[8px] bg-white px-4 text-center shadow-sm transition "
     >
       <div className="flex items-center justify-center gap-3 text-[#2D3D4D]">
         <Icon className="h-4 w-4 text-[#64748B]" />
-        <span className="text-[16px] font-medium">{label}</span>
+        <span className="text-[18px] font-medium">{label}</span>
       </div>
-    </button>
+    </div>
   );
 }
 
