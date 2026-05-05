@@ -1,12 +1,27 @@
-import { Suspense } from "react";
-import InstallContainer from "./_components/install-container";
+//this is  servey system code   so dont the  comment code ===============================================
 
-const InstallPage = () => {
+
+// import { Suspense } from "react";
+// import InstallContainer from "./_components/install-container";
+
+// const InstallPage = () => {
+//   return (
+//     <Suspense fallback={null}>
+//       <InstallContainer />
+//     </Suspense>
+//   );
+// };
+
+// export default InstallPage;
+
+import React from 'react'
+
+const page = () => {
   return (
-    <Suspense fallback={null}>
-      <InstallContainer />
-    </Suspense>
-  );
-};
+    <div>
+       comming soon
+    </div>
+  )
+}
 
-export default InstallPage;
+export default page
