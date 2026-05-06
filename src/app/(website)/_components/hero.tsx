@@ -72,7 +72,7 @@ const HeroSection = () => {
 
   // Data found
   return (
-    <section className={`bg-[${data?.data[0]?.backgroundColor || "primary"}] overflow-hidden`}>
+    <section className={`bg-[${data?.data[0]?.backgroundColor || "#FBFF26"}] overflow-hidden`}>
       <div className="container px-1 py-2 md:py-16 lg:py-20 ">
         <div className="grid items-center lg:grid-cols-2 gap-6 md:gap-8 lg:gap-8">
           {/* Left side: Text Content */}
