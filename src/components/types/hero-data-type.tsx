@@ -18,7 +18,7 @@ export interface Banner {
   firstTitle: string;
   secondTitle: string;
   subTitle: string;
-  feature: string[]; // ⚠️ currently coming as stringified array (see note below)
+  feature: string[]; 
   image: string;
   imageText: string;
   backgroundColor: string;

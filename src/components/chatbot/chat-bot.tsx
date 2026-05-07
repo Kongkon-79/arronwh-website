@@ -400,7 +400,7 @@ export function ChatBot() {
     "Installation timeline",
   ]
 
-  const API_ENDPOINT = "http://72.62.213.212:8000/api/ai/chatbot"
+  // const API_ENDPOINT = "http://72.62.213.212:8000/api/ai/chatbot"
 
   // Blink animation only once
   useEffect(() => {
@@ -553,7 +553,7 @@ export function ChatBot() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(API_ENDPOINT, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_CHATBOT_URL}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
