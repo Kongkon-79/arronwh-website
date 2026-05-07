@@ -9,6 +9,7 @@ import { Outfit } from "next/font/google";
 // import Navbar from "@/components/shared/Navbar/Navbar";
 import Footer from "@/components/shared/Footer/Footer";
 import SmoothScrollProvider from "@/components/providers/SmoothScrollProvider";
+import { ChatBot } from "@/components/chatbot/chat-bot";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -35,6 +36,7 @@ export default function RootLayout({
           <AppProvider>
             {/* <Navbar /> */}
             {children}
+             <ChatBot/>
             <Footer />
             <Toaster />
           </AppProvider>
