@@ -189,7 +189,7 @@ export default HeroSection;
 //               />
 //             <Link href="boilers/property-overview" >
 //               <button className="px-6 py-[10px] bg-black text-white rounded-full">
-//                 Fix my price
+//                 Fix price
 //               </button>
 //             </Link>
 //             </div>
