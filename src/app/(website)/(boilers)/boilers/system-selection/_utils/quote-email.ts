@@ -10,6 +10,11 @@ type SendQuoteEmailInput = {
   price: number;
 };
 
+type BuildCustomerDetailsPageUrlInput = {
+  quoteId: string;
+  productId?: string | number | null;
+};
+
 function resolveQuoteEndpoint(): string {
   if (process.env.NEXT_PUBLIC_API_BASE_URL) {
     return `${process.env.NEXT_PUBLIC_API_BASE_URL}/quote`;
@@ -34,6 +39,27 @@ export function getBrowserPageUrl(): string {
   }
 
   return window.location.href;
+}
+
+export function getCustomerDetailsPageUrl({
+  quoteId,
+  productId,
+}: BuildCustomerDetailsPageUrlInput): string {
+  if (!productId) {
+    return getBrowserPageUrl();
+  }
+
+  const params = new URLSearchParams({
+    quoteId: String(quoteId),
+    productId: String(productId),
+  });
+  const customerDetailsPath = `/boilers/customer-details?${params.toString()}`;
+
+  if (typeof window === "undefined") {
+    return customerDetailsPath;
+  }
+
+  return `${window.location.origin}${customerDetailsPath}`;
 }
 
 export async function sendQuoteEmail({

@@ -21,7 +21,7 @@ import {
   getQuotePriceAdjustmentTotal,
 } from "../_utils/quote-price-adjustment";
 import {
-  getBrowserPageUrl,
+  getCustomerDetailsPageUrl,
   sendQuoteEmail,
 } from "../_utils/quote-email";
 
@@ -226,7 +226,10 @@ function ChooseControlsPage() {
     try {
       const result = await mutateEmailQuote({
         quoteId,
-        pageUrl: getBrowserPageUrl(),
+        pageUrl: getCustomerDetailsPageUrl({
+          quoteId,
+          productId: resolvedProductId,
+        }),
         price: payTodayTotal,
       });
       toast.success(result.message || "Quote email sent successfully.");
