@@ -17,7 +17,7 @@ import {
   CircleDollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getBrowserPageUrl, sendQuoteEmail } from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-email";
+import { getCustomerDetailsPageUrl, sendQuoteEmail } from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-email";
 
 export type ProductSpec = {
   label: string;
@@ -144,7 +144,10 @@ export function ProductCard({ product }: { product: ProductItem }) {
     try {
       const result = await mutateEmailQuote({
         quoteId,
-        pageUrl: getBrowserPageUrl(),
+        pageUrl: getCustomerDetailsPageUrl({
+          quoteId,
+          productId: product.id,
+        }),
         price: payTodayPrice,
       });
       toast.success(result.message || "Quote email sent successfully.");

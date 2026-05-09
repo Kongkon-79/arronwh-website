@@ -27,7 +27,7 @@ import {
   getQuotePriceAdjustmentTotal,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
 import {
-  getBrowserPageUrl,
+  getCustomerDetailsPageUrl,
   sendQuoteEmail,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-email";
 
@@ -226,7 +226,10 @@ function ProductDetailsPageContent() {
     try {
       const result = await mutateEmailQuote({
         quoteId,
-        pageUrl: getBrowserPageUrl(),
+        pageUrl: getCustomerDetailsPageUrl({
+          quoteId,
+          productId: resolvedProductId,
+        }),
         price: payTodayTotal,
       });
       toast.success(result.message || "Quote email sent successfully.");
