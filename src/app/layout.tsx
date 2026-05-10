@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import AuthProvider from "@/components/providers/AuthProvider";
@@ -36,7 +37,9 @@ export default function RootLayout({
           <AppProvider>
             {/* <Navbar /> */}
             {children}
-             <ChatBot/>
+             <Suspense fallback={null}>
+               <ChatBot />
+             </Suspense>
             <Footer />
             <Toaster />
           </AppProvider>

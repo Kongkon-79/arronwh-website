@@ -363,6 +363,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Bot, MessageSquareText, Send, Sparkles, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 interface Message {
   id: string
@@ -379,6 +380,9 @@ export function ChatBot() {
   const [isOpen, setIsOpen] = useState(false)
   const [input, setInput] = useState("")
   const [showBlink, setShowBlink] = useState(true)
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -448,6 +452,21 @@ export function ChatBot() {
       document.body.style.overflow = previousOverflow
     }
   }, [isOpen])
+
+  // Open chat automatically when `?openChat=1` is present.
+  useEffect(() => {
+    const shouldOpenChat = searchParams.get("openChat") === "1"
+    if (!shouldOpenChat) return
+
+    setIsOpen(true)
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("openChat")
+    const nextQuery = params.toString()
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+      scroll: false,
+    })
+  }, [pathname, router, searchParams])
 
   const buildPreviousChat = (
     chatMessages: Message[]
