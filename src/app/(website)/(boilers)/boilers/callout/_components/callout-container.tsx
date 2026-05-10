@@ -2,13 +2,18 @@
 
 import { ArrowLeft, MessageCircle, PhoneCall } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const CalloutContainer = () => {
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleBack = () => {
     router.back();
+  };
+
+  const handleStartLiveChat = () => {
+    router.push(`${pathname}?openChat=1`);
   };
 
   return (
@@ -81,6 +86,7 @@ const CalloutContainer = () => {
                 </div>
                 <button
                   type="button"
+                  onClick={handleStartLiveChat}
                   className="inline-flex h-[58px] min-w-[280px] items-center justify-center gap-3 border border-[#00a56f] bg-transparent px-6 text-[20px] font-medium text-[#00a56f] transition hover:bg-[#00a56f]/20"
                 >
                   <MessageCircle className="h-5 w-5" />
