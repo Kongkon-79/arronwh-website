@@ -481,53 +481,6 @@ export function ChatBot() {
     return (doc.body.textContent || "").trim()
   }
 
-  const sleep = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms))
-
-  const typeBotMessage = async (fullText: string) => {
-    const typingText = fullText.trim()
-
-    if (!typingText) return
-
-    const botId = `bot-${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2, 8)}`
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: botId,
-        sender: "bot",
-        text: "",
-      },
-    ])
-
-    const tokens = typingText
-      .split(/(\s+)/)
-      .filter((token) => token.length > 0)
-
-    let built = ""
-
-    for (const token of tokens) {
-      built += token
-
-      setMessages((prev) => {
-        return prev.map((msg) =>
-          msg.id === botId
-            ? {
-                ...msg,
-                text: built,
-              }
-            : msg
-        )
-      })
-
-      const delay = /\s+/.test(token) ? 25 : 55
-
-      await sleep(delay)
-    }
-  }
-
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
 
@@ -558,7 +511,7 @@ export function ChatBot() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          accept: "text/event-stream",
+          accept: "application/json",
         },
         body: JSON.stringify({
           previous_chat: buildPreviousChat(messages),
@@ -593,12 +546,20 @@ export function ChatBot() {
 
       if (botText) {
         const isHtml = /<\/?[a-z][\s\S]*>/i.test(botText)
-
-        const textForTyping = isHtml
+        const finalText = isHtml
           ? htmlToPlainText(botText)
           : botText
 
-        await typeBotMessage(textForTyping)
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `bot-${Date.now()}-${Math.random()
+              .toString(36)
+              .slice(2, 8)}`,
+            sender: "bot",
+            text: finalText,
+          },
+        ])
       } else {
         setMessages((prev) => [
           ...prev,
@@ -822,4 +783,3 @@ export function ChatBot() {
     </div>
   )
 }
-
