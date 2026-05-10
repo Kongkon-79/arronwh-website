@@ -30,6 +30,7 @@ import {
   getCustomerDetailsPageUrl,
   sendQuoteEmail,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-email";
+import Faq from "@/app/(website)/_components/faq";
 
 function stripHtml(value?: string) {
   return (
@@ -510,6 +511,10 @@ function ProductDetailsPageContent() {
                 )
               )}
             </div>
+          </section>
+
+          <section className="mt-6 md:mt-8 lg:mt-10">
+            <Faq/>
           </section>
         </div>
       </div>
