@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        accept: "application/json",
+        accept: "text/event-stream",
       },
       body: JSON.stringify({
         previous_chat: Array.isArray(body.previous_chat) ? body.previous_chat : [],
@@ -33,9 +33,8 @@ export async function POST(request: Request) {
       cache: "no-store",
     });
 
-    const rawText = await upstreamResponse.text();
-
     if (!upstreamResponse.ok) {
+      const rawText = await upstreamResponse.text();
       return NextResponse.json(
         {
           message:
@@ -46,12 +45,22 @@ export async function POST(request: Request) {
       );
     }
 
-    try {
-      const parsed = JSON.parse(rawText);
-      return NextResponse.json(parsed, { status: 200 });
-    } catch {
-      return NextResponse.json({ response: rawText.trim() }, { status: 200 });
+    if (upstreamResponse.body) {
+      return new Response(upstreamResponse.body, {
+        status: 200,
+        headers: {
+          "Content-Type":
+            upstreamResponse.headers.get("content-type") || "text/event-stream",
+          "Cache-Control": "no-cache, no-transform",
+          Connection: "keep-alive",
+        },
+      });
     }
+
+    return NextResponse.json(
+      { message: "Chatbot response stream is empty." },
+      { status: 502 },
+    );
   } catch (error) {
     return NextResponse.json(
       {
