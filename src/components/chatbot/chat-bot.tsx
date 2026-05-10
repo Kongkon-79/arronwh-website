@@ -506,8 +506,7 @@ export function ChatBot() {
     setIsLoading(true)
 
     try {
-      // const response = await fetch("http://72.62.213.212:8000/api/ai/chatbot", {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_CHATBOT_URL}`, {
+      const response = await fetch("/api/chatbot", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
