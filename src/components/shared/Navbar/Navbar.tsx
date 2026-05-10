@@ -90,7 +90,7 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div className="md:hidden bg-[#EAEBEC] shadow-md px-4 py-6">
+          <div className="md:hidden bg-[#EAEBEC] shadow-md space-y-2 px-4 py-6">
             {navItems.map((item) => (
               <Link
                 key={item.label}
@@ -105,12 +105,23 @@ const Navbar = () => {
                 {item.label}
               </Link>
             ))}
-            <Link
-              href="/helps"
-              className="px-4 py-2 bg-transparent border border-[#2D3D4D] font-medium rounded-[8px] text-[#2D3D4D] text-base leading-normal flex justify-center items-center gap-2 hover:bg-primary hover:text-[#2D3D4D] transition duration-300"
-            >
-              Help <MessageCircleQuestionMark className="w-5 h-5" />
-            </Link>
+            <Sheet open={isHelpOpen} onOpenChange={setIsHelpOpen}>
+              <SheetTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="px-4 py-2 bg-transparent border border-[#2D3D4D] font-medium rounded-[8px] text-[#2D3D4D] text-base leading-normal flex justify-center items-center gap-2 hover:bg-primary hover:text-[#2D3D4D] transition duration-300"
+                >
+                  Help <MessageCircleQuestionMark className="w-5 h-5" />
+                </button>
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="w-full border-l-0 p-0 sm:max-w-[530px] [&>button]:hidden"
+              >
+                <HelpContainer embedded onClose={() => setIsHelpOpen(false)} />
+              </SheetContent>
+            </Sheet>
           </div>
         )}
       </header>

@@ -1,4 +1,4 @@
-import { ArrowRight, Banknote, Clock3, ShieldCheck, Wrench } from "lucide-react";
+import { Banknote, Clock3, ShieldCheck, Wrench } from "lucide-react";
 
 type ValueItem = {
   id: number;
@@ -91,7 +91,7 @@ export default function OurValues() {
           })}
         </div>
 
-        <div className="mt-8 flex justify-center">
+        {/* <div className="mt-8 flex justify-center">
           <button
             type="button"
             className="inline-flex items-center gap-2 rounded-[8px] bg-primary px-6 py-3 text-sm md:text-base font-medium text-[#2D3D4D] leading-normal transition hover:brightness-95"
@@ -99,7 +99,7 @@ export default function OurValues() {
             Explore our services 
             <span aria-hidden="true"><ArrowRight /></span>
           </button>
-        </div>
+        </div> */}
       </div>
     </section>
   );
