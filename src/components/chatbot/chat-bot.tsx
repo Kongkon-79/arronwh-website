@@ -481,6 +481,39 @@ export function ChatBot() {
     return (doc.body.textContent || "").trim()
   }
 
+  const extractStreamText = (chunk: string): string => {
+    const lines = chunk.split(/\r?\n/)
+    const dataLines = lines
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.replace(/^data:\s?/, "").trim())
+      .filter((line) => line && line !== "[DONE]")
+
+    if (dataLines.length === 0) return chunk
+
+    let built = ""
+
+    for (const line of dataLines) {
+      try {
+        const parsed = JSON.parse(line)
+        const candidate =
+          (typeof parsed === "string" && parsed) ||
+          parsed?.response ||
+          parsed?.message ||
+          parsed?.data ||
+          parsed?.text ||
+          parsed?.delta?.content
+
+        if (typeof candidate === "string") {
+          built += candidate
+        }
+      } catch {
+        built += line
+      }
+    }
+
+    return built
+  }
+
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
 
@@ -510,7 +543,7 @@ export function ChatBot() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          accept: "application/json",
+          accept: "text/event-stream",
         },
         body: JSON.stringify({
           previous_chat: buildPreviousChat(messages),
@@ -522,50 +555,78 @@ export function ChatBot() {
         throw new Error(`Request failed with status ${response.status}`)
       }
 
-      const rawResponse = await response.text()
+      const botId = `bot-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 8)}`
 
-      let botText = ""
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: botId,
+          sender: "bot",
+          text: "",
+        },
+      ])
 
-      try {
-        const parsed = JSON.parse(rawResponse)
+      const reader = response.body?.getReader()
 
-        const candidate =
-          (typeof parsed === "string" && parsed) ||
-          parsed?.response ||
-          parsed?.message ||
-          parsed?.data ||
-          parsed?.text
-
-        if (typeof candidate === "string") {
-          botText = candidate.trim()
-        }
-      } catch {
-        botText = rawResponse.trim()
+      if (!reader) {
+        throw new Error("No response stream found.")
       }
 
-      if (botText) {
-        const isHtml = /<\/?[a-z][\s\S]*>/i.test(botText)
-        const finalText = isHtml
-          ? htmlToPlainText(botText)
-          : botText
+      const decoder = new TextDecoder()
+      let streamedText = ""
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `bot-${Date.now()}-${Math.random()
-              .toString(36)
-              .slice(2, 8)}`,
-            sender: "bot",
-            text: finalText,
-          },
-        ])
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        const parsedChunk = extractStreamText(chunk)
+
+        if (!parsedChunk) continue
+
+        streamedText += parsedChunk
+        setIsLoading(false)
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === botId
+              ? {
+                  ...msg,
+                  text: streamedText,
+                }
+              : msg,
+          ),
+        )
+      }
+
+      const finalChunk = decoder.decode()
+      if (finalChunk) {
+        streamedText += extractStreamText(finalChunk)
+      }
+
+      const normalizedText = streamedText.trim()
+
+      if (normalizedText) {
+        const isHtml = /<\/?[a-z][\s\S]*>/i.test(normalizedText)
+        const finalText = isHtml ? htmlToPlainText(normalizedText) : normalizedText
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === botId
+              ? {
+                  ...msg,
+                  text: finalText,
+                }
+              : msg,
+          ),
+        )
       } else {
         setMessages((prev) => [
-          ...prev,
+          ...prev.filter((msg) => msg.id !== botId),
           {
-            id: `bot-${Date.now()}-${Math.random()
-              .toString(36)
-              .slice(2, 8)}`,
+            id: botId,
             sender: "bot",
             text: "I received your message but couldn’t read a proper response. Please try again.",
           },
