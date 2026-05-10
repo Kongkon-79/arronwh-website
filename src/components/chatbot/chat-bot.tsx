@@ -553,11 +553,12 @@ export function ChatBot() {
     setIsLoading(true)
 
     try {
-      const response = await fetch("http://72.62.213.212:8000/api/ai/chatbot", {
+      // const response = await fetch("http://72.62.213.212:8000/api/ai/chatbot", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_CHATBOT_URL}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          accept: "application/json",
+          accept: "text/event-stream",
         },
         body: JSON.stringify({
           previous_chat: buildPreviousChat(messages),
