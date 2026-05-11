@@ -3,10 +3,14 @@
 import { ArrowLeft, MessageCircle, PhoneCall } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import HelpContainer from "@/app/(website)/helps/_components.tsx/help-container";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 const CalloutContainer = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const handleBack = () => {
     router.back();
@@ -15,6 +19,24 @@ const CalloutContainer = () => {
   const handleStartLiveChat = () => {
     router.push(`${pathname}?openChat=1`);
   };
+
+  const handleRequestCallback = () => {
+    setIsHelpOpen(true);
+  };
+
+  useEffect(() => {
+    if (!isHelpOpen) {
+      return;
+    }
+
+    const originalOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isHelpOpen]);
 
   return (
     <section className="min-h-screen bg-[#ECEDEF] px-2 py-1 md:px-4 md:py-2">
@@ -66,6 +88,7 @@ const CalloutContainer = () => {
                 </div>
                 <button
                   type="button"
+                  onClick={handleRequestCallback}
                   className="inline-flex h-[58px] min-w-[280px] items-center justify-center gap-3 bg-[#00a56f] px-6 text-[20px] font-medium text-white transition hover:bg-[#009460]"
                 >
                   <PhoneCall className="h-5 w-5" />
@@ -97,6 +120,21 @@ const CalloutContainer = () => {
           </div>
         </div>
       </div>
+
+      <Sheet open={isHelpOpen} onOpenChange={setIsHelpOpen}>
+        <SheetContent
+          side="right"
+          className="flex h-screen w-full flex-col overflow-hidden border-l-0 p-0 sm:max-w-[530px] [&>button]:hidden"
+        >
+          <div className="h-full min-h-0 w-full">
+            <HelpContainer
+              embedded
+              defaultOpenCallback
+              onClose={() => setIsHelpOpen(false)}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </section>
   );
 };

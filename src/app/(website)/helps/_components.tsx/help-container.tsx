@@ -1,12 +1,18 @@
 "use client";
 
-import { X } from "lucide-react";
+import { Phone, X } from "lucide-react";
 import { useState } from "react";
 // import { useState } from "react";
 
 type HelpFaqItem = {
   question: string;
   answers: string[];
+};
+
+type CountryOption = {
+  code: string;
+  name: string;
+  dialCode: string;
 };
 
 const FAQ_ITEMS: HelpFaqItem[] = [
@@ -45,6 +51,76 @@ const FAQ_ITEMS: HelpFaqItem[] = [
   },
 ];
 
+const countryNameFormatter = new Intl.DisplayNames(["en"], { type: "region" });
+
+const ISO_COUNTRY_CODES = [
+  "AF", "AX", "AL", "DZ", "AS", "AD", "AO", "AI", "AQ", "AG", "AR", "AM", "AW", "AU", "AT", "AZ",
+  "BS", "BH", "BD", "BB", "BY", "BE", "BZ", "BJ", "BM", "BT", "BO", "BQ", "BA", "BW", "BV", "BR",
+  "IO", "BN", "BG", "BF", "BI", "CV", "KH", "CM", "CA", "KY", "CF", "TD", "CL", "CN", "CX", "CC",
+  "CO", "KM", "CG", "CD", "CK", "CR", "CI", "HR", "CU", "CW", "CY", "CZ", "DK", "DJ", "DM", "DO",
+  "EC", "EG", "SV", "GQ", "ER", "EE", "SZ", "ET", "FK", "FO", "FJ", "FI", "FR", "GF", "PF", "TF",
+  "GA", "GM", "GE", "DE", "GH", "GI", "GR", "GL", "GD", "GP", "GU", "GT", "GG", "GN", "GW", "GY",
+  "HT", "HM", "VA", "HN", "HK", "HU", "IS", "IN", "ID", "IR", "IQ", "IE", "IM", "IL", "IT", "JM",
+  "JP", "JE", "JO", "KZ", "KE", "KI", "KP", "KR", "KW", "KG", "LA", "LV", "LB", "LS", "LR", "LY",
+  "LI", "LT", "LU", "MO", "MG", "MW", "MY", "MV", "ML", "MT", "MH", "MQ", "MR", "MU", "YT", "MX",
+  "FM", "MD", "MC", "MN", "ME", "MS", "MA", "MZ", "MM", "NA", "NR", "NP", "NL", "NC", "NZ", "NI",
+  "NE", "NG", "NU", "NF", "MK", "MP", "NO", "OM", "PK", "PW", "PS", "PA", "PG", "PY", "PE", "PH",
+  "PN", "PL", "PT", "PR", "QA", "RE", "RO", "RU", "RW", "BL", "SH", "KN", "LC", "MF", "PM", "VC",
+  "WS", "SM", "ST", "SA", "SN", "RS", "SC", "SL", "SG", "SX", "SK", "SI", "SB", "SO", "ZA", "GS",
+  "SS", "ES", "LK", "SD", "SR", "SJ", "SE", "CH", "SY", "TW", "TJ", "TZ", "TH", "TL", "TG", "TK",
+  "TO", "TT", "TN", "TR", "TM", "TC", "TV", "UG", "UA", "AE", "GB", "US", "UM", "UY", "UZ", "VU",
+  "VE", "VN", "VG", "VI", "WF", "EH", "YE", "ZM", "ZW",
+] as const;
+
+const COUNTRY_DIAL_CODES: Record<string, string> = {
+  ZZ: "",
+  BD: "+880",
+  GB: "+44",
+  US: "+1",
+  IN: "+91",
+  AE: "+971",
+  SA: "+966",
+  AU: "+61",
+  CA: "+1",
+  PK: "+92",
+  MY: "+60",
+  SG: "+65",
+  QA: "+974",
+  OM: "+968",
+  KW: "+965",
+  BH: "+973",
+  FR: "+33",
+  DE: "+49",
+  IT: "+39",
+  ES: "+34",
+  NL: "+31",
+};
+
+const POPULAR_COUNTRY_CODES = ["BD", "GB", "US", "IN", "AE", "SA", "AU", "CA"];
+
+const COUNTRY_OPTIONS: CountryOption[] = [
+  { code: "ZZ", name: "International", dialCode: "" },
+  ...ISO_COUNTRY_CODES
+    .map((code) => ({
+      code,
+      name: countryNameFormatter.of(code) ?? code,
+      dialCode: COUNTRY_DIAL_CODES[code] ?? "",
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name)),
+];
+
+const getFlagEmoji = (countryCode: string) => {
+  if (countryCode === "ZZ") {
+    return "🌐";
+  }
+
+  return countryCode
+    .toUpperCase()
+    .split("")
+    .map((char) => String.fromCodePoint(127397 + char.charCodeAt(0)))
+    .join("");
+};
+
 // const FAQ_CATEGORIES = [
 //   "Buying with YOLO HEAT",
 //   "Delivery and installation",
@@ -54,17 +130,102 @@ const FAQ_ITEMS: HelpFaqItem[] = [
 type HelpContainerProps = {
   embedded?: boolean;
   onClose?: () => void;
+  defaultOpenCallback?: boolean;
 };
 
-const HelpContainer = ({ embedded = false, onClose }: HelpContainerProps) => {
-  const [openCallback, setOpenCallback] = useState(false);
+const resolveCallbackEndpoint = () => {
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+  if (apiBase) {
+    return `${apiBase.replace(/\/$/, "")}/subscriber/callback`;
+  }
+
+  const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
+  if (backendBase) {
+    return `${backendBase.replace(/\/$/, "")}/subscriber/callback`;
+  }
+
+  return "http://localhost:5001/api/v1/subscriber/callback";
+};
+
+const HelpContainer = ({
+  embedded = false,
+  onClose,
+  defaultOpenCallback = false,
+}: HelpContainerProps) => {
+  const [openCallback, setOpenCallback] = useState(defaultOpenCallback);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [subject, setSubject] = useState("Choosing a product");
+  const [name, setName] = useState("");
+  const [countryCode, setCountryCode] = useState("BD");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [feedbackType, setFeedbackType] = useState<"success" | "error" | null>(
+    null,
+  );
   // const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   // const [selectedCategory, setSelectedCategory] = useState<(typeof FAQ_CATEGORIES)[number]>(
   //   "After your boiler is installed"
   // );
 
-  console.log(openCallback)
+  const handleCallbackSubmit = async () => {
+    if (!name.trim()) {
+      setFeedbackType("error");
+      setFeedbackMessage("Please enter your name.");
+      return;
+    }
+
+    if (!phoneNumber.trim()) {
+      setFeedbackType("error");
+      setFeedbackMessage("Please enter your mobile number.");
+      return;
+    }
+
+    const selectedCountry = COUNTRY_OPTIONS.find((country) => country.code === countryCode);
+    const dialCode = selectedCountry?.dialCode?.trim() ?? "";
+    const normalizedNumber = phoneNumber.trim();
+    const phoneNumberWithCode =
+      dialCode && !normalizedNumber.startsWith("+")
+        ? `${dialCode} ${normalizedNumber}`
+        : normalizedNumber;
+
+    setIsSubmitting(true);
+    setFeedbackMessage(null);
+    setFeedbackType(null);
+
+    try {
+      const response = await fetch(resolveCallbackEndpoint(), {
+        method: "POST",
+        headers: {
+          accept: "*/*",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          reason: subject.trim(),
+          phoneNumber: phoneNumberWithCode,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.message || "Failed to send callback request.");
+      }
+
+      setFeedbackType("success");
+      setFeedbackMessage(result.message || "Callback request sent successfully.");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again.";
+      setFeedbackType("error");
+      setFeedbackMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const panelContent = (
     <div className="w-full bg-white px-5 py-7 md:px-7 md:py-8">
@@ -81,7 +242,7 @@ const HelpContainer = ({ embedded = false, onClose }: HelpContainerProps) => {
               </button>
             </div>
 
-            {/* <div className="border-b border-[#8FA8C6] pb-4">
+             <div className="border-b border-[#8FA8C6] pb-4">
               <button
                 type="button"
                 onClick={() => {
@@ -116,7 +277,8 @@ const HelpContainer = ({ embedded = false, onClose }: HelpContainerProps) => {
                       <select
                         id="help-topic"
                         className="h-11 w-full border border-[#C8D3DE] bg-white px-3 text-[16px] text-[#2D3D4D] outline-none"
-                        defaultValue="Choosing a product"
+                        value={subject}
+                        onChange={(event) => setSubject(event.target.value)}
                       >
                         <option>Choosing a product</option>
                         <option>Installation support</option>
@@ -132,6 +294,8 @@ const HelpContainer = ({ embedded = false, onClose }: HelpContainerProps) => {
                       <input
                         id="help-name"
                         type="text"
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
                         className="h-11 w-full border border-[#C8D3DE] bg-white px-3 text-[16px] text-[#2D3D4D] outline-none"
                       />
                     </div>
@@ -141,22 +305,70 @@ const HelpContainer = ({ embedded = false, onClose }: HelpContainerProps) => {
                         Mobile number
                       </label>
                       <div className="flex items-center gap-2">
-                        <span className="text-[18px] leading-none">🇬🇧</span>
+                        <div className="relative min-w-[210px]">
+                          <select
+                            id="help-country"
+                            value={countryCode}
+                            onChange={(event) => setCountryCode(event.target.value)}
+                            className="h-11 w-full border border-[#C8D3DE] bg-white pl-10 pr-8 text-[14px] text-[#2D3D4D] outline-none"
+                          >
+                            <optgroup label="Popular">
+                              {COUNTRY_OPTIONS.filter((country) =>
+                                POPULAR_COUNTRY_CODES.includes(country.code),
+                              ).map((country) => (
+                                <option key={country.code} value={country.code}>
+                                  {country.name}
+                                  {country.dialCode ? ` (${country.dialCode})` : ""}
+                                </option>
+                              ))}
+                            </optgroup>
+                            <optgroup label="All countries">
+                              {COUNTRY_OPTIONS.filter(
+                                (country) => !POPULAR_COUNTRY_CODES.includes(country.code),
+                              ).map((country) => (
+                                <option key={country.code} value={country.code}>
+                                  {country.name}
+                                  {country.dialCode ? ` (${country.dialCode})` : ""}
+                                </option>
+                              ))}
+                            </optgroup>
+                          </select>
+                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[18px] leading-none">
+                            {getFlagEmoji(countryCode)}
+                          </span>
+                        </div>
                         <input
                           id="help-mobile"
                           type="tel"
+                          value={phoneNumber}
+                          onChange={(event) => setPhoneNumber(event.target.value)}
+                          placeholder="17XXXXXXXX"
                           className="h-11 w-full border border-[#C8D3DE] bg-white px-3 text-[16px] text-[#2D3D4D] outline-none"
                         />
                       </div>
+                      <p className="mt-1 text-[12px] text-[#5E7488]">
+                        Country code will be added automatically when you submit.
+                      </p>
                     </div>
 
                     <button
                       type="button"
-                      className="mt-2 flex h-12 w-full items-center justify-center gap-2 bg-[#E8E8E8] text-[18px] font-medium text-[#7A7A7A]"
+                      onClick={handleCallbackSubmit}
+                      disabled={isSubmitting}
+                      className="mt-2 flex h-12 w-full items-center justify-center gap-2 bg-[#00A870] text-[18px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Give me a call
+                      {isSubmitting ? "Sending..." : "Give me a call"}
                       <Phone size={14} />
                     </button>
+                    {feedbackMessage ? (
+                      <p
+                        className={`text-[14px] ${
+                          feedbackType === "success" ? "text-[#0B7A4F]" : "text-[#C73A3A]"
+                        }`}
+                      >
+                        {feedbackMessage}
+                      </p>
+                    ) : null}
 
                     <p className="text-[13px] text-[#4E6478]">
                       Our office hours are Mon-Fri 8am-8pm, Sat & Sun 9am-3pm
@@ -174,7 +386,7 @@ const HelpContainer = ({ embedded = false, onClose }: HelpContainerProps) => {
                   </div>
                 </div>
               </div>
-            </div> */}
+            </div> 
 
             <div className="pt-5">
               {/* <h3 className="mb-4 text-[36px] font-semibold leading-none text-[#24374B]">Frequently asked questions</h3>
@@ -258,14 +470,20 @@ const HelpContainer = ({ embedded = false, onClose }: HelpContainerProps) => {
   );
 
   if (embedded) {
-    return <div className="h-full overflow-y-auto bg-white">{panelContent}</div>;
+    return (
+      <div className="h-full min-h-0 overflow-y-auto overscroll-contain bg-white">
+        {panelContent}
+      </div>
+    );
   }
 
   return (
-    <section className="min-h-screen w-full bg-white">
-      <div className="flex min-h-screen w-full">
+    <section className="h-screen w-full bg-white">
+      <div className="flex h-full w-full">
         <div className="hidden flex-1 bg-[#95A1AF]/85 md:block" />
-        <div className="w-full md:w-[48%]">{panelContent}</div>
+        <div className="h-full min-h-0 w-full overflow-y-auto overscroll-contain md:w-[48%]">
+          {panelContent}
+        </div>
       </div>
     </section>
   );
