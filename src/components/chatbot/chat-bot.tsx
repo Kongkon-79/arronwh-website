@@ -19,6 +19,7 @@ interface Message {
   sender: "user" | "bot"
   text: string
   html?: string
+  createdAt: number
 }
 
 interface GifOption {
@@ -267,6 +268,26 @@ const normalizeVoiceTranscript = (value: string): string => {
     .trim()
 }
 
+const formatMessageAge = (createdAt: number, now: number): string => {
+  const diffSeconds = Math.max(0, Math.floor((now - createdAt) / 1000))
+  if (diffSeconds < 8) return "Just now"
+  if (diffSeconds < 60) return `${diffSeconds}s ago`
+
+  const diffMinutes = Math.floor(diffSeconds / 60)
+  if (diffMinutes < 60) return `${diffMinutes}m ago`
+
+  const diffHours = Math.floor(diffMinutes / 60)
+  if (diffHours < 24) return `${diffHours}h ago`
+
+  const diffDays = Math.floor(diffHours / 24)
+  if (diffDays < 7) return `${diffDays}d ago`
+
+  return new Date(createdAt).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  })
+}
+
 export function ChatBot() {
   const [isOpen, setIsOpen] = useState(false)
   const [input, setInput] = useState("")
@@ -295,10 +316,12 @@ export function ChatBot() {
       id: "bot-welcome",
       sender: "bot",
       text: "Hi, I'm your ArronWH assistant. Ask me anything about boilers, controllers, prices, or installation.",
+      createdAt: Date.now(),
     },
   ])
 
   const [isLoading, setIsLoading] = useState(false)
+  const [messageTimeNow, setMessageTimeNow] = useState(() => Date.now())
 
   const chatRef = useRef<HTMLDivElement>(null)
   const chatScrollRef = useRef<HTMLDivElement>(null)
@@ -375,6 +398,17 @@ export function ChatBot() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  useEffect(() => {
+    if (!isOpen) return
+
+    setMessageTimeNow(Date.now())
+    const timer = window.setInterval(() => {
+      setMessageTimeNow(Date.now())
+    }, 30_000)
+
+    return () => window.clearInterval(timer)
+  }, [isOpen])
+
   // Lock background scroll
   useEffect(() => {
     if (!isOpen) return
@@ -409,7 +443,7 @@ export function ChatBot() {
     })
   }, [pathname, router, searchParams])
 
-  // ✅ Event delegation — একবার mount হলেই সব link handle করবে, re-render এ কোনো সমস্যা নেই
+  
   useEffect(() => {
     const container = chatScrollRef.current
     if (!container) return
@@ -718,6 +752,7 @@ export function ChatBot() {
         id: `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         sender: "user" as const,
         text: userMessage,
+        createdAt: Date.now(),
       },
     ]
     setMessages(updatedMessages)
@@ -750,7 +785,7 @@ export function ChatBot() {
       const botId = `bot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
       setMessages((prev) => [
         ...prev,
-        { id: botId, sender: "bot", text: "" },
+        { id: botId, sender: "bot", text: "", createdAt: Date.now() },
       ])
 
       const reader = response.body?.getReader()
@@ -799,6 +834,7 @@ export function ChatBot() {
             id: botId,
             sender: "bot",
             text: "I received your message but couldn't read a proper response. Please try again.",
+            createdAt: Date.now(),
           },
         ])
       }
@@ -810,6 +846,7 @@ export function ChatBot() {
           id: `bot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           sender: "bot",
           text: "Sorry, something went wrong while contacting support AI. Please try again in a moment.",
+          createdAt: Date.now(),
         },
       ])
     } finally {
@@ -989,6 +1026,7 @@ export function ChatBot() {
           id: `bot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           sender: "bot",
           text: "Voice input is not supported in this browser. Please use Chrome for mic support.",
+          createdAt: Date.now(),
         },
       ])
       return
@@ -1133,7 +1171,7 @@ export function ChatBot() {
           ref={chatRef}
           className="animate-in fade-in slide-in-from-bottom-10 duration-300"
         >
-          <Card className="w-[92vw] sm:w-[420px] h-[660px] shadow-2xl border-slate-200 flex flex-col overflow-hidden rounded-3xl bg-white">
+          <Card className="w-[92vw] sm:w-[420px] h-[700px] shadow-2xl border-slate-200 flex flex-col overflow-hidden rounded-3xl bg-white">
             <CardHeader className="bg-gradient-to-r from-[#0A4229] to-[#0a3523] text-white p-4 flex flex-row justify-between items-center rounded-t-3xl flex-shrink-0">
               <div className="flex items-center gap-3">
                 <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
@@ -1164,23 +1202,46 @@ export function ChatBot() {
               className="p-4 flex-grow overflow-y-auto overscroll-contain touch-pan-y bg-gradient-to-b from-slate-50 to-white [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
               <div className="space-y-4">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={cn(
-                      "max-w-[88%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm",
-                      msg.sender === "user"
-                        ? "bg-[#0A4229] text-white ml-auto rounded-br-md"
-                        : "bg-white border border-slate-200 text-gray-800 rounded-bl-md"
-                    )}
-                  >
-                    {msg.sender === "bot" ? (
-                      <AIMessage content={(typeof msg.html === "string" && msg.html.trim()) || msg.text} />
-                    ) : (
-                      <p className="whitespace-pre-wrap">{renderTextWithLinks(msg.text)}</p>
-                    )}
-                  </div>
-                ))}
+                {messages.map((msg) => {
+                  const timeLabel = formatMessageAge(msg.createdAt, messageTimeNow)
+                  const metaLabel =
+                    msg.sender === "bot"
+                      ? `YOLO HEAT • AI Agent • ${timeLabel}`
+                      : `You • ${timeLabel}`
+
+                  return (
+                    <div
+                      key={msg.id}
+                      className={cn(
+                        "flex flex-col gap-1",
+                        msg.sender === "user" ? "items-end" : "items-start",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "max-w-[88%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm",
+                          msg.sender === "user"
+                            ? "bg-[#0A4229] text-white rounded-br-md"
+                            : "bg-white border border-slate-200 text-gray-800 rounded-bl-md"
+                        )}
+                      >
+                        {msg.sender === "bot" ? (
+                          <AIMessage content={(typeof msg.html === "string" && msg.html.trim()) || msg.text} />
+                        ) : (
+                          <p className="whitespace-pre-wrap">{renderTextWithLinks(msg.text)}</p>
+                        )}
+                      </div>
+                      <p
+                        className={cn(
+                          "px-1 text-[11px] font-medium text-slate-500",
+                          msg.sender === "user" && "text-right",
+                        )}
+                      >
+                        {metaLabel}
+                      </p>
+                    </div>
+                  )
+                })}
 
                 {isLoading && (
                   <div className="bg-white border border-slate-200 text-gray-800 max-w-[18%] p-3 rounded-2xl rounded-bl-md shadow-sm">
