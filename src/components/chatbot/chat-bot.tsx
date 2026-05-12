@@ -638,9 +638,10 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Bot, MessageSquareText, Send, Sparkles, X } from "lucide-react"
+import { Bot, FileText, MessageSquareText, Mic, Paperclip, Send, Smile, Sparkles, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import Image from "next/image"
 
 interface Message {
   id: string
@@ -649,20 +650,111 @@ interface Message {
   html?: string
 }
 
+interface GifOption {
+  id: string
+  label: string
+  tags: string[]
+  url: string
+}
+
 interface PreviousChatItem {
   user_query: string
   ai_response: string
+}
+
+interface SpeechRecognitionResultLike {
+  transcript: string
+}
+
+interface SpeechRecognitionEventLike extends Event {
+  resultIndex: number
+  results: ArrayLike<ArrayLike<SpeechRecognitionResultLike>>
+}
+
+interface BrowserSpeechRecognition extends EventTarget {
+  lang: string
+  interimResults: boolean
+  continuous: boolean
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null
+  onerror: (() => void) | null
+  onend: (() => void) | null
+  start: () => void
+  stop: () => void
+}
+
+type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition
+
+declare global {
+  interface Window {
+    SpeechRecognition?: BrowserSpeechRecognitionConstructor
+    webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor
+    showEmojiPicker?: () => Promise<string>
+  }
 }
 
 const URL_REGEX = /(https?:\/\/[^\s<>"')\]]+)/gi
 const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi
 const QUOTE_TOOL_URL = "https://arronwh-website.vercel.app/boilers/property-overview"
 const QUOTE_TOOL_LABEL_REGEX = /\bstart\s+online\s+quote\s+tool\b/i
+const GIF_SUGGESTIONS: GifOption[] = [
+  {
+    id: "celebrate",
+    label: "Celebrate",
+    tags: ["party", "wow", "happy", "celebrate"],
+    url: "https://media.giphy.com/media/3o7TKTDn976rzVgky4/giphy.gif",
+  },
+  {
+    id: "thumbs-up",
+    label: "Thumbs Up",
+    tags: ["ok", "nice", "great", "approve"],
+    url: "https://media.giphy.com/media/111ebonMs90YLu/giphy.gif",
+  },
+  {
+    id: "laugh",
+    label: "Laugh",
+    tags: ["funny", "lol", "haha", "laugh"],
+    url: "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif",
+  },
+  {
+    id: "excited",
+    label: "Excited",
+    tags: ["excited", "hype", "energy"],
+    url: "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif",
+  },
+  {
+    id: "clap",
+    label: "Clap",
+    tags: ["clap", "congrats", "well done"],
+    url: "https://media.giphy.com/media/26BRv0ThflsHCqDrG/giphy.gif",
+  },
+  {
+    id: "heart",
+    label: "Love",
+    tags: ["heart", "love", "care"],
+    url: "https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif",
+  },
+]
+const QUICK_EMOJIS = ["😀", "🔥", "👍", "🎉", "🙏", "✅", "🙂", "💬"]
+
+const normalizeVoiceTranscript = (value: string): string => {
+  return value
+    .replace(/\s+/g, " ")
+    .replace(/([.!?])\s+/g, "$1\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+}
 
 export function ChatBot() {
   const [isOpen, setIsOpen] = useState(false)
   const [input, setInput] = useState("")
   const [showBlink, setShowBlink] = useState(true)
+  const [isRecording, setIsRecording] = useState(false)
+  const [showEmojiMenu, setShowEmojiMenu] = useState(false)
+  const [showGifMenu, setShowGifMenu] = useState(false)
+  const [gifQuery, setGifQuery] = useState("")
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [selectedFilePreview, setSelectedFilePreview] = useState<string | null>(null)
+  const [selectedGif, setSelectedGif] = useState<GifOption | null>(null)
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -680,6 +772,8 @@ export function ChatBot() {
   const chatRef = useRef<HTMLDivElement>(null)
   const chatScrollRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null)
 
   const quickPrompts = [
     "Controller prices",
@@ -711,6 +805,26 @@ export function ChatBot() {
       document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [isOpen])
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!selectedFile || !selectedFile.type.startsWith("image/")) {
+      setSelectedFilePreview(null)
+      return
+    }
+
+    const objectUrl = URL.createObjectURL(selectedFile)
+    setSelectedFilePreview(objectUrl)
+
+    return () => {
+      URL.revokeObjectURL(objectUrl)
+    }
+  }, [selectedFile])
 
   // Auto scroll
   useEffect(() => {
@@ -1017,9 +1131,11 @@ export function ChatBot() {
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     const trimmedInput = input.trim()
-    if (!trimmedInput) return
+    if (!trimmedInput && !selectedFile && !selectedGif) return
 
-    const userMessage = trimmedInput
+    const attachmentText = selectedFile ? `\n[Attachment: ${selectedFile.name}]` : ""
+    const gifAttachmentText = selectedGif ? `\n[GIF: ${selectedGif.label}]` : ""
+    const userMessage = `${trimmedInput}${attachmentText}${gifAttachmentText}`.trim()
     const updatedMessages = [
       ...messages,
       {
@@ -1030,6 +1146,12 @@ export function ChatBot() {
     ]
     setMessages(updatedMessages)
     setInput("")
+    setSelectedFile(null)
+    setSelectedFilePreview(null)
+    setSelectedGif(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
     setIsLoading(true)
 
     try {
@@ -1140,6 +1262,109 @@ export function ChatBot() {
       e.stopPropagation()
       container.scrollTop += e.deltaY
     }
+  }
+
+  const handleSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setSelectedFile(file)
+    setShowGifMenu(false)
+    setShowEmojiMenu(false)
+  }
+
+  const handleEmojiClick = async () => {
+    setShowGifMenu(false)
+    const picker = window.showEmojiPicker
+    if (typeof picker === "function") {
+      try {
+        const selected = await picker.call(window)
+        if (selected) {
+          setInput((prev) => `${prev}${selected}`)
+        }
+        return
+      } catch {
+        // fallback to inline picker
+      }
+    }
+    setShowEmojiMenu((prev) => !prev)
+  }
+
+  const handleGifInsert = (gif: GifOption) => {
+    setSelectedGif(gif)
+    setShowEmojiMenu(false)
+    setShowGifMenu(false)
+    setGifQuery("")
+  }
+
+  const startSpeechRecognition = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition
+
+    if (!SpeechRecognition) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `bot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          sender: "bot",
+          text: "Voice input is not supported in this browser. Please use Chrome for mic support.",
+        },
+      ])
+      return
+    }
+
+    const recognition = new SpeechRecognition()
+    recognition.lang = "en-US"
+    recognition.interimResults = true
+    recognition.continuous = false
+    let fullTranscript = ""
+
+    recognition.onresult = (event: SpeechRecognitionEventLike) => {
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        fullTranscript += `${event.results[i][0].transcript} `
+      }
+      setInput(normalizeVoiceTranscript(fullTranscript))
+    }
+
+    recognition.onerror = () => {
+      setIsRecording(false)
+    }
+
+    recognition.onend = () => {
+      setIsRecording(false)
+    }
+
+    recognitionRef.current = recognition
+    recognition.start()
+    setIsRecording(true)
+  }
+
+  const stopSpeechRecognition = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop()
+      recognitionRef.current = null
+    }
+    setIsRecording(false)
+  }
+
+  const handleMicClick = () => {
+    if (isRecording) {
+      stopSpeechRecognition()
+      return
+    }
+    startSpeechRecognition()
+  }
+
+  const filteredGifSuggestions = GIF_SUGGESTIONS.filter((gif) => {
+    const query = gifQuery.trim().toLowerCase()
+    if (!query) return true
+    const haystack = `${gif.label} ${gif.tags.join(" ")}`.toLowerCase()
+    return haystack.includes(query)
+  })
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   }
 
   return (
@@ -1293,22 +1518,209 @@ export function ChatBot() {
             <CardFooter className="p-3 border-t bg-white/95 backdrop-blur-sm flex-shrink-0">
               <form
                 onSubmit={handleSendMessage}
-                className="flex w-full gap-2 max-w-full p-1 rounded-2xl border border-slate-200 bg-slate-50 focus-within:border-[#0A4229] transition-colors duration-200"
+                className="flex w-full max-w-full items-end gap-2 rounded-2xl border border-[#0A4229] bg-slate-50 p-2 transition-colors duration-200 focus-within:border-[#0A4229]"
               >
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask about prices, products, installation..."
-                  className="flex-1 min-w-0 border-0 bg-transparent shadow-none placeholder:text-[#616161] focus-visible:ring-0 focus-visible:ring-offset-0"
-                  disabled={isLoading}
-                />
+                <div className="relative flex min-w-0 flex-1 flex-col">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask a question..."
+                    className="h-9 min-w-0 border-0 bg-transparent px-2 shadow-none placeholder:text-[#616161] focus-visible:ring-0 focus-visible:ring-offset-0"
+                    disabled={isLoading}
+                  />
+                  {selectedFile && (
+                    <div className="mx-2 mb-1 mt-0.5 inline-flex max-w-full items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] text-slate-600 shadow-sm">
+                      {selectedFile.type.startsWith("image/") && selectedFilePreview ? (
+                        <Image
+                          src={selectedFilePreview}
+                          alt={selectedFile.name}
+                          width={26}
+                          height={26}
+                          className="h-[26px] w-[26px] rounded-md border border-slate-200 object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <FileText className="h-3.5 w-3.5 text-[#0A4229]" />
+                      )}
+                      <span className="max-w-[160px] truncate font-medium text-slate-700">{selectedFile.name}</span>
+                      <span className="text-[10px] text-slate-400">{formatFileSize(selectedFile.size)}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedFile(null)
+                          setSelectedFilePreview(null)
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = ""
+                          }
+                        }}
+                        className="text-slate-400 hover:text-slate-700"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                  {selectedGif && (
+                    <div className="mx-2 mb-1 mt-0.5 inline-flex max-w-full items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] text-slate-600 shadow-sm">
+                      <Image
+                        src={selectedGif.url}
+                        alt={selectedGif.label}
+                        width={28}
+                        height={28}
+                        className="h-7 w-7 rounded-md object-cover"
+                      />
+                      <span className="max-w-[140px] truncate font-medium text-slate-700">{selectedGif.label}</span>
+                      <span className="text-[10px] text-slate-400">GIF</span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedGif(null)}
+                        className="text-slate-400 hover:text-slate-700"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                  <div className="relative flex items-center gap-3 px-2 pb-1 pt-0.5 text-slate-500">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      onChange={handleSelectFile}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="transition-colors hover:text-slate-700"
+                      aria-label="Attach file"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleEmojiClick}
+                      className="transition-colors hover:text-slate-700"
+                      aria-label="Open emojis"
+                    >
+                      <Smile className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowEmojiMenu(false)
+                        setGifQuery("")
+                        setShowGifMenu((prev) => !prev)
+                      }}
+                      className="rounded border border-slate-300 px-1.5 py-[1px] text-[10px] font-semibold leading-none text-slate-500 transition-colors hover:text-slate-700"
+                      aria-label="Insert GIF"
+                    >
+                      GIF
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleMicClick}
+                      className={cn(
+                        "relative transition-colors hover:text-slate-700",
+                        isRecording && "text-red-500",
+                      )}
+                      aria-label={isRecording ? "Stop recording" : "Start voice input"}
+                    >
+                      {isRecording ? (
+                        <span className="relative flex h-4 w-4 items-end justify-center gap-[2px]">
+                          <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-red-400/40" />
+                          <span
+                            className="w-[2px] rounded-full bg-red-500 animate-pulse"
+                            style={{ height: "7px", animationDuration: "620ms" }}
+                          />
+                          <span
+                            className="w-[2px] rounded-full bg-red-500 animate-pulse"
+                            style={{ height: "12px", animationDuration: "520ms" }}
+                          />
+                          <span
+                            className="w-[2px] rounded-full bg-red-500 animate-pulse"
+                            style={{ height: "9px", animationDuration: "700ms" }}
+                          />
+                        </span>
+                      ) : (
+                        <Mic className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+
+                  {showEmojiMenu && (
+                    <div className="absolute bottom-10 left-0 z-20 flex flex-wrap gap-1 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+                      {QUICK_EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => {
+                            setInput((prev) => `${prev}${emoji}`)
+                            setShowEmojiMenu(false)
+                          }}
+                          className="rounded px-1.5 py-1 text-sm hover:bg-slate-100"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {showGifMenu && (
+                    <div className="absolute bottom-10 left-0 z-20 w-[282px] rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+                      <div className="mb-2 flex items-center justify-between px-1">
+                        <p className="text-xs font-semibold text-slate-700">Choose a GIF</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowGifMenu(false)
+                            setGifQuery("")
+                          }}
+                          className="text-xs text-slate-400 hover:text-slate-600"
+                        >
+                          Close
+                        </button>
+                      </div>
+                      <input
+                        value={gifQuery}
+                        onChange={(e) => setGifQuery(e.target.value)}
+                        placeholder="Search GIF..."
+                        className="mb-2 h-8 w-full rounded-lg border border-slate-200 px-2 text-xs outline-none focus:border-[#0A4229]"
+                      />
+                      <div className="grid max-h-[180px] grid-cols-2 gap-2 overflow-y-auto pr-1">
+                        {filteredGifSuggestions.map((gif) => (
+                          <button
+                            key={gif.id}
+                            type="button"
+                            onClick={() => handleGifInsert(gif)}
+                            className="group overflow-hidden rounded-lg border border-slate-200 bg-slate-50 text-left transition hover:border-[#0A4229]/40 hover:shadow-sm"
+                          >
+                            <Image
+                              src={gif.url}
+                              alt={gif.label}
+                              width={140}
+                              height={64}
+                              className="h-16 w-full object-cover"
+                              loading="lazy"
+                            />
+                            <p className="truncate px-2 py-1 text-[10px] font-medium text-slate-600 group-hover:text-[#0A4229]">
+                              {gif.label}
+                            </p>
+                          </button>
+                        ))}
+                        {filteredGifSuggestions.length === 0 && (
+                          <p className="col-span-2 rounded-lg bg-slate-50 p-2 text-center text-[11px] text-slate-500">
+                            No GIF found
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <Button
                   type="submit"
                   size="icon"
-                  className="bg-[#0A4229] hover:bg-[#0a3523] flex-shrink-0 rounded-xl"
-                  disabled={isLoading || !input.trim()}
+                  className="mb-1 h-8 w-8 flex-shrink-0 rounded-full bg-slate-200 text-slate-400 hover:bg-slate-300 hover:text-slate-600"
+                  disabled={isLoading || (!input.trim() && !selectedFile && !selectedGif)}
                 >
-                  <Send className="h-4 w-4 text-white" />
+                  <Send className="h-4 w-4" />
                 </Button>
               </form>
             </CardFooter>
