@@ -1,7 +1,7 @@
 "use client";
 
 import { Phone, X } from "lucide-react";
-import { useState } from "react";
+import { useState, type WheelEvent, type TouchEvent } from "react";
 // import { useState } from "react";
 
 type HelpFaqItem = {
@@ -163,6 +163,12 @@ const HelpContainer = ({
   const [feedbackType, setFeedbackType] = useState<"success" | "error" | null>(
     null,
   );
+
+  const preventScrollPropagation = (
+    event: WheelEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>,
+  ) => {
+    event.stopPropagation();
+  };
   // const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   // const [selectedCategory, setSelectedCategory] = useState<(typeof FAQ_CATEGORIES)[number]>(
   //   "After your boiler is installed"
@@ -471,7 +477,14 @@ const HelpContainer = ({
 
   if (embedded) {
     return (
-      <div className="h-full min-h-0 overflow-y-auto overscroll-contain bg-white">
+      <div
+        data-lenis-prevent
+        data-lenis-prevent-wheel
+        data-lenis-prevent-touch
+        onWheelCapture={preventScrollPropagation}
+        onTouchMoveCapture={preventScrollPropagation}
+        className="h-full min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y bg-white"
+      >
         {panelContent}
       </div>
     );
@@ -479,9 +492,16 @@ const HelpContainer = ({
 
   return (
     <section className="h-screen w-full bg-white">
-      <div className="flex h-full w-full">
+      <div className="flex h-full w-full overflow-hidden">
         <div className="hidden flex-1 bg-[#95A1AF]/85 md:block" />
-        <div className="h-full min-h-0 w-full overflow-y-auto overscroll-contain md:w-[48%]">
+        <div
+          data-lenis-prevent
+          data-lenis-prevent-wheel
+          data-lenis-prevent-touch
+          onWheelCapture={preventScrollPropagation}
+          onTouchMoveCapture={preventScrollPropagation}
+          className="h-full min-h-0 w-full overflow-y-auto overscroll-y-contain touch-pan-y md:w-[48%]"
+        >
           {panelContent}
         </div>
       </div>

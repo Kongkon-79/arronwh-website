@@ -69,7 +69,12 @@ const Navbar = () => {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-full border-l-0 p-0 sm:max-w-[530px] [&>button]:hidden"
+                data-lenis-prevent
+                data-lenis-prevent-wheel
+                data-lenis-prevent-touch
+                onWheelCapture={(event) => event.stopPropagation()}
+                onTouchMoveCapture={(event) => event.stopPropagation()}
+                className="flex h-screen w-full flex-col overflow-hidden border-l-0 p-0 sm:max-w-[530px] [&>button]:hidden"
               >
                 <HelpContainer embedded onClose={() => setIsHelpOpen(false)} />
               </SheetContent>
@@ -117,7 +122,12 @@ const Navbar = () => {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-full border-l-0 p-0 sm:max-w-[530px] [&>button]:hidden"
+                data-lenis-prevent
+                data-lenis-prevent-wheel
+                data-lenis-prevent-touch
+                onWheelCapture={(event) => event.stopPropagation()}
+                onTouchMoveCapture={(event) => event.stopPropagation()}
+                className="flex h-screen w-full flex-col overflow-hidden border-l-0 p-0 sm:max-w-[530px] [&>button]:hidden"
               >
                 <HelpContainer embedded onClose={() => setIsHelpOpen(false)} />
               </SheetContent>

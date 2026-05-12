@@ -29,12 +29,21 @@ const CalloutContainer = () => {
       return;
     }
 
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalHtmlOverscroll = document.documentElement.style.overscrollBehavior;
     const originalOverflow = document.body.style.overflow;
+    const originalBodyOverscroll = document.body.style.overscrollBehavior;
 
+    document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
     document.body.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
 
     return () => {
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.documentElement.style.overscrollBehavior = originalHtmlOverscroll;
       document.body.style.overflow = originalOverflow;
+      document.body.style.overscrollBehavior = originalBodyOverscroll;
     };
   }, [isHelpOpen]);
 
@@ -124,6 +133,11 @@ const CalloutContainer = () => {
       <Sheet open={isHelpOpen} onOpenChange={setIsHelpOpen}>
         <SheetContent
           side="right"
+          data-lenis-prevent
+          data-lenis-prevent-wheel
+          data-lenis-prevent-touch
+          onWheelCapture={(event) => event.stopPropagation()}
+          onTouchMoveCapture={(event) => event.stopPropagation()}
           className="flex h-screen w-full flex-col overflow-hidden border-l-0 p-0 sm:max-w-[530px] [&>button]:hidden"
         >
           <div className="h-full min-h-0 w-full">
