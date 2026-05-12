@@ -1,635 +1,5 @@
 
 
-
-// "use client"
-
-// import type React from "react"
-
-// import { useState, useRef, useEffect } from "react"
-// import { Button } from "@/components/ui/button"
-// import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-// import { Input } from "@/components/ui/input"
-// import { Bot, MessageSquareText, Send, Sparkles, X } from "lucide-react"
-// import { cn } from "@/lib/utils"
-// import { usePathname, useRouter, useSearchParams } from "next/navigation"
-
-// interface Message {
-//   id: string
-//   sender: "user" | "bot"
-//   text: string
-//   html?: string
-// }
-
-// interface PreviousChatItem {
-//   user_query: string
-//   ai_response: string
-// }
-
-// export function ChatBot() {
-//   const [isOpen, setIsOpen] = useState(false)
-//   const [input, setInput] = useState("")
-//   const [showBlink, setShowBlink] = useState(true)
-//   const pathname = usePathname()
-//   const router = useRouter()
-//   const searchParams = useSearchParams()
-
-//   const [messages, setMessages] = useState<Message[]>([
-//     {
-//       id: "bot-welcome",
-//       sender: "bot",
-//       text: "Hi, I’m your ArronWH assistant. Ask me anything about boilers, controllers, prices, or installation.",
-//     },
-//   ])
-
-//   const [isLoading, setIsLoading] = useState(false)
-
-//   const chatRef = useRef<HTMLDivElement>(null)
-//   const chatScrollRef = useRef<HTMLDivElement>(null)
-//   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-//   const quickPrompts = [
-//     "Controller prices",
-//     "Best boiler for my home",
-//     "Installation timeline",
-//   ]
-
-//   // const API_ENDPOINT = "http://72.62.213.212:8000/api/ai/chatbot"
-
-//   // Blink animation only once
-//   useEffect(() => {
-//     const timer = setTimeout(() => {
-//       setShowBlink(false)
-//     }, 3500)
-
-//     return () => clearTimeout(timer)
-//   }, [])
-
-//   // Handle outside click
-//   useEffect(() => {
-//     const handleClickOutside = (event: MouseEvent) => {
-//       if (
-//         chatRef.current &&
-//         !chatRef.current.contains(event.target as Node) &&
-//         isOpen
-//       ) {
-//         setIsOpen(false)
-//       }
-//     }
-
-//     document.addEventListener("mousedown", handleClickOutside)
-
-//     return () => {
-//       document.removeEventListener("mousedown", handleClickOutside)
-//     }
-//   }, [isOpen])
-
-//   // Auto scroll
-//   useEffect(() => {
-//     messagesEndRef.current?.scrollIntoView({
-//       behavior: "smooth",
-//     })
-//   }, [messages])
-
-//   // Lock background scroll
-//   useEffect(() => {
-//     if (!isOpen) return
-
-//     const previousOverflow = document.body.style.overflow
-//     document.body.style.overflow = "hidden"
-
-//     return () => {
-//       document.body.style.overflow = previousOverflow
-//     }
-//   }, [isOpen])
-
-//   // Open chat automatically when `?openChat=1` is present.
-//   useEffect(() => {
-//     const shouldOpenChat = searchParams.get("openChat") === "1"
-//     if (!shouldOpenChat) return
-
-//     setIsOpen(true)
-
-//     const params = new URLSearchParams(searchParams.toString())
-//     params.delete("openChat")
-//     const nextQuery = params.toString()
-//     router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
-//       scroll: false,
-//     })
-//   }, [pathname, router, searchParams])
-
-//   const buildPreviousChat = (
-//     chatMessages: Message[]
-//   ): PreviousChatItem[] => {
-//     const previousChat: PreviousChatItem[] = []
-
-//     for (let i = 0; i < chatMessages.length; i += 1) {
-//       if (chatMessages[i].sender !== "user") continue
-
-//       const aiReply = chatMessages
-//         .slice(i + 1)
-//         .find((msg) => msg.sender === "bot")
-
-//       if (!aiReply) continue
-
-//       previousChat.push({
-//         user_query: chatMessages[i].text,
-//         ai_response: aiReply.text,
-//       })
-//     }
-
-//     return previousChat
-//   }
-
-//   const htmlToPlainText = (value: string): string => {
-//     if (typeof window === "undefined") return value
-
-//     const parser = new DOMParser()
-//     const doc = parser.parseFromString(value, "text/html")
-//     const body = doc.body
-//     if (!body) return value.trim()
-
-//     return (body.textContent || "").trim()
-//   }
-
-//   const sanitizeHtml = (value: string): string => {
-//     if (typeof window === "undefined") return value
-
-//     const parser = new DOMParser()
-//     const doc = parser.parseFromString(value, "text/html")
-//     const body = doc.body
-//     if (!body) return value.trim()
-
-//     const allowedTags = new Set([
-//       "p",
-//       "br",
-//       "strong",
-//       "b",
-//       "em",
-//       "i",
-//       "u",
-//       "a",
-//       "ul",
-//       "ol",
-//       "li",
-//       "span",
-//       "div",
-//       "code",
-//     ])
-
-//     const cleanNode = (node: Node) => {
-//       if (node.nodeType === Node.ELEMENT_NODE) {
-//         const element = node as HTMLElement
-//         const tagName = element.tagName.toLowerCase()
-
-//         if (!allowedTags.has(tagName)) {
-//           const parent = element.parentNode
-//           if (parent) {
-//             while (element.firstChild) {
-//               parent.insertBefore(element.firstChild, element)
-//             }
-//             parent.removeChild(element)
-//           }
-//           return
-//         }
-
-//         const attributes = [...element.attributes]
-//         for (const attribute of attributes) {
-//           const name = attribute.name.toLowerCase()
-//           if (tagName === "a" && (name === "href" || name === "target")) {
-//             continue
-//           }
-//           element.removeAttribute(attribute.name)
-//         }
-
-//         if (tagName === "a") {
-//           const href = element.getAttribute("href") || ""
-//           const safeHref =
-//             href.startsWith("http://") ||
-//             href.startsWith("https://") ||
-//             href.startsWith("/")
-//           if (!safeHref) {
-//             element.removeAttribute("href")
-//           }
-//           element.setAttribute("rel", "noopener noreferrer")
-//           if (element.getAttribute("target") === "_blank") {
-//             element.setAttribute("target", "_blank")
-//           } else {
-//             element.removeAttribute("target")
-//           }
-//         }
-//       }
-
-//       const children = [...node.childNodes]
-//       for (const child of children) {
-//         cleanNode(child)
-//       }
-//     }
-
-//     cleanNode(body)
-//     return body.innerHTML.trim()
-//   }
-
-//   const decodeHtmlEntities = (value: string): string => {
-//     if (typeof window === "undefined") return value
-
-//     const parser = new DOMParser()
-//     const doc = parser.parseFromString(value, "text/html")
-//     const body = doc.body
-//     if (!body) return value
-//     return body.textContent || value
-//   }
-
-//   const formatBotMessage = (value: string): { text: string; html?: string } => {
-//     const trimmed = value.trim()
-//     if (!trimmed) return { text: "" }
-
-//     const decoded = decodeHtmlEntities(trimmed)
-//     const isHtml = /<\/?[a-z][\s\S]*>/i.test(decoded)
-
-//     if (isHtml) {
-//       const sanitized = sanitizeHtml(decoded)
-//       return {
-//         text: htmlToPlainText(sanitized) || trimmed,
-//         html: sanitized,
-//       }
-//     }
-
-//     return { text: decoded }
-//   }
-
-//   const extractStreamText = (chunk: string): string => {
-//     const lines = chunk.split(/\r?\n/)
-//     const dataLines = lines
-//       .filter((line) => line.startsWith("data:"))
-//       .map((line) => line.replace(/^data:\s?/, "").trim())
-//       .filter((line) => line && line !== "[DONE]")
-
-//     if (dataLines.length === 0) return chunk
-
-//     let built = ""
-
-//     for (const line of dataLines) {
-//       try {
-//         const parsed = JSON.parse(line)
-//         const candidate =
-//           (typeof parsed === "string" && parsed) ||
-//           parsed?.response ||
-//           parsed?.message ||
-//           parsed?.data ||
-//           parsed?.text ||
-//           parsed?.delta?.content
-
-//         if (typeof candidate === "string") {
-//           built += candidate
-//         }
-//       } catch {
-//         built += line
-//       }
-//     }
-
-//     return built
-//   }
-
-//   const handleSendMessage = async (e?: React.FormEvent) => {
-//     if (e) e.preventDefault()
-
-//     const trimmedInput = input.trim()
-
-//     if (!trimmedInput) return
-
-//     const userMessage = trimmedInput
-
-//     const updatedMessages = [
-//       ...messages,
-//       {
-//         id: `user-${Date.now()}-${Math.random()
-//           .toString(36)
-//           .slice(2, 8)}`,
-//         sender: "user" as const,
-//         text: userMessage,
-//       },
-//     ]
-
-//     setMessages(updatedMessages)
-//     setInput("")
-//     setIsLoading(true)
-
-//     try {
-//       const response = await fetch("/api/chatbot", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           accept: "text/event-stream",
-//         },
-//         body: JSON.stringify({
-//           previous_chat: buildPreviousChat(messages),
-//           user_query: userMessage,
-//         }),
-//       })
-
-//       if (!response.ok) {
-//         throw new Error(`Request failed with status ${response.status}`)
-//       }
-
-//       const botId = `bot-${Date.now()}-${Math.random()
-//         .toString(36)
-//         .slice(2, 8)}`
-
-//       setMessages((prev) => [
-//         ...prev,
-//         {
-//           id: botId,
-//           sender: "bot",
-//           text: "",
-//         },
-//       ])
-
-//       const reader = response.body?.getReader()
-
-//       if (!reader) {
-//         throw new Error("No response stream found.")
-//       }
-
-//       const decoder = new TextDecoder()
-//       let streamedText = ""
-
-//       while (true) {
-//         const { done, value } = await reader.read()
-//         if (done) break
-
-//         const chunk = decoder.decode(value, { stream: true })
-//         const parsedChunk = extractStreamText(chunk)
-
-//         if (!parsedChunk) continue
-
-//         streamedText += parsedChunk
-//         setIsLoading(false)
-//         const formatted = formatBotMessage(streamedText)
-
-//         setMessages((prev) =>
-//           prev.map((msg) =>
-//             msg.id === botId
-//               ? {
-//                   ...msg,
-//                   text: formatted.text,
-//                   html: formatted.html,
-//                 }
-//               : msg,
-//           ),
-//         )
-//       }
-
-//       const finalChunk = decoder.decode()
-//       if (finalChunk) {
-//         streamedText += extractStreamText(finalChunk)
-//       }
-
-//       const normalizedText = streamedText.trim()
-
-//       if (normalizedText) {
-//         const formatted = formatBotMessage(normalizedText)
-
-//         setMessages((prev) =>
-//           prev.map((msg) =>
-//             msg.id === botId
-//               ? {
-//                   ...msg,
-//                   text: formatted.text,
-//                   html: formatted.html,
-//                 }
-//               : msg,
-//           ),
-//         )
-//       } else {
-//         setMessages((prev) => [
-//           ...prev.filter((msg) => msg.id !== botId),
-//           {
-//             id: botId,
-//             sender: "bot",
-//             text: "I received your message but couldn’t read a proper response. Please try again.",
-//           },
-//         ])
-//       }
-//     } catch (error) {
-//       console.error("Error sending message:", error)
-
-//       setMessages((prev) => [
-//         ...prev,
-//         {
-//           id: `bot-${Date.now()}-${Math.random()
-//             .toString(36)
-//             .slice(2, 8)}`,
-//           sender: "bot",
-//           text: "Sorry, something went wrong while contacting support AI. Please try again in a moment.",
-//         },
-//       ])
-//     } finally {
-//       setIsLoading(false)
-//     }
-//   }
-
-//   const handleQuickPrompt = (prompt: string) => {
-//     if (isLoading) return
-
-//     setInput(prompt)
-//   }
-
-//   const handleChatWheelCapture = (
-//     e: React.WheelEvent<HTMLDivElement>
-//   ) => {
-//     const container = chatScrollRef.current
-
-//     if (!container) return
-
-//     const {
-//       scrollTop,
-//       scrollHeight,
-//       clientHeight,
-//     } = container
-
-//     const isAtTop = scrollTop <= 0
-
-//     const isAtBottom =
-//       scrollTop + clientHeight >= scrollHeight - 1
-
-//     const isScrollingDown = e.deltaY > 0
-//     const isScrollingUp = e.deltaY < 0
-
-//     if (
-//       (isScrollingDown && !isAtBottom) ||
-//       (isScrollingUp && !isAtTop)
-//     ) {
-//       e.preventDefault()
-//       e.stopPropagation()
-
-//       container.scrollTop += e.deltaY
-//     }
-//   }
-
-//   return (
-//     <div className="fixed bottom-24 right-[36px] z-50">
-//       {/* Chat Button */}
-//       {!isOpen && (
-//         <div className="relative">
-//           {/* Blink Animation */}
-//           {showBlink && (
-//             <>
-//               <span className="absolute inset-0 rounded-full bg-[#0A4229]/40 animate-ping"></span>
-
-//               <span className="absolute inset-0 rounded-full border-4 border-[#0A4229] animate-pulse"></span>
-//             </>
-//           )}
-
-//           <button
-//             onClick={() => setIsOpen(true)}
-//             className="relative h-12 w-12 rounded-full flex justify-center items-center shadow-xl bg-[#0A4229] border border-white/20 hover:scale-105 transition-transform duration-300"
-//             aria-label="Open chat support"
-//           >
-//             <MessageSquareText className="h-5 w-5 text-white" />
-//           </button>
-//         </div>
-//       )}
-
-//       {/* Chat Window */}
-//       {isOpen && (
-//         <div
-//           ref={chatRef}
-//           className="animate-in fade-in slide-in-from-bottom-10 duration-300"
-//         >
-//           <Card className="w-[92vw] sm:w-[420px] h-[560px] shadow-2xl border-slate-200 flex flex-col overflow-hidden rounded-3xl bg-white">
-//             <CardHeader className="bg-gradient-to-r from-[#0A4229] to-[#0a3523] text-white p-4 flex flex-row justify-between items-center rounded-t-3xl flex-shrink-0">
-//               <div className="flex items-center gap-3">
-//                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
-//                   <Bot className="h-5 w-5" />
-//                 </span>
-
-//                 <div>
-//                   <p className="font-semibold leading-tight">
-//                     ArronWH Assistant
-//                   </p>
-
-//                   <p className="text-xs text-white/80">
-//                     Online now • Fast replies
-//                   </p>
-//                 </div>
-//               </div>
-
-//               <Button
-//                 variant="ghost"
-//                 size="icon"
-//                 onClick={() => setIsOpen(false)}
-//                 className="h-9 w-9 text-white hover:bg-white/10 rounded-full"
-//               >
-//                 <X className="h-5 w-5" />
-//               </Button>
-//             </CardHeader>
-
-//             <CardContent
-//               ref={chatScrollRef}
-//               onWheelCapture={handleChatWheelCapture}
-//               className="p-4 flex-grow overflow-y-auto overscroll-contain touch-pan-y bg-gradient-to-b from-slate-50 to-white"
-//             >
-//               <div className="space-y-4">
-//                 {messages.map((msg) => (
-//                   <div
-//                     key={msg.id}
-//                     className={cn(
-//                       "max-w-[88%] p-3.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap shadow-sm",
-//                       msg.sender === "user"
-//                         ? "bg-[#0A4229] text-white ml-auto rounded-br-md"
-//                         : "bg-white border border-slate-200 text-gray-800 rounded-bl-md"
-//                     )}
-//                   >
-//                     {msg.sender === "bot" && msg.html ? (
-//                       <div
-//                         className="[&>p]:mb-2 [&>p:last-child]:mb-0 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_a]:font-medium [&_a]:text-[#0A4229] [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-[#0a3523]"
-//                         dangerouslySetInnerHTML={{ __html: msg.html }}
-//                       />
-//                     ) : (
-//                       msg.text
-//                     )}
-//                   </div>
-//                 ))}
-
-//                 {isLoading && (
-//                   <div className="bg-white border border-slate-200 text-gray-800 max-w-[18%] p-3 rounded-2xl rounded-bl-md shadow-sm">
-//                     <div className="flex space-x-2">
-//                       <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"></div>
-//                       <div
-//                         className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
-//                         style={{ animationDelay: "150ms" }}
-//                       ></div>
-//                       <div
-//                         className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
-//                         style={{ animationDelay: "300ms" }}
-//                       ></div>
-//                     </div>
-//                   </div>
-//                 )}
-
-//                 {!isLoading && messages.length <= 2 && (
-//                   <div className="pt-1">
-//                     <p className="text-xs text-slate-500 mb-2 flex items-center gap-1.5">
-//                       <Sparkles className="h-3.5 w-3.5" />
-//                       Try a quick question
-//                     </p>
-
-//                     <div className="flex flex-wrap gap-2">
-//                       {quickPrompts.map((prompt) => (
-//                         <button
-//                           key={prompt}
-//                           type="button"
-//                           onClick={() =>
-//                             handleQuickPrompt(prompt)
-//                           }
-//                           className="px-3 py-1.5 rounded-full bg-white border border-slate-200 text-xs text-slate-700 hover:bg-slate-100 transition-colors"
-//                         >
-//                           {prompt}
-//                         </button>
-//                       ))}
-//                     </div>
-//                   </div>
-//                 )}
-
-//                 <div ref={messagesEndRef} />
-//               </div>
-//             </CardContent>
-
-//             <CardFooter className="p-3 border-t bg-white/95 backdrop-blur-sm flex-shrink-0">
-//               <form
-//                 onSubmit={handleSendMessage}
-//                 className="flex w-full gap-2 max-w-full p-1 rounded-2xl border border-slate-200 bg-slate-50 focus-within:border-[#0A4229] transition-colors duration-200"
-//               >
-//                 <Input
-//                   value={input}
-//                   onChange={(e) =>
-//                     setInput(e.target.value)
-//                   }
-//                   placeholder="Ask about prices, products, installation..."
-//                   className="flex-1 min-w-0 border-0 bg-transparent shadow-none placeholder:text-[#616161] focus-visible:ring-0 focus-visible:ring-offset-0"
-//                   disabled={isLoading}
-//                 />
-
-//                 <Button
-//                   type="submit"
-//                   size="icon"
-//                   className="bg-[#0A4229] hover:bg-[#0a3523] flex-shrink-0 rounded-xl"
-//                   disabled={
-//                     isLoading || !input.trim()
-//                   }
-//                 >
-//                   <Send className="h-4 w-4 text-white" />
-//                 </Button>
-//               </form>
-//             </CardFooter>
-//           </Card>
-//         </div>
-//       )}
-//     </div>
-//   )
-// }
-
-
 "use client"
 
 import type React from "react"
@@ -638,10 +8,11 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { FileText, MessageSquareText, Mic, Paperclip, Send, Smile, Sparkles, X } from "lucide-react"
+import { FileText, MessageSquareText, Mic, Paperclip, Search, Send, Smile, Sparkles, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
+import AIMessage from "@/components/chatbot/ai-message"
 
 interface Message {
   id: string
@@ -655,6 +26,18 @@ interface GifOption {
   label: string
   tags: string[]
   url: string
+}
+
+interface EmojiOption {
+  emoji: string
+  label: string
+  tags: string[]
+}
+
+interface EmojiSection {
+  id: string
+  label: string
+  emojis: EmojiOption[]
 }
 
 interface PreviousChatItem {
@@ -692,7 +75,6 @@ declare global {
   interface Window {
     SpeechRecognition?: BrowserSpeechRecognitionConstructor
     webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor
-    showEmojiPicker?: () => Promise<string>
   }
 }
 
@@ -738,7 +120,144 @@ const GIF_SUGGESTIONS: GifOption[] = [
     url: "https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif",
   },
 ]
-const QUICK_EMOJIS = ["😀", "🔥", "👍", "🎉", "🙏", "✅", "🙂", "💬"]
+
+const EMOJI_SECTIONS: EmojiSection[] = [
+  {
+    id: "smileys",
+    label: "Smileys",
+    emojis: [
+      { emoji: "😀", label: "Grinning face", tags: ["happy", "smile", "joy"] },
+      { emoji: "😄", label: "Smiling face", tags: ["cheerful", "happy"] },
+      { emoji: "😁", label: "Beaming face", tags: ["grin", "teeth"] },
+      { emoji: "😂", label: "Face with tears of joy", tags: ["funny", "lol", "laugh"] },
+      { emoji: "😊", label: "Smiling eyes", tags: ["kind", "sweet"] },
+      { emoji: "😉", label: "Winking face", tags: ["wink", "playful"] },
+      { emoji: "😍", label: "Heart eyes", tags: ["love", "crush"] },
+      { emoji: "😘", label: "Face blowing a kiss", tags: ["kiss", "affection"] },
+      { emoji: "😎", label: "Smiling face with sunglasses", tags: ["cool", "style"] },
+      { emoji: "🤔", label: "Thinking face", tags: ["hmm", "question"] },
+      { emoji: "🙃", label: "Upside-down face", tags: ["sarcasm", "playful"] },
+      { emoji: "😴", label: "Sleeping face", tags: ["sleep", "tired"] },
+      { emoji: "😭", label: "Loudly crying face", tags: ["sad", "cry"] },
+      { emoji: "😡", label: "Pouting face", tags: ["angry", "mad"] },
+      { emoji: "🤯", label: "Exploding head", tags: ["mind blown", "wow"] },
+      { emoji: "🥺", label: "Pleading face", tags: ["please", "cute"] },
+    ],
+  },
+  {
+    id: "gestures",
+    label: "Gestures",
+    emojis: [
+      { emoji: "👍", label: "Thumbs up", tags: ["ok", "yes", "approve"] },
+      { emoji: "👎", label: "Thumbs down", tags: ["no", "reject"] },
+      { emoji: "👏", label: "Clapping hands", tags: ["clap", "congrats"] },
+      { emoji: "🙌", label: "Raising hands", tags: ["celebrate", "yay"] },
+      { emoji: "🙏", label: "Folded hands", tags: ["thanks", "please", "pray"] },
+      { emoji: "👌", label: "OK hand", tags: ["perfect", "fine"] },
+      { emoji: "✌️", label: "Victory hand", tags: ["peace", "victory"] },
+      { emoji: "🤝", label: "Handshake", tags: ["deal", "agreement"] },
+      { emoji: "🤞", label: "Crossed fingers", tags: ["luck", "hope"] },
+      { emoji: "🤟", label: "Love-you gesture", tags: ["love", "support"] },
+      { emoji: "👋", label: "Waving hand", tags: ["hello", "bye"] },
+      { emoji: "💪", label: "Flexed biceps", tags: ["strong", "power"] },
+      { emoji: "🫶", label: "Heart hands", tags: ["care", "love"] },
+      { emoji: "🫡", label: "Saluting face", tags: ["respect", "roger"] },
+    ],
+  },
+  {
+    id: "hearts",
+    label: "Hearts",
+    emojis: [
+      { emoji: "❤️", label: "Red heart", tags: ["love", "heart"] },
+      { emoji: "💛", label: "Yellow heart", tags: ["friendship"] },
+      { emoji: "💚", label: "Green heart", tags: ["nature", "safe"] },
+      { emoji: "💙", label: "Blue heart", tags: ["trust", "loyal"] },
+      { emoji: "💜", label: "Purple heart", tags: ["care", "support"] },
+      { emoji: "🖤", label: "Black heart", tags: ["dark", "mood"] },
+      { emoji: "🤍", label: "White heart", tags: ["pure", "peace"] },
+      { emoji: "🤎", label: "Brown heart", tags: ["warm", "earth"] },
+      { emoji: "💔", label: "Broken heart", tags: ["sad", "breakup"] },
+      { emoji: "❣️", label: "Heart exclamation", tags: ["love", "emphasis"] },
+      { emoji: "💕", label: "Two hearts", tags: ["affection", "romance"] },
+      { emoji: "💖", label: "Sparkling heart", tags: ["cute", "sparkle"] },
+    ],
+  },
+  {
+    id: "celebration",
+    label: "Celebration",
+    emojis: [
+      { emoji: "🎉", label: "Party popper", tags: ["party", "congrats"] },
+      { emoji: "🎊", label: "Confetti ball", tags: ["celebrate", "festival"] },
+      { emoji: "🥳", label: "Partying face", tags: ["birthday", "party"] },
+      { emoji: "🎁", label: "Wrapped gift", tags: ["gift", "present"] },
+      { emoji: "🎈", label: "Balloon", tags: ["party", "decor"] },
+      { emoji: "🍰", label: "Shortcake", tags: ["cake", "birthday"] },
+      { emoji: "🍕", label: "Pizza", tags: ["food", "eat"] },
+      { emoji: "☕", label: "Hot beverage", tags: ["coffee", "tea"] },
+      { emoji: "🍿", label: "Popcorn", tags: ["movie", "snack"] },
+      { emoji: "🎵", label: "Musical note", tags: ["music", "song"] },
+      { emoji: "🎶", label: "Musical notes", tags: ["melody", "music"] },
+      { emoji: "🏆", label: "Trophy", tags: ["winner", "award"] },
+      { emoji: "✨", label: "Sparkles", tags: ["shiny", "magic"] },
+      { emoji: "🔥", label: "Fire", tags: ["hot", "lit", "trend"] },
+    ],
+  },
+  {
+    id: "animals-nature",
+    label: "Animals & Nature",
+    emojis: [
+      { emoji: "🐶", label: "Dog face", tags: ["dog", "pet"] },
+      { emoji: "🐱", label: "Cat face", tags: ["cat", "pet"] },
+      { emoji: "🐼", label: "Panda", tags: ["panda", "cute"] },
+      { emoji: "🦊", label: "Fox", tags: ["fox", "animal"] },
+      { emoji: "🐸", label: "Frog", tags: ["frog", "green"] },
+      { emoji: "🐵", label: "Monkey face", tags: ["monkey", "funny"] },
+      { emoji: "🐧", label: "Penguin", tags: ["penguin", "winter"] },
+      { emoji: "🐢", label: "Turtle", tags: ["slow", "nature"] },
+      { emoji: "🌞", label: "Sun with face", tags: ["sun", "day"] },
+      { emoji: "🌙", label: "Crescent moon", tags: ["night", "moon"] },
+      { emoji: "⭐", label: "Star", tags: ["star", "favorite"] },
+      { emoji: "🌈", label: "Rainbow", tags: ["color", "hope"] },
+      { emoji: "🌸", label: "Cherry blossom", tags: ["flower", "spring"] },
+      { emoji: "🍀", label: "Four leaf clover", tags: ["luck", "nature"] },
+    ],
+  },
+  {
+    id: "objects-travel",
+    label: "Objects & Travel",
+    emojis: [
+      { emoji: "🏠", label: "House", tags: ["home", "building"] },
+      { emoji: "🚗", label: "Car", tags: ["drive", "travel"] },
+      { emoji: "✈️", label: "Airplane", tags: ["flight", "travel"] },
+      { emoji: "🚀", label: "Rocket", tags: ["space", "launch"] },
+      { emoji: "💻", label: "Laptop", tags: ["computer", "work"] },
+      { emoji: "📱", label: "Mobile phone", tags: ["phone", "call"] },
+      { emoji: "📷", label: "Camera", tags: ["photo", "picture"] },
+      { emoji: "🎮", label: "Video game", tags: ["game", "play"] },
+      { emoji: "📚", label: "Books", tags: ["read", "study"] },
+      { emoji: "💡", label: "Light bulb", tags: ["idea", "think"] },
+      { emoji: "✅", label: "Check mark", tags: ["done", "yes"] },
+      { emoji: "❌", label: "Cross mark", tags: ["wrong", "no"] },
+      { emoji: "💬", label: "Speech balloon", tags: ["chat", "message"] },
+      { emoji: "📌", label: "Pushpin", tags: ["pin", "important"] },
+    ],
+  },
+]
+
+const DEFAULT_RECENT_EMOJI_CHARS = ["😀", "🔥", "👍", "🎉", "🙏", "❤️", "😂", "💬"]
+const ALL_EMOJI_OPTIONS = EMOJI_SECTIONS.flatMap((section) => section.emojis)
+const EMOJI_BY_CHAR = new Map(
+  ALL_EMOJI_OPTIONS.map((option) => [option.emoji, option] as const),
+)
+const RECORDING_BAR_COUNT = 34
+const RECORDING_BASE_BARS = Array.from({ length: RECORDING_BAR_COUNT }, (_, index) => {
+  const center = (RECORDING_BAR_COUNT - 1) / 2
+  const distance = Math.abs(index - center)
+  if (distance < 1.5) return 15
+  if (distance < 4) return 11
+  if (distance < 8) return 8
+  return 5
+})
 
 const normalizeVoiceTranscript = (value: string): string => {
   return value
@@ -753,9 +272,17 @@ export function ChatBot() {
   const [input, setInput] = useState("")
   const [showBlink, setShowBlink] = useState(true)
   const [isRecording, setIsRecording] = useState(false)
+  const [recordingBars, setRecordingBars] = useState<number[]>(RECORDING_BASE_BARS)
   const [showEmojiMenu, setShowEmojiMenu] = useState(false)
+  const [emojiQuery, setEmojiQuery] = useState("")
   const [showGifMenu, setShowGifMenu] = useState(false)
   const [gifQuery, setGifQuery] = useState("")
+  const [recentEmojis, setRecentEmojis] = useState<EmojiOption[]>(
+    () =>
+      DEFAULT_RECENT_EMOJI_CHARS
+        .map((char) => EMOJI_BY_CHAR.get(char))
+        .filter((option): option is EmojiOption => Boolean(option)),
+  )
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [selectedFilePreview, setSelectedFilePreview] = useState<string | null>(null)
   const [selectedGif, setSelectedGif] = useState<GifOption | null>(null)
@@ -778,6 +305,12 @@ export function ChatBot() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const waveformStreamRef = useRef<MediaStream | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const waveformFrameRef = useRef<number | null>(null)
+  const recordingCancelledRef = useRef(false)
+  const recordingDraftRef = useRef("")
 
   const quickPrompts = [
     "Controller prices",
@@ -813,6 +346,13 @@ export function ChatBot() {
   useEffect(() => {
     return () => {
       recognitionRef.current?.stop()
+      waveformStreamRef.current?.getTracks().forEach((track) => track.stop())
+      if (waveformFrameRef.current !== null) {
+        cancelAnimationFrame(waveformFrameRef.current)
+      }
+      if (audioContextRef.current) {
+        void audioContextRef.current.close()
+      }
     }
   }, [])
 
@@ -838,10 +378,21 @@ export function ChatBot() {
   // Lock background scroll
   useEffect(() => {
     if (!isOpen) return
-    const previousOverflow = document.body.style.overflow
+    const previousHtmlOverflow = document.documentElement.style.overflow
+    const previousHtmlOverscroll = document.documentElement.style.overscrollBehavior
+    const previousBodyOverflow = document.body.style.overflow
+    const previousBodyOverscroll = document.body.style.overscrollBehavior
+
+    document.documentElement.style.overflow = "hidden"
+    document.documentElement.style.overscrollBehavior = "none"
     document.body.style.overflow = "hidden"
+    document.body.style.overscrollBehavior = "none"
+
     return () => {
-      document.body.style.overflow = previousOverflow
+      document.documentElement.style.overflow = previousHtmlOverflow
+      document.documentElement.style.overscrollBehavior = previousHtmlOverscroll
+      document.body.style.overflow = previousBodyOverflow
+      document.body.style.overscrollBehavior = previousBodyOverscroll
     }
   }, [isOpen])
 
@@ -972,28 +523,48 @@ export function ChatBot() {
     return body.innerHTML.trim()
   }
 
+  const stripHtmlCodeFence = (value: string): string => {
+    const trimmed = value.trim()
+    const fencedMatch = trimmed.match(/^```(?:html|xml)?\s*([\s\S]*?)\s*```$/i)
+    return fencedMatch ? fencedMatch[1].trim() : trimmed
+  }
+
   const decodeHtmlEntities = (value: string): string => {
     if (typeof window === "undefined") return value
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(value, "text/html")
-    const body = doc.body
-    if (!body) return value
-    return body.textContent || value
+    let decoded = value
+
+    // Decode nested entities safely (e.g. &amp;lt;p&amp;gt; -> <p>)
+    for (let i = 0; i < 3; i += 1) {
+      const textarea = document.createElement("textarea")
+      textarea.innerHTML = decoded
+      const next = textarea.value
+      if (next === decoded) break
+      decoded = next
+    }
+
+    return decoded
+  }
+
+  const getSanitizedHtmlIfPresent = (value: string): string | null => {
+    const decoded = decodeHtmlEntities(stripHtmlCodeFence(value))
+    const isHtml = /<\/?[a-z][\s\S]*>/i.test(decoded)
+    if (!isHtml) return null
+
+    const sanitized = sanitizeHtml(decoded)
+    return sanitized || null
   }
 
   const formatBotMessage = (value: string): { text: string; html?: string } => {
     const trimmed = value.trim()
     if (!trimmed) return { text: "" }
-    const decoded = decodeHtmlEntities(trimmed)
-    const isHtml = /<\/?[a-z][\s\S]*>/i.test(decoded)
-    if (isHtml) {
-      const sanitized = sanitizeHtml(decoded)
+    const sanitized = getSanitizedHtmlIfPresent(trimmed)
+    if (sanitized) {
       return {
         text: htmlToPlainText(sanitized) || trimmed,
         html: sanitized,
       }
     }
-    return { text: decoded }
+    return { text: decodeHtmlEntities(stripHtmlCodeFence(trimmed)) }
   }
 
   const extractStreamText = (chunk: string): string => {
@@ -1134,6 +705,7 @@ export function ChatBot() {
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
+    if (isRecording) return
     const trimmedInput = input.trim()
     if (!trimmedInput && !selectedFile && !selectedGif) return
 
@@ -1253,6 +825,7 @@ export function ChatBot() {
   const handleChatWheelCapture = (e: React.WheelEvent<HTMLDivElement>) => {
     const container = chatScrollRef.current
     if (!container) return
+    e.stopPropagation()
     const { scrollTop, scrollHeight, clientHeight } = container
     const isAtTop = scrollTop <= 0
     const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1
@@ -1274,23 +847,26 @@ export function ChatBot() {
     setSelectedFile(file)
     setShowGifMenu(false)
     setShowEmojiMenu(false)
+    setEmojiQuery("")
   }
 
-  const handleEmojiClick = async () => {
+  const handleEmojiClick = () => {
     setShowGifMenu(false)
-    const picker = window.showEmojiPicker
-    if (typeof picker === "function") {
-      try {
-        const selected = await picker.call(window)
-        if (selected) {
-          setInput((prev) => `${prev}${selected}`)
-        }
-        return
-      } catch {
-        // fallback to inline picker
+    setShowEmojiMenu((prev) => {
+      const next = !prev
+      if (next) {
+        setEmojiQuery("")
       }
-    }
-    setShowEmojiMenu((prev) => !prev)
+      return next
+    })
+  }
+
+  const handleEmojiSelect = (option: EmojiOption) => {
+    setInput((prev) => `${prev}${option.emoji}`)
+    setRecentEmojis((prev) => {
+      const next = [option, ...prev.filter((item) => item.emoji !== option.emoji)]
+      return next.slice(0, 18)
+    })
   }
 
   const handleGifInsert = (gif: GifOption) => {
@@ -1298,6 +874,108 @@ export function ChatBot() {
     setShowEmojiMenu(false)
     setShowGifMenu(false)
     setGifQuery("")
+  }
+
+  const stopScrollPropagation = (
+    event: React.WheelEvent<HTMLElement> | React.TouchEvent<HTMLElement>,
+  ) => {
+    event.stopPropagation()
+  }
+
+  const resetRecordingWave = () => {
+    setRecordingBars(RECORDING_BASE_BARS)
+  }
+
+  const stopRecordingWave = () => {
+    if (waveformFrameRef.current !== null) {
+      cancelAnimationFrame(waveformFrameRef.current)
+      waveformFrameRef.current = null
+    }
+
+    analyserRef.current = null
+
+    if (waveformStreamRef.current) {
+      waveformStreamRef.current.getTracks().forEach((track) => track.stop())
+      waveformStreamRef.current = null
+    }
+
+    if (audioContextRef.current) {
+      void audioContextRef.current.close()
+      audioContextRef.current = null
+    }
+
+    resetRecordingWave()
+  }
+
+  const startRecordingWave = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      resetRecordingWave()
+      return
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      waveformStreamRef.current = stream
+
+      const AudioContextCtor =
+        window.AudioContext ||
+        (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+
+      if (!AudioContextCtor) {
+        stream.getTracks().forEach((track) => track.stop())
+        waveformStreamRef.current = null
+        resetRecordingWave()
+        return
+      }
+
+      const audioContext = new AudioContextCtor()
+      audioContextRef.current = audioContext
+
+      const source = audioContext.createMediaStreamSource(stream)
+      const analyser = audioContext.createAnalyser()
+      analyser.fftSize = 256
+      analyser.smoothingTimeConstant = 0.8
+      source.connect(analyser)
+      analyserRef.current = analyser
+
+      const frequencies = new Uint8Array(analyser.frequencyBinCount)
+      const center = (RECORDING_BASE_BARS.length - 1) / 2
+
+      const tick = () => {
+        if (!analyserRef.current) return
+        analyser.getByteFrequencyData(frequencies)
+
+        let total = 0
+        for (let i = 0; i < frequencies.length; i += 1) {
+          total += frequencies[i]
+        }
+        const overallLevel = total / (frequencies.length * 255)
+        const bandSize = Math.max(1, Math.floor(frequencies.length / RECORDING_BASE_BARS.length))
+
+        const nextBars = RECORDING_BASE_BARS.map((baseHeight, index) => {
+          const start = index * bandSize
+          const end = Math.min(frequencies.length, start + bandSize)
+
+          let bandTotal = 0
+          for (let i = start; i < end; i += 1) {
+            bandTotal += frequencies[i]
+          }
+
+          const bandLevel = end > start ? bandTotal / ((end - start) * 255) : 0
+          const distanceFactor = 1 - Math.min(1, Math.abs(index - center) / center)
+          const dynamicBoost = (bandLevel * 15 + overallLevel * 10) * (0.55 + distanceFactor * 0.95)
+
+          return Math.min(28, Math.max(4, Math.round(baseHeight + dynamicBoost)))
+        })
+
+        setRecordingBars(nextBars)
+        waveformFrameRef.current = requestAnimationFrame(tick)
+      }
+
+      waveformFrameRef.current = requestAnimationFrame(tick)
+    } catch {
+      stopRecordingWave()
+    }
   }
 
   const startSpeechRecognition = () => {
@@ -1320,6 +998,11 @@ export function ChatBot() {
     recognition.lang = "en-US"
     recognition.interimResults = true
     recognition.continuous = false
+    recordingCancelledRef.current = false
+    recordingDraftRef.current = ""
+    resetRecordingWave()
+    setShowEmojiMenu(false)
+    setShowGifMenu(false)
     let finalTranscript = ""
 
     recognition.onresult = (event: SpeechRecognitionEventLike) => {
@@ -1340,39 +1023,57 @@ export function ChatBot() {
 
       finalTranscript = nextFinalTranscript.trim()
       const composedTranscript = `${nextFinalTranscript}${interimTranscript}`.trim()
-      setInput(normalizeVoiceTranscript(composedTranscript))
+      recordingDraftRef.current = normalizeVoiceTranscript(composedTranscript)
     }
 
     recognition.onerror = () => {
       setIsRecording(false)
+      stopRecordingWave()
     }
 
     recognition.onend = () => {
       setIsRecording(false)
-      if (finalTranscript) {
-        setInput(normalizeVoiceTranscript(finalTranscript))
+      stopRecordingWave()
+      const transcriptToUse = normalizeVoiceTranscript(finalTranscript || recordingDraftRef.current)
+
+      if (!recordingCancelledRef.current && transcriptToUse) {
+        setInput(transcriptToUse)
       }
+      recordingDraftRef.current = ""
+      recordingCancelledRef.current = false
     }
 
     recognitionRef.current = recognition
     recognition.start()
     setIsRecording(true)
+    void startRecordingWave()
   }
 
-  const stopSpeechRecognition = () => {
+  const stopSpeechRecognition = ({ discard }: { discard: boolean }) => {
+    recordingCancelledRef.current = discard
+    stopRecordingWave()
     if (recognitionRef.current) {
       recognitionRef.current.stop()
       recognitionRef.current = null
+      return
     }
     setIsRecording(false)
+    if (discard) {
+      recordingDraftRef.current = ""
+    }
   }
 
   const handleMicClick = () => {
-    if (isRecording) {
-      stopSpeechRecognition()
-      return
-    }
+    if (isRecording) return
     startSpeechRecognition()
+  }
+
+  const handleStopRecording = () => {
+    stopSpeechRecognition({ discard: false })
+  }
+
+  const handleCancelRecording = () => {
+    stopSpeechRecognition({ discard: true })
   }
 
   const filteredGifSuggestions = GIF_SUGGESTIONS.filter((gif) => {
@@ -1381,6 +1082,23 @@ export function ChatBot() {
     const haystack = `${gif.label} ${gif.tags.join(" ")}`.toLowerCase()
     return haystack.includes(query)
   })
+
+  const normalizedEmojiQuery = emojiQuery.trim().toLowerCase()
+  const searchedEmojis = normalizedEmojiQuery
+    ? ALL_EMOJI_OPTIONS.filter((option) => {
+        const haystack = `${option.label} ${option.tags.join(" ")}`.toLowerCase()
+        return haystack.includes(normalizedEmojiQuery)
+      })
+    : []
+
+  const emojiSectionsToRender: EmojiSection[] = normalizedEmojiQuery
+    ? [{ id: "search-results", label: "Search results", emojis: searchedEmojis }]
+    : [
+        ...(recentEmojis.length > 0
+          ? [{ id: "recent", label: "Recent", emojis: recentEmojis }]
+          : []),
+        ...EMOJI_SECTIONS,
+      ]
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`
@@ -1415,7 +1133,7 @@ export function ChatBot() {
           ref={chatRef}
           className="animate-in fade-in slide-in-from-bottom-10 duration-300"
         >
-          <Card className="w-[92vw] sm:w-[420px] h-[560px] shadow-2xl border-slate-200 flex flex-col overflow-hidden rounded-3xl bg-white">
+          <Card className="w-[92vw] sm:w-[420px] h-[660px] shadow-2xl border-slate-200 flex flex-col overflow-hidden rounded-3xl bg-white">
             <CardHeader className="bg-gradient-to-r from-[#0A4229] to-[#0a3523] text-white p-4 flex flex-row justify-between items-center rounded-t-3xl flex-shrink-0">
               <div className="flex items-center gap-3">
                 <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
@@ -1438,8 +1156,12 @@ export function ChatBot() {
 
             <CardContent
               ref={chatScrollRef}
+              data-lenis-prevent
+              data-lenis-prevent-wheel
+              data-lenis-prevent-touch
               onWheelCapture={handleChatWheelCapture}
-              className="p-4 flex-grow overflow-y-auto overscroll-contain touch-pan-y bg-gradient-to-b from-slate-50 to-white"
+              onTouchMoveCapture={stopScrollPropagation}
+              className="p-4 flex-grow overflow-y-auto overscroll-contain touch-pan-y bg-gradient-to-b from-slate-50 to-white [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
               <div className="space-y-4">
                 {messages.map((msg) => (
@@ -1452,43 +1174,8 @@ export function ChatBot() {
                         : "bg-white border border-slate-200 text-gray-800 rounded-bl-md"
                     )}
                   >
-                    {msg.sender === "bot" && msg.html ? (
-                      <div
-                        data-bot-html="true"
-                        className={cn(
-                          // paragraph spacing
-                          "[&>p]:mb-2 [&>p:last-child]:mb-0",
-                          // list styling
-                          "[&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5",
-                          "[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5",
-                          "[&_li]:my-1.5",
-                          // ✅ সাধারণ inline link — সবুজ underline
-                          "[&_a:not([data-cta])]:text-[#0A4229]",
-                          "[&_a:not([data-cta])]:font-semibold",
-                          "[&_a:not([data-cta])]:underline",
-                          "[&_a:not([data-cta])]:underline-offset-2",
-                          "[&_a:not([data-cta])]:cursor-pointer",
-                          "hover:[&_a:not([data-cta])]:text-[#0a3523]",
-                          // ✅ CTA link — সবুজ button style
-                          "[&_a[data-cta]]:inline-flex",
-                          "[&_a[data-cta]]:items-center",
-                          "[&_a[data-cta]]:gap-1.5",
-                          "[&_a[data-cta]]:bg-[#0A4229]",
-                          "[&_a[data-cta]]:text-white",
-                          "[&_a[data-cta]]:no-underline",
-                          "[&_a[data-cta]]:text-xs",
-                          "[&_a[data-cta]]:font-semibold",
-                          "[&_a[data-cta]]:px-3.5",
-                          "[&_a[data-cta]]:py-1.5",
-                          "[&_a[data-cta]]:rounded-lg",
-                          "[&_a[data-cta]]:my-1",
-                          "[&_a[data-cta]]:cursor-pointer",
-                          "[&_a[data-cta]]:transition-colors",
-                          "[&_a[data-cta]]:duration-150",
-                          "hover:[&_a[data-cta]]:bg-[#0a3523]",
-                        )}
-                        dangerouslySetInnerHTML={{ __html: msg.html }}
-                      />
+                    {msg.sender === "bot" ? (
+                      <AIMessage content={(typeof msg.html === "string" && msg.html.trim()) || msg.text} />
                     ) : (
                       <p className="whitespace-pre-wrap">{renderTextWithLinks(msg.text)}</p>
                     )}
@@ -1539,9 +1226,53 @@ export function ChatBot() {
             <CardFooter className="p-3 border-t bg-white/95 backdrop-blur-sm flex-shrink-0">
               <form
                 onSubmit={handleSendMessage}
-                className="flex w-full max-w-full items-end gap-2 rounded-2xl border border-[#0A4229] bg-slate-50 p-2 transition-colors duration-200 focus-within:border-[#0A4229]"
+                className={cn(
+                  "flex w-full max-w-full items-end gap-2 rounded-2xl border border-[#0A4229] bg-slate-50 p-2 transition-colors duration-200 focus-within:border-[#0A4229]",
+                  isRecording && "items-stretch gap-0 border-none bg-transparent p-0",
+                )}
               >
-                <div className="relative flex min-w-0 flex-1 flex-col">
+                {isRecording && (
+                  <div className="w-full rounded-2xl bg-gradient-to-r from-[#0A4229] to-[#0a3523] p-3 shadow-[0_12px_24px_rgba(10,66,41,0.25)]">
+                    <div className="flex h-[56px] w-full items-center gap-3 rounded-[16px] border border-white/15 bg-white/5 px-3">
+                      <button
+                        type="button"
+                        onClick={handleCancelRecording}
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/25 bg-white/10 transition-colors hover:bg-white/20"
+                        aria-label="Cancel recording"
+                      >
+                        <X className="h-4 w-4 text-white" />
+                      </button>
+
+                      <div className="flex h-9 flex-1 items-end justify-center gap-[3px] rounded-xl border border-white/15 bg-black/10 px-3">
+                        {recordingBars.map((barHeight, index) => (
+                          <span
+                            key={`voice-bar-${barHeight}-${index}`}
+                            className="w-[2px] rounded-full bg-white/95"
+                            style={{
+                              height: `${barHeight}px`,
+                            }}
+                          />
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleStopRecording}
+                        className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white transition-colors hover:bg-white/90"
+                        aria-label="Stop recording"
+                      >
+                        <span className="h-3 w-3 rounded-sm bg-[#0A4229]" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div
+                  className={cn(
+                    "relative flex min-w-0 flex-1 flex-col",
+                    isRecording && "hidden",
+                  )}
+                >
                   <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
@@ -1627,6 +1358,7 @@ export function ChatBot() {
                       type="button"
                       onClick={() => {
                         setShowEmojiMenu(false)
+                        setEmojiQuery("")
                         setGifQuery("")
                         setShowGifMenu((prev) => !prev)
                       }}
@@ -1667,20 +1399,71 @@ export function ChatBot() {
                   </div>
 
                   {showEmojiMenu && (
-                    <div className="absolute bottom-10 left-0 z-20 flex flex-wrap gap-1 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
-                      {QUICK_EMOJIS.map((emoji) => (
+                    <div className="absolute bottom-10 left-0 z-20 w-[300px] rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+                      <div className="mb-2 flex items-center justify-between px-1">
+                        <p className="text-xs font-semibold text-slate-700">Emoji</p>
                         <button
-                          key={emoji}
                           type="button"
                           onClick={() => {
-                            setInput((prev) => `${prev}${emoji}`)
                             setShowEmojiMenu(false)
+                            setEmojiQuery("")
                           }}
-                          className="rounded px-1.5 py-1 text-sm hover:bg-slate-100"
+                          className="text-xs text-slate-400 hover:text-slate-600"
                         >
-                          {emoji}
+                          Close
                         </button>
-                      ))}
+                      </div>
+
+                      <div className="relative mb-2">
+                        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                        <input
+                          value={emojiQuery}
+                          onChange={(e) => setEmojiQuery(e.target.value)}
+                          placeholder="Search emoji..."
+                          className="h-8 w-full rounded-lg border border-slate-200 bg-slate-50 pl-8 pr-2 text-xs outline-none focus:border-[#0A4229]"
+                        />
+                      </div>
+
+                      <div
+                        data-lenis-prevent
+                        data-lenis-prevent-wheel
+                        data-lenis-prevent-touch
+                        onWheelCapture={stopScrollPropagation}
+                        onTouchMoveCapture={stopScrollPropagation}
+                        className="max-h-[230px] space-y-3 overflow-y-auto pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                      >
+                        {emojiSectionsToRender.every((section) => section.emojis.length === 0) ? (
+                          <p className="rounded-lg bg-slate-50 p-2 text-center text-[11px] text-slate-500">
+                            No emoji found
+                          </p>
+                        ) : (
+                          emojiSectionsToRender.map((section) => {
+                            if (section.emojis.length === 0) return null
+
+                            return (
+                              <div key={section.id}>
+                                <p className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                  {section.label}
+                                </p>
+                                <div className="grid grid-cols-8 gap-1">
+                                  {section.emojis.map((option) => (
+                                    <button
+                                      key={`${section.id}-${option.emoji}`}
+                                      type="button"
+                                      title={option.label}
+                                      aria-label={option.label}
+                                      onClick={() => handleEmojiSelect(option)}
+                                      className="flex h-8 w-8 items-center justify-center rounded-lg text-base transition-colors hover:bg-slate-100"
+                                    >
+                                      {option.emoji}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )
+                          })
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -1705,7 +1488,14 @@ export function ChatBot() {
                         placeholder="Search GIF..."
                         className="mb-2 h-8 w-full rounded-lg border border-slate-200 px-2 text-xs outline-none focus:border-[#0A4229]"
                       />
-                      <div className="grid max-h-[180px] grid-cols-2 gap-2 overflow-y-auto pr-1">
+                      <div
+                        data-lenis-prevent
+                        data-lenis-prevent-wheel
+                        data-lenis-prevent-touch
+                        onWheelCapture={stopScrollPropagation}
+                        onTouchMoveCapture={stopScrollPropagation}
+                        className="grid max-h-[180px] grid-cols-2 gap-2 overflow-y-auto pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                      >
                         {filteredGifSuggestions.map((gif) => (
                           <button
                             key={gif.id}
@@ -1738,7 +1528,10 @@ export function ChatBot() {
                 <Button
                   type="submit"
                   size="icon"
-                  className="mb-1 h-8 w-8 flex-shrink-0 rounded-full bg-slate-200 text-slate-400 hover:bg-slate-300 hover:text-slate-600"
+                  className={cn(
+                    "mb-1 h-8 w-8 flex-shrink-0 rounded-full bg-[#0A4229] text-white hover:bg-[#0a3523] disabled:bg-[#0A4229]/45 disabled:text-white/80",
+                    isRecording && "hidden",
+                  )}
                   disabled={isLoading || (!input.trim() && !selectedFile && !selectedGif)}
                 >
                   <Send className="h-4 w-4" />
