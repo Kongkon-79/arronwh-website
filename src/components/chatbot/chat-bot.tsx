@@ -638,7 +638,7 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Bot, FileText, MessageSquareText, Mic, Paperclip, Send, Smile, Sparkles, X } from "lucide-react"
+import { FileText, MessageSquareText, Mic, Paperclip, Send, Smile, Sparkles, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
@@ -662,13 +662,17 @@ interface PreviousChatItem {
   ai_response: string
 }
 
-interface SpeechRecognitionResultLike {
+interface SpeechRecognitionAlternativeLike {
   transcript: string
+}
+
+interface SpeechRecognitionResultLike extends ArrayLike<SpeechRecognitionAlternativeLike> {
+  isFinal: boolean
 }
 
 interface SpeechRecognitionEventLike extends Event {
   resultIndex: number
-  results: ArrayLike<ArrayLike<SpeechRecognitionResultLike>>
+  results: ArrayLike<SpeechRecognitionResultLike>
 }
 
 interface BrowserSpeechRecognition extends EventTarget {
@@ -1316,13 +1320,27 @@ export function ChatBot() {
     recognition.lang = "en-US"
     recognition.interimResults = true
     recognition.continuous = false
-    let fullTranscript = ""
+    let finalTranscript = ""
 
     recognition.onresult = (event: SpeechRecognitionEventLike) => {
-      for (let i = event.resultIndex; i < event.results.length; i += 1) {
-        fullTranscript += `${event.results[i][0].transcript} `
+      let nextFinalTranscript = ""
+      let interimTranscript = ""
+
+      for (let i = 0; i < event.results.length; i += 1) {
+        const result = event.results[i]
+        const transcriptPiece = result[0]?.transcript?.trim()
+        if (!transcriptPiece) continue
+
+        if (result.isFinal) {
+          nextFinalTranscript += `${transcriptPiece} `
+        } else {
+          interimTranscript += `${transcriptPiece} `
+        }
       }
-      setInput(normalizeVoiceTranscript(fullTranscript))
+
+      finalTranscript = nextFinalTranscript.trim()
+      const composedTranscript = `${nextFinalTranscript}${interimTranscript}`.trim()
+      setInput(normalizeVoiceTranscript(composedTranscript))
     }
 
     recognition.onerror = () => {
@@ -1331,6 +1349,9 @@ export function ChatBot() {
 
     recognition.onend = () => {
       setIsRecording(false)
+      if (finalTranscript) {
+        setInput(normalizeVoiceTranscript(finalTranscript))
+      }
     }
 
     recognitionRef.current = recognition
@@ -1397,12 +1418,12 @@ export function ChatBot() {
           <Card className="w-[92vw] sm:w-[420px] h-[560px] shadow-2xl border-slate-200 flex flex-col overflow-hidden rounded-3xl bg-white">
             <CardHeader className="bg-gradient-to-r from-[#0A4229] to-[#0a3523] text-white p-4 flex flex-row justify-between items-center rounded-t-3xl flex-shrink-0">
               <div className="flex items-center gap-3">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
-                  <Bot className="h-5 w-5" />
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+                  <Image src="/assets/images/robot.svg" alt="bot image" width={100} height={100} className="w-auto h-auto object-contain"/>
                 </span>
                 <div>
-                  <p className="font-semibold leading-tight">ArronWH Assistant</p>
-                  <p className="text-xs text-white/80">Online now • Fast replies</p>
+                  <p className="font-semibold leading-tight">YOLO HEAT</p>
+                  <p className="text-xs text-white/90 pt-1">Online now • Fast replies</p>
                 </div>
               </div>
               <Button
