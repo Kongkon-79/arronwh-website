@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 const HeroSection = () => {
+  
   const { data, isLoading, isError } = useQuery<BannerApiResponse>({
     queryKey: ["heroData"],
     queryFn: async () => {
