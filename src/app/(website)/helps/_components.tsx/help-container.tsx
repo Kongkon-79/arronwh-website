@@ -1,13 +1,8 @@
 "use client";
 
-import { Phone, X } from "lucide-react";
+import { AlertTriangle, Phone, X } from "lucide-react";
 import { useState, type WheelEvent, type TouchEvent } from "react";
-// import { useState } from "react";
-
-type HelpFaqItem = {
-  question: string;
-  answers: string[];
-};
+import { useQuery } from "@tanstack/react-query";
 
 type CountryOption = {
   code: string;
@@ -15,41 +10,18 @@ type CountryOption = {
   dialCode: string;
 };
 
-const FAQ_ITEMS: HelpFaqItem[] = [
-  {
-    question: "Can I get a quote from YOLO HEAT?",
-    answers: [
-      "Yes. Just click \"Save Quote\" on the checkout page and we'll email a quote over to you.",
-      "Don't forget, with the YOLO HEAT Price Promise we'll beat any like-for-like quote, or give you £50 if we can't.",
-    ],
-  },
-  {
-    question: "What if my preferred installation date isn't available?",
-    answers: [
-      "If you need a specific date for your install and it isn't available, get in touch and we'll see what we can do.",
-      "If you are flexible on install date, don't forget that we offer discounts on days where we are less busy.",
-    ],
-  },
-  {
-    question: "What payment methods can I use?",
-    answers: [
-      "You can pay by card, or spread the cost with our finance plans.",
-      "We offer 0% finance on selected boilers.",
-    ],
-  },
-  {
-    question: "Why does it sound too good to be true?",
-    answers: [
-      "Our award winning technology means we are able to streamline our operations, cut out the middle man and pass these savings on to you.",
-    ],
-  },
-  {
-    question: "Are YOLO HEAT installers trained and Gas Safe registered?",
-    answers: [
-      "Yes. All of our installers are professional, experienced central heating engineers with Gas Safe certification.",
-    ],
-  },
-];
+type HelpFaqItem = {
+  _id?: string;
+  question: string;
+  answer: string;
+  category?: string;
+};
+
+type HelpFaqApiResponse = {
+  success?: boolean;
+  message?: string;
+  data?: HelpFaqItem[];
+};
 
 const countryNameFormatter = new Intl.DisplayNames(["en"], { type: "region" });
 
@@ -121,12 +93,6 @@ const getFlagEmoji = (countryCode: string) => {
     .join("");
 };
 
-// const FAQ_CATEGORIES = [
-//   "Buying with YOLO HEAT",
-//   "Delivery and installation",
-//   "After your boiler is installed",
-// ] as const;
-
 type HelpContainerProps = {
   embedded?: boolean;
   onClose?: () => void;
@@ -147,6 +113,44 @@ const resolveCallbackEndpoint = () => {
   return "http://localhost:5001/api/v1/subscriber/callback";
 };
 
+const resolveFaqEndpoint = (searchTerm?: string) => {
+  const query = new URLSearchParams({
+    sortBy: "createdAt",
+    limit: "50",
+    page: "1",
+  });
+
+  if (searchTerm?.trim()) {
+    query.set("searchTerm", searchTerm.trim());
+  }
+
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+  if (apiBase) {
+    return `${apiBase.replace(/\/$/, "")}/faq?${query.toString()}`;
+  }
+
+  const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
+  if (backendBase) {
+    return `${backendBase.replace(/\/$/, "")}/faq?${query.toString()}`;
+  }
+
+  return `/api/v1/faq?${query.toString()}`;
+};
+
+const fetchHelpFaqs = async (searchTerm?: string): Promise<HelpFaqItem[]> => {
+  const response = await fetch(resolveFaqEndpoint(searchTerm), {
+    method: "GET",
+    headers: { accept: "*/*" },
+  });
+
+  const result = (await response.json().catch(() => null)) as HelpFaqApiResponse | null;
+  if (!response.ok || !result?.success) {
+    throw new Error(result?.message || "Unable to load FAQs right now. Please try again.");
+  }
+
+  return Array.isArray(result.data) ? result.data : [];
+};
+
 const HelpContainer = ({
   embedded = false,
   onClose,
@@ -163,16 +167,45 @@ const HelpContainer = ({
   const [feedbackType, setFeedbackType] = useState<"success" | "error" | null>(
     null,
   );
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("All categories");
+
+  const {
+    data: allFaqItems = [],
+    isLoading: isCategoriesLoading,
+  } = useQuery({
+    queryKey: ["help-faqs-categories"],
+    queryFn: () => fetchHelpFaqs(),
+  });
+
+  const dynamicCategories = Array.from(
+    new Set(
+      allFaqItems
+        .map((item) => item.category?.trim())
+        .filter((category): category is string => Boolean(category)),
+    ),
+  );
+
+  const categoryOptions = ["All categories", ...dynamicCategories];
+
+  const {
+    data: faqItems = [],
+    isLoading: isFaqLoading,
+    isError: isFaqError,
+    error: faqError,
+    refetch: refetchFaqs,
+    isFetching: isFaqFetching,
+  } = useQuery({
+    queryKey: ["help-faqs", selectedCategory],
+    queryFn: () =>
+      fetchHelpFaqs(selectedCategory === "All categories" ? undefined : selectedCategory),
+  });
 
   const preventScrollPropagation = (
     event: WheelEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>,
   ) => {
     event.stopPropagation();
   };
-  // const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-  // const [selectedCategory, setSelectedCategory] = useState<(typeof FAQ_CATEGORIES)[number]>(
-  //   "After your boiler is installed"
-  // );
 
   const handleCallbackSubmit = async () => {
     if (!name.trim()) {
@@ -395,7 +428,7 @@ const HelpContainer = ({
             </div> 
 
             <div className="pt-5">
-              {/* <h3 className="mb-4 text-[36px] font-semibold leading-none text-[#24374B]">Frequently asked questions</h3>
+              <h3 className="mb-4 text-[36px] font-semibold leading-none text-[#24374B]">Frequently asked questions</h3>
 
               <div className="relative mb-1 border-b border-[#8FA8C6] pb-4">
                 <button
@@ -411,7 +444,7 @@ const HelpContainer = ({
 
                 {isCategoryOpen ? (
                   <div className="absolute left-0 right-0 top-8 z-20 border border-[#0FA67A] border-t-0 bg-white">
-                    {FAQ_CATEGORIES.map((category) => {
+                    {categoryOptions.map((category) => {
                       const isSelected = selectedCategory === category;
                       return (
                         <button
@@ -420,6 +453,7 @@ const HelpContainer = ({
                           onClick={() => {
                             setSelectedCategory(category);
                             setIsCategoryOpen(false);
+                            setOpenIndex(null);
                           }}
                           className={`block w-full px-4 py-2 text-left text-[16px] leading-none ${
                             isSelected ? "bg-[#1E63C8] text-white" : "bg-white text-[#111827]"
@@ -431,45 +465,84 @@ const HelpContainer = ({
                     })}
                   </div>
                 ) : null}
-              </div> */}
+              </div>
 
-              {FAQ_ITEMS.map((item, index) => {
-                const isOpen = openIndex === index;
-                return (
-                  <div key={item.question} className="border-b border-[#8FA8C6] py-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setOpenIndex((prev) => {
-                          const next = prev === index ? null : index;
-                          if (next !== null) {
-                            setOpenCallback(false);
-                          }
-                          return next;
-                        })
-                      }
-                      className="flex w-full items-start gap-3 text-left text-[20px] font-semibold leading-snug text-[#24374B]"
-                    >
-                      <span className="pt-[1px] text-[22px] font-light leading-none text-[#EF4E47]">
-                        {isOpen ? "-" : "+"}
-                      </span>
-                      <span>{item.question}</span>
-                    </button>
-
-                    <div
-                      className={`grid overflow-hidden pl-6 transition-all duration-300 ${
-                        isOpen ? "mt-3 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                      }`}
-                    >
-                      <div className="min-h-0 space-y-3 text-[16px] leading-relaxed text-[#2D3D4D]">
-                        {item.answers.map((answer) => (
-                          <p key={answer}>{answer}</p>
-                        ))}
-                      </div>
+              {isFaqLoading || isCategoriesLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="animate-pulse border-b border-[#8FA8C6] py-3">
+                      <div className="h-6 w-4/5 rounded bg-[#E4F3FD]" />
+                      <div className="mt-3 h-4 w-full rounded bg-[#E4F3FD]" />
+                    </div>
+                  ))}
+                </div>
+              ) : isFaqError ? (
+                <div className="rounded-2xl border border-[#F2B8B5] bg-[#FFF5F4] p-5 text-[#7A2D2A] shadow-sm md:p-6">
+                  <div className="flex flex-col items-center text-center">
+                    <span className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#FFDCD9] text-[#B63730]">
+                      <AlertTriangle className="h-4 w-4" />
+                    </span>
+                    <div className="mt-3">
+                      <p className="text-base font-semibold leading-normal md:text-lg">
+                        We could not load the FAQs
+                      </p>
+                      <p className="mt-1 text-sm leading-normal md:text-base">
+                        {faqError instanceof Error
+                          ? faqError.message
+                          : "Something went wrong while loading this section. Please try again."}
+                      </p>
                     </div>
                   </div>
-                );
-              })}
+                  <button
+                    type="button"
+                    onClick={() => void refetchFaqs()}
+                    disabled={isFaqFetching}
+                    className="mx-auto mt-4 block rounded-md bg-[#B63730] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#9C2E29] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isFaqFetching ? "Trying again..." : "Try again"}
+                  </button>
+                </div>
+              ) : faqItems.length === 0 ? (
+                <div className="rounded-lg border border-[#DDE4EC] bg-[#F8FAFC] p-4 text-center text-sm text-[#2D3D4D] md:text-base">
+                  No FAQs found at the moment.
+                </div>
+              ) : (
+                faqItems.map((item, index) => {
+                  const isOpen = openIndex === index;
+                  return (
+                    <div key={item._id || item.question} className="border-b border-[#8FA8C6] py-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenIndex((prev) => {
+                            const next = prev === index ? null : index;
+                            if (next !== null) {
+                              setOpenCallback(false);
+                            }
+                            return next;
+                          })
+                        }
+                        className="flex w-full items-start gap-3 text-left text-[20px] font-semibold leading-snug text-[#24374B]"
+                      >
+                        <span className="pt-[1px] text-[22px] font-light leading-none text-[#EF4E47]">
+                          {isOpen ? "-" : "+"}
+                        </span>
+                        <span>{item.question}</span>
+                      </button>
+
+                      <div
+                        className={`grid overflow-hidden pl-6 transition-all duration-300 ${
+                          isOpen ? "mt-3 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                        }`}
+                      >
+                        <div className="min-h-0 space-y-3 text-[16px] leading-relaxed text-[#2D3D4D]">
+                          <p>{item.answer}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
       </div>
