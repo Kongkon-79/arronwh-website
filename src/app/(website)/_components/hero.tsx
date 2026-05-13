@@ -151,7 +151,7 @@ const HeroSection = () => {
               {banner.subTitle}
             </p>
 
-            <div className="h-[52px] mt-6 flex justify-between items-center gap-4 bg-white p-1 rounded-full w-full md:w-[80%] shadow-md">
+            {/* <div className="h-[52px] mt-6 flex justify-between items-center gap-4 bg-white p-1 rounded-full w-full md:w-[80%] shadow-md">
               <input
                 type="text"
                 placeholder="Enter postcode"
@@ -163,7 +163,15 @@ const HeroSection = () => {
                   Fix my price
                 </button>
               </Link>
-            </div>
+            </div> */}
+
+             <div className="mt-6">
+              <Link href="boilers/property-overview">
+                <button className="px-6 py-[10px] bg-black text-white rounded-full hover:scale-105 transition-all duration-300">
+                  Fix my price
+                </button>
+              </Link>
+             </div>
 
             <ul className="mt-6 space-y-2">
               {heroPoints.map((point, index) => (
