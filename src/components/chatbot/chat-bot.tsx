@@ -315,7 +315,7 @@ export function ChatBot() {
     {
       id: "bot-welcome",
       sender: "bot",
-      text: "Hi, I'm your ArronWH assistant. Ask me anything about boilers, controllers, prices, or installation.",
+      text: "👋 Hi there! What brings you here today?",
       createdAt: Date.now(),
     },
   ])
@@ -336,9 +336,10 @@ export function ChatBot() {
   const recordingDraftRef = useRef("")
 
   const quickPrompts = [
-    "Controller prices",
-    "Best boiler for my home",
-    "Installation timeline",
+    "I want to get a quote",
+    "I have a question about pricing",
+    "I have a product question",
+    "I'm a customer, and I need help",
   ]
 
   // Blink animation only once

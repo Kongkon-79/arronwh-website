@@ -3,6 +3,7 @@ export interface Faq {
   _id: string;
   question: string;
   answer: string;
+  category: string;
   createdAt: string;
   updatedAt: string;
   __v: number;
