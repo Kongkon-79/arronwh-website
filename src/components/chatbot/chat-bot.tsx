@@ -1138,8 +1138,7 @@ export function ChatBot() {
     }
 
     const recognition = new SpeechRecognition()
-    const hasEnglishHintInInput = /[a-z]/i.test(input)
-    recognition.lang = hasEnglishHintInInput ? "en-US" : "bn-BD"
+    recognition.lang = "en-US"
     recognition.interimResults = true
     recognition.continuous = false
     ;(recognition as BrowserSpeechRecognition & { maxAlternatives?: number }).maxAlternatives = 1
