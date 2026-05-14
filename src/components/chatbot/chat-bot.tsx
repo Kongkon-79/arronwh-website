@@ -65,12 +65,17 @@ interface SpeechRecognitionEventLike extends Event {
   results: ArrayLike<SpeechRecognitionResultLike>
 }
 
+interface SpeechRecognitionErrorEventLike extends Event {
+  error?: string
+  message?: string
+}
+
 interface BrowserSpeechRecognition extends EventTarget {
   lang: string
   interimResults: boolean
   continuous: boolean
   onresult: ((event: SpeechRecognitionEventLike) => void) | null
-  onerror: (() => void) | null
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null
   onend: (() => void) | null
   start: () => void
   stop: () => void
@@ -89,10 +94,7 @@ const URL_REGEX = /(https?:\/\/[^\s<>"')\]]+)/gi
 const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi
 const QUOTE_TOOL_URL = "/boilers/property-overview"
 const QUOTE_TOOL_LABEL_REGEX = /\bstart\s+online\s+quote\s+tool\b/i
-const CHATBOT_BASE_URL = process.env.NEXT_PUBLIC_CHATBOT_URL
-const CHATBOT_INITIAL_MESSAGE_ENDPOINT = CHATBOT_BASE_URL?.endsWith("/chatbot")
-  ? CHATBOT_BASE_URL.replace(/\/chatbot$/, "/chatbot-initial-message")
-  : null
+const CHATBOT_INITIAL_MESSAGE_ENDPOINT = "/api/chatbot-initial-message"
 const CHATBOT_INITIAL_FALLBACK_MESSAGE = "👋 Hi there! What brings you here today?"
 const CHATBOT_INITIAL_MIN_DELAY_MS = 1000
 const CHATBOT_INITIAL_MAX_DELAY_MS = 2000
@@ -339,8 +341,10 @@ export function ChatBot() {
   const waveformStreamRef = useRef<MediaStream | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
   const waveformFrameRef = useRef<number | null>(null)
+  const recordingBarsIntervalRef = useRef<number | null>(null)
   const recordingCancelledRef = useRef(false)
   const recordingDraftRef = useRef("")
+  const recordingInputBaseRef = useRef("")
 
   const quickPrompts = [
     "I want to get a quote",
@@ -380,6 +384,9 @@ export function ChatBot() {
       waveformStreamRef.current?.getTracks().forEach((track) => track.stop())
       if (waveformFrameRef.current !== null) {
         cancelAnimationFrame(waveformFrameRef.current)
+      }
+      if (recordingBarsIntervalRef.current !== null) {
+        window.clearInterval(recordingBarsIntervalRef.current)
       }
       if (audioContextRef.current) {
         void audioContextRef.current.close()
@@ -639,12 +646,6 @@ export function ChatBot() {
         Math.floor(
           Math.random() * (CHATBOT_INITIAL_MAX_DELAY_MS - CHATBOT_INITIAL_MIN_DELAY_MS + 1),
         ) + CHATBOT_INITIAL_MIN_DELAY_MS
-
-      if (!CHATBOT_INITIAL_MESSAGE_ENDPOINT) {
-        await wait(simulatedDelay)
-        setWelcomeMessage(CHATBOT_INITIAL_FALLBACK_MESSAGE)
-        return
-      }
 
       try {
         const response = await fetch(CHATBOT_INITIAL_MESSAGE_ENDPOINT, {
@@ -1078,6 +1079,11 @@ export function ChatBot() {
   }
 
   const stopRecordingWave = () => {
+    if (recordingBarsIntervalRef.current !== null) {
+      window.clearInterval(recordingBarsIntervalRef.current)
+      recordingBarsIntervalRef.current = null
+    }
+
     if (waveformFrameRef.current !== null) {
       cancelAnimationFrame(waveformFrameRef.current)
       waveformFrameRef.current = null
@@ -1099,74 +1105,19 @@ export function ChatBot() {
   }
 
   const startRecordingWave = async () => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      resetRecordingWave()
-      return
+    if (recordingBarsIntervalRef.current !== null) {
+      window.clearInterval(recordingBarsIntervalRef.current)
     }
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      waveformStreamRef.current = stream
-
-      const AudioContextCtor =
-        window.AudioContext ||
-        (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-
-      if (!AudioContextCtor) {
-        stream.getTracks().forEach((track) => track.stop())
-        waveformStreamRef.current = null
-        resetRecordingWave()
-        return
-      }
-
-      const audioContext = new AudioContextCtor()
-      audioContextRef.current = audioContext
-
-      const source = audioContext.createMediaStreamSource(stream)
-      const analyser = audioContext.createAnalyser()
-      analyser.fftSize = 256
-      analyser.smoothingTimeConstant = 0.8
-      source.connect(analyser)
-      analyserRef.current = analyser
-
-      const frequencies = new Uint8Array(analyser.frequencyBinCount)
-      const center = (RECORDING_BASE_BARS.length - 1) / 2
-
-      const tick = () => {
-        if (!analyserRef.current) return
-        analyser.getByteFrequencyData(frequencies)
-
-        let total = 0
-        for (let i = 0; i < frequencies.length; i += 1) {
-          total += frequencies[i]
-        }
-        const overallLevel = total / (frequencies.length * 255)
-        const bandSize = Math.max(1, Math.floor(frequencies.length / RECORDING_BASE_BARS.length))
-
-        const nextBars = RECORDING_BASE_BARS.map((baseHeight, index) => {
-          const start = index * bandSize
-          const end = Math.min(frequencies.length, start + bandSize)
-
-          let bandTotal = 0
-          for (let i = start; i < end; i += 1) {
-            bandTotal += frequencies[i]
-          }
-
-          const bandLevel = end > start ? bandTotal / ((end - start) * 255) : 0
-          const distanceFactor = 1 - Math.min(1, Math.abs(index - center) / center)
-          const dynamicBoost = (bandLevel * 15 + overallLevel * 10) * (0.55 + distanceFactor * 0.95)
-
-          return Math.min(28, Math.max(4, Math.round(baseHeight + dynamicBoost)))
-        })
-
-        setRecordingBars(nextBars)
-        waveformFrameRef.current = requestAnimationFrame(tick)
-      }
-
-      waveformFrameRef.current = requestAnimationFrame(tick)
-    } catch {
-      stopRecordingWave()
-    }
+    recordingBarsIntervalRef.current = window.setInterval(() => {
+      setRecordingBars((prev) =>
+        prev.map((barHeight, index) => {
+          const swing = 5 + (index % 5)
+          const jitter = Math.round((Math.random() - 0.5) * swing)
+          return Math.max(4, Math.min(28, barHeight + jitter))
+        }),
+      )
+    }, 95)
   }
 
   const startSpeechRecognition = () => {
@@ -1187,58 +1138,122 @@ export function ChatBot() {
     }
 
     const recognition = new SpeechRecognition()
-    recognition.lang = "en-US"
+    const hasEnglishHintInInput = /[a-z]/i.test(input)
+    recognition.lang = hasEnglishHintInInput ? "en-US" : "bn-BD"
     recognition.interimResults = true
     recognition.continuous = false
+    ;(recognition as BrowserSpeechRecognition & { maxAlternatives?: number }).maxAlternatives = 1
     recordingCancelledRef.current = false
     recordingDraftRef.current = ""
+    recordingInputBaseRef.current = input.trim()
     resetRecordingWave()
     setShowEmojiMenu(false)
     setShowGifMenu(false)
     let finalTranscript = ""
+    let latestTranscript = ""
 
     recognition.onresult = (event: SpeechRecognitionEventLike) => {
-      let nextFinalTranscript = ""
-      let interimTranscript = ""
+      let nextFinalTranscript = finalTranscript
+      const allPieces: string[] = []
 
-      for (let i = 0; i < event.results.length; i += 1) {
+      const startIndex = Number.isFinite(event.resultIndex) ? event.resultIndex : 0
+      for (let i = startIndex; i < event.results.length; i += 1) {
         const result = event.results[i]
-        const transcriptPiece = result[0]?.transcript?.trim()
+        if (!result) continue
+
+        const firstAlternativeFromIndex = result[0]
+        const resultWithItem = result as unknown as { item?: (index: number) => SpeechRecognitionAlternativeLike | null }
+        const firstAlternativeFromItem =
+          typeof resultWithItem.item === "function"
+            ? resultWithItem.item(0)
+            : null
+        const firstAlternative = firstAlternativeFromIndex ?? firstAlternativeFromItem
+        const transcriptPiece = firstAlternative?.transcript?.trim()
         if (!transcriptPiece) continue
+        allPieces.push(transcriptPiece)
 
         if (result.isFinal) {
           nextFinalTranscript += `${transcriptPiece} `
-        } else {
-          interimTranscript += `${transcriptPiece} `
         }
       }
 
       finalTranscript = nextFinalTranscript.trim()
-      const composedTranscript = `${nextFinalTranscript}${interimTranscript}`.trim()
-      recordingDraftRef.current = normalizeVoiceTranscript(composedTranscript)
+      const composedTranscript = `${nextFinalTranscript} ${allPieces.join(" ")}`.trim()
+      latestTranscript = normalizeVoiceTranscript(composedTranscript)
+      recordingDraftRef.current = latestTranscript
+      if (!recordingCancelledRef.current) {
+        const mergedValue = [recordingInputBaseRef.current, latestTranscript]
+          .filter(Boolean)
+          .join(" ")
+          .trim()
+        setInput(mergedValue)
+      }
     }
 
-    recognition.onerror = () => {
+    recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
       setIsRecording(false)
       stopRecordingWave()
+      recognitionRef.current = null
+      const reason = event?.error || "unknown"
+      const errorMessage =
+        reason === "not-allowed" || reason === "service-not-allowed"
+          ? "Microphone permission is blocked. Please allow mic access in browser settings and try again."
+          : reason === "no-speech"
+            ? "I couldn't hear anything. Please speak a bit louder and try again."
+            : reason === "audio-capture"
+              ? "No microphone was detected. Please connect a mic and try again."
+              : "Voice input failed. Please try again."
+
+      if (reason !== "aborted") {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `bot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            sender: "bot",
+            text: errorMessage,
+            createdAt: Date.now(),
+          },
+        ])
+      }
     }
 
     recognition.onend = () => {
       setIsRecording(false)
       stopRecordingWave()
-      const transcriptToUse = normalizeVoiceTranscript(finalTranscript || recordingDraftRef.current)
+      const transcriptToUse = normalizeVoiceTranscript(
+        finalTranscript || recordingDraftRef.current || latestTranscript,
+      )
 
       if (!recordingCancelledRef.current && transcriptToUse) {
-        setInput(transcriptToUse)
+        const mergedValue = [recordingInputBaseRef.current, transcriptToUse]
+          .filter(Boolean)
+          .join(" ")
+          .trim()
+        setInput(mergedValue)
       }
       recordingDraftRef.current = ""
       recordingCancelledRef.current = false
+      recordingInputBaseRef.current = ""
     }
 
     recognitionRef.current = recognition
-    recognition.start()
-    setIsRecording(true)
-    void startRecordingWave()
+    try {
+      recognition.start()
+      setIsRecording(true)
+      void startRecordingWave()
+    } catch {
+      recognitionRef.current = null
+      setIsRecording(false)
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `bot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          sender: "bot",
+          text: "Could not start voice input. Please check microphone permission and try again.",
+          createdAt: Date.now(),
+        },
+      ])
+    }
   }
 
   const stopSpeechRecognition = ({ discard }: { discard: boolean }) => {
