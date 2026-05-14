@@ -94,6 +94,8 @@ const CHATBOT_INITIAL_MESSAGE_ENDPOINT = CHATBOT_BASE_URL?.endsWith("/chatbot")
   ? CHATBOT_BASE_URL.replace(/\/chatbot$/, "/chatbot-initial-message")
   : null
 const CHATBOT_INITIAL_FALLBACK_MESSAGE = "👋 Hi there! What brings you here today?"
+const CHATBOT_INITIAL_MIN_DELAY_MS = 1000
+const CHATBOT_INITIAL_MAX_DELAY_MS = 2000
 const GIF_SUGGESTIONS: GifOption[] = [
   {
     id: "celebrate",
@@ -325,6 +327,7 @@ export function ChatBot() {
   const [messages, setMessages] = useState<Message[]>([])
 
   const [isLoading, setIsLoading] = useState(false)
+  const [isInitialMessageLoading, setIsInitialMessageLoading] = useState(true)
   const [messageTimeNow, setMessageTimeNow] = useState(() => Date.now())
 
   const chatRef = useRef<HTMLDivElement>(null)
@@ -608,6 +611,10 @@ export function ChatBot() {
 
   useEffect(() => {
     let isCancelled = false
+    setIsInitialMessageLoading(true)
+    const wait = (ms: number) => new Promise<void>((resolve) => {
+      window.setTimeout(resolve, ms)
+    })
 
     const setWelcomeMessage = (rawMessage: string) => {
       const formatted = formatBotMessage(rawMessage)
@@ -624,10 +631,17 @@ export function ChatBot() {
         const withoutWelcome = prev.filter((message) => message.id !== "bot-welcome")
         return [welcomeMessage, ...withoutWelcome]
       })
+      setIsInitialMessageLoading(false)
     }
 
     const loadInitialMessage = async () => {
+      const simulatedDelay =
+        Math.floor(
+          Math.random() * (CHATBOT_INITIAL_MAX_DELAY_MS - CHATBOT_INITIAL_MIN_DELAY_MS + 1),
+        ) + CHATBOT_INITIAL_MIN_DELAY_MS
+
       if (!CHATBOT_INITIAL_MESSAGE_ENDPOINT) {
+        await wait(simulatedDelay)
         setWelcomeMessage(CHATBOT_INITIAL_FALLBACK_MESSAGE)
         return
       }
@@ -645,11 +659,13 @@ export function ChatBot() {
         }
 
         const rawResponse = await response.text()
+        await wait(simulatedDelay)
         if (!isCancelled) {
           setWelcomeMessage(rawResponse)
         }
       } catch (error) {
         console.error("Error loading initial chatbot message:", error)
+        await wait(simulatedDelay)
         if (!isCancelled) {
           setWelcomeMessage(CHATBOT_INITIAL_FALLBACK_MESSAGE)
         }
@@ -1412,6 +1428,20 @@ export function ChatBot() {
                     </div>
                   )
                 })}
+
+                {isInitialMessageLoading && messages.length === 0 && (
+                  <div className="bg-slate-100 text-gray-700 inline-flex items-center gap-1.5 rounded-full px-4 py-2 shadow-sm">
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce" />
+                    <span
+                      className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce"
+                      style={{ animationDelay: "120ms" }}
+                    />
+                    <span
+                      className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce"
+                      style={{ animationDelay: "240ms" }}
+                    />
+                  </div>
+                )}
 
                 {isLoading && (
                   <div className="bg-white border border-slate-200 text-gray-800 max-w-[18%] p-3 rounded-2xl rounded-bl-md shadow-sm">
