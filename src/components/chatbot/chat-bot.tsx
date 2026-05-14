@@ -81,8 +81,13 @@ declare global {
 
 const URL_REGEX = /(https?:\/\/[^\s<>"')\]]+)/gi
 const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi
-const QUOTE_TOOL_URL = "https://arronwh-website.vercel.app/boilers/property-overview"
+const QUOTE_TOOL_URL = "/boilers/property-overview"
 const QUOTE_TOOL_LABEL_REGEX = /\bstart\s+online\s+quote\s+tool\b/i
+const CHATBOT_BASE_URL = process.env.NEXT_PUBLIC_CHATBOT_URL
+const CHATBOT_INITIAL_MESSAGE_ENDPOINT = CHATBOT_BASE_URL?.endsWith("/chatbot")
+  ? CHATBOT_BASE_URL.replace(/\/chatbot$/, "/chatbot-initial-message")
+  : null
+const CHATBOT_INITIAL_FALLBACK_MESSAGE = "👋 Hi there! What brings you here today?"
 const GIF_SUGGESTIONS: GifOption[] = [
   {
     id: "celebrate",
@@ -311,14 +316,7 @@ export function ChatBot() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "bot-welcome",
-      sender: "bot",
-      text: "👋 Hi there! What brings you here today?",
-      createdAt: Date.now(),
-    },
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
 
   const [isLoading, setIsLoading] = useState(false)
   const [messageTimeNow, setMessageTimeNow] = useState(() => Date.now())
@@ -601,6 +599,63 @@ export function ChatBot() {
     }
     return { text: decodeHtmlEntities(stripHtmlCodeFence(trimmed)) }
   }
+
+  useEffect(() => {
+    let isCancelled = false
+
+    const setWelcomeMessage = (rawMessage: string) => {
+      const formatted = formatBotMessage(rawMessage)
+      const text = formatted.text.trim() || CHATBOT_INITIAL_FALLBACK_MESSAGE
+
+      setMessages((prev) => {
+        const welcomeMessage: Message = {
+          id: "bot-welcome",
+          sender: "bot",
+          text,
+          html: formatted.html,
+          createdAt: Date.now(),
+        }
+        const withoutWelcome = prev.filter((message) => message.id !== "bot-welcome")
+        return [welcomeMessage, ...withoutWelcome]
+      })
+    }
+
+    const loadInitialMessage = async () => {
+      if (!CHATBOT_INITIAL_MESSAGE_ENDPOINT) {
+        setWelcomeMessage(CHATBOT_INITIAL_FALLBACK_MESSAGE)
+        return
+      }
+
+      try {
+        const response = await fetch(CHATBOT_INITIAL_MESSAGE_ENDPOINT, {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error(`Initial message request failed with status ${response.status}`)
+        }
+
+        const rawResponse = await response.text()
+        if (!isCancelled) {
+          setWelcomeMessage(rawResponse)
+        }
+      } catch (error) {
+        console.error("Error loading initial chatbot message:", error)
+        if (!isCancelled) {
+          setWelcomeMessage(CHATBOT_INITIAL_FALLBACK_MESSAGE)
+        }
+      }
+    }
+
+    void loadInitialMessage()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [])
 
   const extractStreamText = (chunk: string): string => {
     const lines = chunk.split(/\r?\n/)
