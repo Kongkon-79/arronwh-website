@@ -19,6 +19,12 @@ interface Message {
   sender: "user" | "bot"
   text: string
   html?: string
+  attachment?: {
+    kind: "image" | "gif" | "file"
+    name: string
+    sizeLabel?: string
+    previewUrl?: string
+  }
   createdAt: number
 }
 
@@ -111,7 +117,7 @@ const GIF_SUGGESTIONS: GifOption[] = [
     id: "excited",
     label: "Excited",
     tags: ["excited", "hype", "energy"],
-    url: "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif",
+    url: "https://media.giphy.com/media/MeIucAjPKoA120R7sN/giphy.gif",
   },
   {
     id: "clap",
@@ -793,6 +799,20 @@ export function ChatBot() {
     })
   }
 
+  const buildGifFile = async (gif: GifOption): Promise<File> => {
+    const response = await fetch(gif.url)
+    if (!response.ok) {
+      throw new Error(`GIF download failed with status ${response.status}`)
+    }
+
+    const blob = await response.blob()
+    const extFromType = blob.type === "image/gif" ? "gif" : "bin"
+    const safeName = gif.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+    return new File([blob], `${safeName || "gif-attachment"}.${extFromType}`, {
+      type: blob.type || "application/octet-stream",
+    })
+  }
+
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (isRecording) return
@@ -802,15 +822,36 @@ export function ChatBot() {
     const attachmentText = selectedFile ? `\n[Attachment: ${selectedFile.name}]` : ""
     const gifAttachmentText = selectedGif ? `\n[GIF: ${selectedGif.label}]` : ""
     const userMessage = `${trimmedInput}${attachmentText}${gifAttachmentText}`.trim()
-    const updatedMessages = [
-      ...messages,
-      {
-        id: `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        sender: "user" as const,
-        text: userMessage,
-        createdAt: Date.now(),
-      },
-    ]
+    const fileToSend = selectedFile
+    const gifToSend = selectedGif
+    const hasAttachment = Boolean(fileToSend || gifToSend)
+    const previousChat = buildPreviousChat(messages)
+
+    const userAttachment: Message["attachment"] = fileToSend
+      ? {
+          kind: fileToSend.type.startsWith("image/") ? "image" : "file",
+          name: fileToSend.name,
+          sizeLabel: formatFileSize(fileToSend.size),
+          previewUrl: fileToSend.type.startsWith("image/") ? selectedFilePreview || undefined : undefined,
+        }
+      : gifToSend
+        ? {
+            kind: "gif",
+            name: gifToSend.label,
+            sizeLabel: "GIF",
+            previewUrl: gifToSend.url,
+          }
+        : undefined
+
+    const newUserMessage: Message = {
+      id: `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      sender: "user",
+      text: userMessage,
+      attachment: userAttachment,
+      createdAt: Date.now(),
+    }
+
+    const updatedMessages: Message[] = [...messages, newUserMessage]
     setMessages(updatedMessages)
     setInput("")
     setSelectedFile(null)
@@ -822,17 +863,35 @@ export function ChatBot() {
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/chatbot", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          accept: "text/event-stream",
-        },
-        body: JSON.stringify({
-          previous_chat: buildPreviousChat(messages),
-          user_query: userMessage,
-        }),
-      })
+      const response = hasAttachment
+        ? await (async () => {
+            const formData = new FormData()
+            formData.append("previous_chat", JSON.stringify(previousChat))
+            formData.append("user_query", trimmedInput || "Please analyze this file.")
+
+            if (fileToSend) {
+              formData.append("file", fileToSend, fileToSend.name)
+            } else if (gifToSend) {
+              const gifFile = await buildGifFile(gifToSend)
+              formData.append("file", gifFile, gifFile.name)
+            }
+
+            return fetch("/api/chatbot", {
+              method: "POST",
+              body: formData,
+            })
+          })()
+        : await fetch("/api/chatbot", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              accept: "text/event-stream",
+            },
+            body: JSON.stringify({
+              previous_chat: previousChat,
+              user_query: userMessage,
+            }),
+          })
 
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`)
@@ -843,6 +902,29 @@ export function ChatBot() {
         ...prev,
         { id: botId, sender: "bot", text: "", createdAt: Date.now() },
       ])
+
+      if (hasAttachment) {
+        const payload = await response.json()
+        const rawText =
+          (typeof payload?.response === "string" && payload.response) ||
+          (typeof payload?.message === "string" && payload.message) ||
+          ""
+        const formatted = formatBotMessage(rawText.trim())
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === botId
+              ? {
+                  ...msg,
+                  text: formatted.text || "Thanks for your attachment. I could not parse a response this time.",
+                  html: formatted.html,
+                }
+              : msg,
+          ),
+        )
+        setIsLoading(false)
+        return
+      }
 
       const reader = response.body?.getReader()
       if (!reader) throw new Error("No response stream found.")
@@ -1200,6 +1282,13 @@ export function ChatBot() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   }
 
+  const stripInlineAttachmentLabels = (value: string): string => {
+    return value
+      .replace(/\n?\[Attachment:[^\]]+\]/gi, "")
+      .replace(/\n?\[GIF:[^\]]+\]/gi, "")
+      .trim()
+  }
+
   return (
     <div className="fixed bottom-24 right-[36px] z-50">
       {/* Chat Button */}
@@ -1284,7 +1373,32 @@ export function ChatBot() {
                         {msg.sender === "bot" ? (
                           <AIMessage content={(typeof msg.html === "string" && msg.html.trim()) || msg.text} />
                         ) : (
-                          <p className="whitespace-pre-wrap">{renderTextWithLinks(msg.text)}</p>
+                          <div className="space-y-2">
+                            {msg.attachment?.previewUrl && (
+                              <Image
+                                src={msg.attachment.previewUrl}
+                                alt={msg.attachment.name}
+                                width={220}
+                                height={140}
+                                className="max-h-[180px] w-full rounded-xl border border-white/20 object-cover"
+                                unoptimized
+                              />
+                            )}
+                            {msg.attachment && !msg.attachment.previewUrl && (
+                              <div className="inline-flex max-w-full items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-2.5 py-1.5 text-[11px] text-white/95">
+                                <FileText className="h-3.5 w-3.5" />
+                                <span className="max-w-[160px] truncate font-medium">{msg.attachment.name}</span>
+                                {msg.attachment.sizeLabel && (
+                                  <span className="text-[10px] text-white/80">{msg.attachment.sizeLabel}</span>
+                                )}
+                              </div>
+                            )}
+                            {stripInlineAttachmentLabels(msg.text) && (
+                              <p className="whitespace-pre-wrap">
+                                {renderTextWithLinks(stripInlineAttachmentLabels(msg.text))}
+                              </p>
+                            )}
+                          </div>
                         )}
                       </div>
                       <p
