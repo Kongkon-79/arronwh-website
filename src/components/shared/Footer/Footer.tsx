@@ -1,24 +1,41 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { Mail, MapPin, Phone, Star } from "lucide-react";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaTwitter } from "react-icons/fa";
+import { fetchNavbarLogo, NAVBAR_LOGO_QUERY_KEY } from "../Navbar/navbar-logo-data";
 
 const trustpilotStars = Array.from({ length: 5 });
 
 const Footer = () => {
+  const { data: logo, isLoading: isLogoLoading } = useQuery({
+    queryKey: NAVBAR_LOGO_QUERY_KEY,
+    queryFn: fetchNavbarLogo,
+  });
+  const logoSrc = logo?.image?.trim() || "/assets/images/navlogo.png";
+
   return (
     <footer className="shadow-[0px_-2px_4px_0px_#0000001A] bg-[#EAEBEC]">
       <div className="container mx-auto px-4 py-6 md:py-8 lg:py-10">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
           <div className="max-w-[260px]">
             <Link href="/" className="inline-flex">
-              <Image
-                src="/assets/images/navlogo.png"
-                alt="Yolo Heat logo"
-                width={180}
-                height={72}
-                className="h-auto w-[200px] object-contain"
-              />
+              {isLogoLoading ? (
+                <div
+                  aria-hidden="true"
+                  className="h-[80px] w-[220px] animate-pulse rounded-[8px] bg-[#DDE4EC]"
+                />
+              ) : (
+                <Image
+                  src={logoSrc}
+                  alt="Yolo Heat logo"
+                  width={1000}
+                  height={1000}
+                  className="h-[80px] w-[220px] object-cover"
+                />
+              )}
             </Link>
 
             <div className="mt-2">
