@@ -98,6 +98,7 @@ const CHATBOT_INITIAL_MESSAGE_ENDPOINT = "/api/chatbot-initial-message"
 const CHATBOT_INITIAL_FALLBACK_MESSAGE = "👋 Hi there! What brings you here today?"
 const CHATBOT_INITIAL_MIN_DELAY_MS = 1000
 const CHATBOT_INITIAL_MAX_DELAY_MS = 2000
+const CHATBOT_HISTORY_STORAGE_KEY = "chatbot-history-v1"
 const GIF_SUGGESTIONS: GifOption[] = [
   {
     id: "celebrate",
@@ -360,6 +361,54 @@ export function ChatBot() {
     }, 3500)
     return () => clearTimeout(timer)
   }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    try {
+      const raw = window.localStorage.getItem(CHATBOT_HISTORY_STORAGE_KEY)
+      if (!raw) return
+
+      const parsed = JSON.parse(raw) as unknown
+      if (!Array.isArray(parsed)) return
+
+      const hydratedMessages = parsed
+        .filter((item): item is Message => {
+          return (
+            item &&
+            typeof item === "object" &&
+            typeof item.id === "string" &&
+            (item.sender === "user" || item.sender === "bot") &&
+            typeof item.text === "string" &&
+            typeof item.createdAt === "number"
+          )
+        })
+        .map((item) => ({
+          id: item.id,
+          sender: item.sender,
+          text: item.text,
+          html: item.html,
+          attachment: item.attachment,
+          createdAt: item.createdAt,
+        }))
+
+      if (hydratedMessages.length > 0) {
+        setMessages(hydratedMessages)
+      }
+    } catch (error) {
+      console.error("Failed to load chatbot history from storage:", error)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    try {
+      window.localStorage.setItem(CHATBOT_HISTORY_STORAGE_KEY, JSON.stringify(messages))
+    } catch (error) {
+      console.error("Failed to save chatbot history to storage:", error)
+    }
+  }, [messages])
 
   // Handle outside click
   useEffect(() => {
@@ -628,6 +677,9 @@ export function ChatBot() {
       const text = formatted.text.trim() || CHATBOT_INITIAL_FALLBACK_MESSAGE
 
       setMessages((prev) => {
+        if (prev.length > 0) {
+          return prev
+        }
         const welcomeMessage: Message = {
           id: "bot-welcome",
           sender: "bot",

@@ -122,9 +122,9 @@ const HowItWorks = () => {
                         <Image
                           src={step.image}
                           alt={step.title}
-                          width={1000}
-                          height={1000}
-                          className="h-[300px] w-full object-cover "
+                          width={600}
+                          height={420}
+                          className="h-[200px] md:h-[300px] w-[300px] object-contain "
                         />
                       ) : (
                         <div className="h-[300px] w-[300px] rounded-[16px] bg-[#DDE4EC]" />

@@ -199,7 +199,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
       {/* Mobile Number */}
       <div className="space-y-1">
         <label className="block text-base md:text-[17px] font-medium text-[#2D3D4D]">
-          Mobile Number ( optional )
+          Mobile Number
         </label>
         <div className="flex h-14 w-full items-center gap-3 overflow-hidden bg-[#E9EEF3] px-2">
           <div className="shrink-0">
@@ -255,7 +255,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
         For more information on how we use your details please see our{" "}
         <a
           href="/privacy-policy"
-          className="text-primary underline-offset-4 hover:underline"
+          className="text-[#2D3D4D] underline-offset-4 hover:underline"
         >
           privacy policy.
         </a>
