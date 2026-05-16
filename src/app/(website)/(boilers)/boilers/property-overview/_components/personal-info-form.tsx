@@ -199,7 +199,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
       {/* Mobile Number */}
       <div className="space-y-1">
         <label className="block text-base md:text-[17px] font-medium text-[#2D3D4D]">
-          Mobile Number ( optional )
+          Mobile Number
         </label>
         <div className="flex h-14 w-full items-center gap-3 overflow-hidden bg-[#E9EEF3] px-2">
           <div className="shrink-0">
