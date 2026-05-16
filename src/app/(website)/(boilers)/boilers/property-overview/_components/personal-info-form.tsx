@@ -255,7 +255,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
         For more information on how we use your details please see our{" "}
         <a
           href="/privacy-policy"
-          className="text-primary underline-offset-4 hover:underline"
+          className="text-[#2D3D4D] underline-offset-4 hover:underline"
         >
           privacy policy.
         </a>

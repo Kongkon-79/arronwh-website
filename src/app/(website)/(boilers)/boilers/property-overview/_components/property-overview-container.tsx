@@ -143,7 +143,7 @@ const PropertyOverviewContainer = () => {
       return (
         <>
           Finally, please enter the{" "}
-          <span className="text-primary">postcode</span> of your property where
+          <span className="text-[#2D3D4D]">postcode</span> of your property where
           we will be installing your new boiler.
         </>
       );
@@ -155,28 +155,28 @@ const PropertyOverviewContainer = () => {
       case "requirement":
         return (
           <>
-            Are you a <span className="text-primary">homeowner</span> or a{" "}
-            <span className="text-primary">landlord</span>?
+            Are you a <span className="text-[#2D3D4D]">homeowner</span> or a{" "}
+            <span className="text-[#2D3D4D]">landlord</span>?
           </>
         );
       case "fuelType":
         return (
           <>
-            What kind of <span className="text-primary">fuel</span> does your
+            What kind of <span className="text-[#2D3D4D]">fuel</span> does your
             boiler use?
           </>
         );
       case "boilerType":
         return (
           <>
-            Currently, what <span className="text-primary">type</span> of boiler
+            Currently, what <span className="text-[#2D3D4D]">type</span> of boiler
             do you have?
           </>
         );
       case "convertToCombi":
         return (
           <>
-            Do you want to <span className="text-primary">convert</span> to a
+            Do you want to <span className="text-[#2D3D4D]">convert</span> to a
             Combi boiler?
           </>
         );
@@ -184,13 +184,13 @@ const PropertyOverviewContainer = () => {
         return (
           <>
             How would you describe your{" "}
-            <span className="text-primary">current boiler</span>?
+            <span className="text-[#2D3D4D]">current boiler</span>?
           </>
         );
       case "boilerAge":
         return (
           <>
-            Roughly how <span className="text-primary">old</span> is your
+            Roughly how <span className="text-[#2D3D4D]">old</span> is your
             boiler?
           </>
         );
@@ -198,20 +198,20 @@ const PropertyOverviewContainer = () => {
         return (
           <>
             Is your boiler{" "}
-            <span className="text-primary">mounted on the wall</span>?
+            <span className="text-[#2D3D4D]">mounted on the wall</span>?
           </>
         );
       case "stayDuration":
         return (
           <>
             How long do you see yourself in your{" "}
-            <span className="text-primary">current home</span>?
+            <span className="text-[#2D3D4D]">current home</span>?
           </>
         );
       case "waterFlowRate":
         return (
           <>
-            How <span className="text-primary">quickly</span> does your water
+            How <span className="text-[#2D3D4D]">quickly</span> does your water
             come out of your cold tap?
           </>
         );
@@ -219,108 +219,108 @@ const PropertyOverviewContainer = () => {
         return (
           <>
             Where&apos;s your{" "}
-            <span className="text-primary">current boiler</span>?
+            <span className="text-[#2D3D4D]">current boiler</span>?
           </>
         );
       case "differentPlace":
         return (
           <>
             Do you want your new boiler in a{" "}
-            <span className="text-primary">different place</span>?
+            <span className="text-[#2D3D4D]">different place</span>?
           </>
         );
       case "airingCupboardLocation":
         return (
           <>
-            Where is your <span className="text-primary">airing cupboard</span>?
+            Where is your <span className="text-[#2D3D4D]">airing cupboard</span>?
           </>
         );
       case "newBoilerLocation":
         return (
           <>
             Where do you want your{" "}
-            <span className="text-primary">new boiler</span>?
+            <span className="text-[#2D3D4D]">new boiler</span>?
           </>
         );
       case "homeType":
         return (
           <>
             Which of these best describes{" "}
-            <span className="text-primary">your home</span>?
+            <span className="text-[#2D3D4D]">your home</span>?
           </>
         );
       case "bungalowFloors":
         return (
           <>
-            Is your <span className="text-primary">bungalow</span> on one or
+            Is your <span className="text-[#2D3D4D]">bungalow</span> on one or
             two floors?
           </>
         );
       case "flatOnSecondFloor":
         return (
           <>
-            Is your <span className="text-primary">flat</span> on or above the
+            Is your <span className="text-[#2D3D4D]">flat</span> on or above the
             second floor?
           </>
         );
       case "accessEquipmentCharges":
         return (
           <>
-            <span className="text-primary">Do you accept</span> that there may
+            <span className="text-[#2D3D4D]">Do you accept</span> that there may
             be extra charges for access equipment?
           </>
         );
       case "bedrooms":
         return (
           <>
-            How many <span className="text-primary">bedrooms</span> do you have?
+            How many <span className="text-[#2D3D4D]">bedrooms</span> do you have?
           </>
         );
       case "bathtubs":
         return (
           <>
-            How many <span className="text-primary">bathtubs</span> do you have,
+            How many <span className="text-[#2D3D4D]">bathtubs</span> do you have,
             or plan to have in the future?
           </>
         );
       case "bathtubShowerOver":
         return (
           <>
-            Do any of your <span className="text-primary">bathtubs</span> have
+            Do any of your <span className="text-[#2D3D4D]">bathtubs</span> have
             showers over them?
           </>
         );
       case "showers":
         return (
           <>
-            How many <span className="text-primary">separate showers</span> do
+            How many <span className="text-[#2D3D4D]">separate showers</span> do
             you have, or plan to have in the future?
           </>
         );
       case "electricShower":
         return (
           <>
-            Do you have an <span className="text-primary">electric shower</span>
+            Do you have an <span className="text-[#2D3D4D]">electric shower</span>
             ?
           </>
         );
       case "powerShower":
         return (
           <>
-            Is it a <span className="text-primary">power shower</span>?
+            Is it a <span className="text-[#2D3D4D]">power shower</span>?
           </>
         );
       case "pumpSeparatedFromShower":
         return (
           <>
-            Is the <span className="text-primary">pump</span> separated from
+            Is the <span className="text-[#2D3D4D]">pump</span> separated from
             the shower?
           </>
         );
       case "radiators":
         return (
           <>
-            How many <span className="text-primary">radiators</span> do you
+            How many <span className="text-[#2D3D4D]">radiators</span> do you
             have?
           </>
         );
@@ -328,61 +328,61 @@ const PropertyOverviewContainer = () => {
         return (
           <>
             Do you have{" "}
-            <span className="text-primary">Thermostatic Radiator Valves</span>{" "}
+            <span className="text-[#2D3D4D]">Thermostatic Radiator Valves</span>{" "}
             on all your radiators?
           </>
         );
       case "waterMeter":
         return (
           <>
-            Do you have <span className="text-primary">a water meter?</span>
+            Do you have <span className="text-[#2D3D4D]">a water meter?</span>
           </>
         );
       case "flueOut":
         return (
           <>
-            Where does your <span className="text-primary">flue</span> come out?
+            Where does your <span className="text-[#2D3D4D]">flue</span> come out?
           </>
         );
       case "roofType":
         return (
           <>
-            Is your flue in a <span className="text-primary">sloped roof</span>{" "}
-            or a <span className="text-primary">flat roof</span> ?
+            Is your flue in a <span className="text-[#2D3D4D]">sloped roof</span>{" "}
+            or a <span className="text-[#2D3D4D]">flat roof</span> ?
           </>
         );
       case "roofPosition":
         return (
           <>
             Where on the roof is it{" "}
-            <span className="text-primary">positioned</span>?
+            <span className="text-[#2D3D4D]">positioned</span>?
           </>
         );
       case "flueWallDistance":
         return (
           <>
             How far is your current boiler from an{" "}
-            <span className="text-primary">outside wall</span>?
+            <span className="text-[#2D3D4D]">outside wall</span>?
           </>
         );
       case "flueShape":
         return (
           <>
-            Is your current flue <span className="text-primary">square</span> or{" "}
-            <span className="text-primary">round</span>?
+            Is your current flue <span className="text-[#2D3D4D]">square</span> or{" "}
+            <span className="text-[#2D3D4D]">round</span>?
           </>
         );
       case "flueGroundDistance":
         return (
           <>
-            How close to the <span className="text-primary">ground</span> is
+            How close to the <span className="text-[#2D3D4D]">ground</span> is
             your flue?
           </>
         );
       case "fluePropertyDistance":
         return (
           <>
-            How close to <span className="text-primary">another property</span>{" "}
+            How close to <span className="text-[#2D3D4D]">another property</span>{" "}
             is your flue?
           </>
         );
@@ -390,7 +390,7 @@ const PropertyOverviewContainer = () => {
         return (
           <>
             Is the flue under a{" "}
-            <span className="text-primary">carport, balcony</span> or other
+            <span className="text-[#2D3D4D]">carport, balcony</span> or other
             structure?
           </>
         );
@@ -398,7 +398,7 @@ const PropertyOverviewContainer = () => {
         return (
           <>
             Is the flue 30cm or more from a{" "}
-            <span className="text-primary">door or window</span>?
+            <span className="text-[#2D3D4D]">door or window</span>?
           </>
         );
       default:
@@ -1301,8 +1301,8 @@ const PropertyOverviewContainer = () => {
                       <span
                         className={cn(
                           "text-center text-lg md:text-xl leading-normal font-semibold transition-colors duration-200",
-                          selected ? "text-primary" : "text-[#2D3D4D]",
-                          !selected && "group-hover:text-primary",
+                          selected ? "text-[#2D3D4D]" : "text-[#2D3D4D]",
+                          !selected && "group-hover:text-[#2D3D4D]",
                         )}
                       >
                         {option.label}
