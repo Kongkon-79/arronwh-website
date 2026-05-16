@@ -46,7 +46,16 @@ const HowItWorks = () => {
     title: header?.headerTitle?.trim() || "",
     description: header?.headerDiscription?.trim() || "",
   };
-  const workSteps = Array.isArray(steps) ? steps.map(toWorkStep) : [];
+  const STEP_ORDER = ["online quote", "install", "choose", "discover"];
+  const getStepRank = (title: string) => {
+    const rank = STEP_ORDER.indexOf(title.toLowerCase().trim());
+    return rank === -1 ? Number.MAX_SAFE_INTEGER : rank;
+  };
+  const workSteps = Array.isArray(steps)
+    ? steps
+        .map(toWorkStep)
+        .sort((a, b) => getStepRank(a.title) - getStepRank(b.title))
+    : [];
 
   if (isLoading) {
     return (
@@ -107,15 +116,15 @@ const HowItWorks = () => {
             <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
               {workSteps.map((step, index) => (
                 <article key={step.id} className="relative">
-                  <div className="mx-auto w-full max-w-[280px]">
+                  <div className="mx-auto w-full">
                     <div className="overflow-hidden rounded-[16px]">
                       {step.image ? (
                         <Image
                           src={step.image}
                           alt={step.title}
-                          width={600}
-                          height={420}
-                          className="h-[300px] w-[300px] object-contain "
+                          width={1000}
+                          height={1000}
+                          className="h-[300px] w-full object-cover "
                         />
                       ) : (
                         <div className="h-[300px] w-[300px] rounded-[16px] bg-[#DDE4EC]" />
@@ -124,7 +133,7 @@ const HowItWorks = () => {
 
                     <div className="relative mt-7">
                       {index !== workSteps.length - 1 && (
-                        <div className="absolute left-1/2 top-4 hidden h-[1px] w-[calc(100%+5rem)] border-t border border-[#0A4229] lg:block" />
+                        <div className="absolute left-1/2 top-4 hidden h-[1px] w-[calc(100%+3rem)] border-t border border-[#0A4229] lg:block" />
                       )}
 
                       <div className="relative z-10 mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#0A4229] text-base md:text-lg font-bold text-white">
