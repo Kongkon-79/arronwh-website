@@ -31,7 +31,20 @@ const decodeEscapedHtml = (value: string): string => {
 export default function AIMessage({ content }: AIMessageProps) {
   const normalizedContent = stripHtmlCodeFence(content || "")
   const decodedContent = decodeEscapedHtml(normalizedContent)
-  const safeHtml = DOMPurify.sanitize(decodedContent)
+  const sanitizedHtml = DOMPurify.sanitize(decodedContent, {
+    ADD_ATTR: ["target", "rel"],
+  })
+
+  const safeHtml = (() => {
+    if (typeof window === "undefined") return sanitizedHtml
+    const doc = new DOMParser().parseFromString(sanitizedHtml, "text/html")
+    const anchors = doc.querySelectorAll("a[href]")
+    anchors.forEach((anchor) => {
+      anchor.setAttribute("target", "_blank")
+      anchor.setAttribute("rel", "noopener noreferrer")
+    })
+    return doc.body.innerHTML
+  })()
 
   return (
     <div
