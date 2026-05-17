@@ -7,12 +7,12 @@ import Navbar from '@/components/shared/Navbar/Navbar'
 
 const ContactUsPage = () => {
   return (
-    <div>
-        <Navbar />
+    <div className="bg-[#dfe1e3]">
+      <Navbar />
       <ContactUsHero />
 
-      <section className="bg-[#e6e7e8] px-4 pb-4 pt-2 md:pb-8 md:pt-3">
-        <div className="mx-auto max-w-[1060px]">
+      <section className="px-4 pb-4 pt-2 md:pb-8 md:pt-3">
+        <div className="container">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Social />
             <Partnerships />
