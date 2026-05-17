@@ -32,6 +32,66 @@ const isValidUKPostcode = (postcode: string): boolean => {
   return UK_POSTCODE_REGEX.test(postcode.trim());
 };
 
+const getCountryDialCodeVariants = (dialCode: string): string[] => {
+  const cleaned = dialCode.replace("+", "").trim();
+  if (!cleaned) return [];
+
+  // Handles codes like +44, +880 and +1-268
+  const parts = cleaned.split("-").filter(Boolean);
+  if (parts.length === 1) return [parts[0]];
+  return [parts.join("")];
+};
+
+const normalizePhone = (phone: string): string => {
+  return phone.replace(/[^\d+]/g, "");
+};
+
+const ALL_COUNTRY_CODES = Array.from(
+  new Set(
+    countries
+      .flatMap((country) => getCountryDialCodeVariants(country.dial_code))
+      .filter(Boolean),
+  ),
+).sort((a, b) => b.length - a.length);
+
+const isValidPhoneForCountry = (
+  phone: string,
+  selectedDialCode: string,
+): boolean => {
+  const normalized = normalizePhone(phone).trim();
+  if (!normalized) return false;
+
+  const digitsOnly = normalized.replace(/\D/g, "");
+  if (digitsOnly.length < 6 || digitsOnly.length > 15) return false;
+
+  const codeVariants = getCountryDialCodeVariants(selectedDialCode);
+  if (codeVariants.length === 0) return false;
+
+  // If number is entered in international format, it must match selected country.
+  if (normalized.startsWith("+")) {
+    const matchedVariant = codeVariants.find((code) =>
+      digitsOnly.startsWith(code),
+    );
+
+    if (!matchedVariant) return false;
+
+    const subscriberNumber = digitsOnly.slice(matchedVariant.length);
+    return subscriberNumber.length >= 6 && subscriberNumber.length <= 12;
+  }
+
+  // National format (without +country code): basic mobile length validation.
+  const startsWithAnotherCountryCode = ALL_COUNTRY_CODES.some(
+    (code) =>
+      !codeVariants.includes(code) &&
+      digitsOnly.startsWith(code) &&
+      digitsOnly.length > code.length + 5,
+  );
+
+  if (startsWithAnotherCountryCode) return false;
+
+  return digitsOnly.length >= 7 && digitsOnly.length <= 12;
+};
+
 const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   personalInfo,
   setPersonalInfo,
@@ -46,6 +106,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
 
   const [isTitleOpen, setIsTitleOpen] = useState(false);
   const [postcodeError, setPostcodeError] = useState<string | null>(null);
+  const [mobileError, setMobileError] = useState<string | null>(null);
 
   const titles = ["Mr", "Mrs", "Ms", "Dr"];
 
@@ -59,18 +120,33 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
 
   const handleSubmit = () => {
     const postcode = personalInfo.postcode.trim();
+    const mobileNumber = personalInfo.mobleNumber.trim();
+    let hasError = false;
 
     if (!postcode) {
       setPostcodeError("Postcode is required.");
-      return;
-    }
-
-    if (!isValidUKPostcode(postcode)) {
+      hasError = true;
+    } else if (!isValidUKPostcode(postcode)) {
       setPostcodeError("Only valid UK postcode is allowed.");
-      return;
+      hasError = true;
+    } else {
+      setPostcodeError(null);
     }
 
-    setPostcodeError(null);
+    if (!mobileNumber) {
+      setMobileError("Mobile number is required.");
+      hasError = true;
+    } else if (!isValidPhoneForCountry(mobileNumber, selectedCountry.dial_code)) {
+      setMobileError(
+        `Please enter a valid mobile number for ${selectedCountry.name}. If you use international format, start with ${selectedCountry.dial_code}.`,
+      );
+      hasError = true;
+    } else {
+      setMobileError(null);
+    }
+
+    if (hasError) return;
+
     onSubmit();
   };
 
@@ -205,17 +281,30 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
           <div className="shrink-0">
             <CountrySelector
               selectedCountry={selectedCountry}
-              onSelect={setSelectedCountry}
+              onSelect={(country) => {
+                setSelectedCountry(country);
+                if (mobileError) {
+                  setMobileError(null);
+                }
+              }}
             />
           </div>
           <input
             type="tel"
             value={personalInfo.mobleNumber}
-            onChange={(e) => setPersonalInfo("mobleNumber", e.target.value)}
+            onChange={(e) => {
+              setPersonalInfo("mobleNumber", e.target.value);
+              if (mobileError) {
+                setMobileError(null);
+              }
+            }}
             placeholder="e.g. 07700 900000"
             className="h-full min-w-0 flex-1 !rounded-none bg-transparent px-2 text-base text-[#2D3D4D] placeholder:text-[#7D8A98] focus:outline-none"
           />
         </div>
+        {mobileError && (
+          <p className="text-sm font-medium text-red-500">{mobileError}</p>
+        )}
       </div>
 
       {/* Marketing Consent */}

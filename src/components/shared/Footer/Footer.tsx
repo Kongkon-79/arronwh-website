@@ -6,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Mail, MapPin, Phone, Star } from "lucide-react";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaTwitter } from "react-icons/fa";
 import { fetchNavbarLogo, NAVBAR_LOGO_QUERY_KEY } from "../Navbar/navbar-logo-data";
+import { Badge } from "@/components/ui/badge"
+import { FaPoundSign } from "react-icons/fa";
 
 const trustpilotStars = Array.from({ length: 5 });
 
@@ -101,6 +103,9 @@ const Footer = () => {
               </Link>
               <Link href="/terms-and-condition" className="block desc">
                 Terms of Service
+              </Link>
+              <Link href="/refer-a-friend" className="desc flex items-center gap-2">
+                Refer a friend <Badge className="rounded-full px-3 py-[2px] ">Get <FaPoundSign/>250</Badge>
               </Link>
             </div>
           </div>
