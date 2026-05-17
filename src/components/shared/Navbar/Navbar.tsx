@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -8,20 +8,23 @@ import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import HelpContainer from "@/app/(website)/helps/_components.tsx/help-container";
-import {
-  fetchNavbarLogo,
-  NAVBAR_LOGO_QUERY_KEY,
-} from "./navbar-logo-data";
+import { fetchNavbarLogo, NAVBAR_LOGO_QUERY_KEY } from "./navbar-logo-data";
 
 const navItems = [
   { label: "Boiler", href: "/#heating", activeKey: "boiler" },
   { label: "How it works", href: "/#how-it-works", activeKey: "how-it-works" },
   { label: "About us", href: "/about-us", activeKey: "about-us" },
+  { label: "Contact us", href: "/contact-us", activeKey: "contact-us" },
+  {
+    label: "Refer a friend",
+    href: "/refer-a-friend",
+    activeKey: "refer-a-friend",
+  },
 ];
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const pathname = usePathname(); 
+  const pathname = usePathname();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const { data: logo, isLoading: isLogoLoading } = useQuery({
     queryKey: NAVBAR_LOGO_QUERY_KEY,
@@ -30,7 +33,7 @@ const Navbar = () => {
   const logoSrc = logo?.image?.trim() || "/assets/images/navlogo.png";
 
   const isActiveLink = (href: string) => {
-    return pathname === href || pathname.startsWith(href); 
+    return pathname === href || pathname.startsWith(href);
   };
 
   return (
@@ -63,9 +66,7 @@ const Navbar = () => {
                 key={item.label}
                 href={item.href}
                 className={`text-sm md:text-base font-medium text-[#2D3D4D] leading-normal transition duration-300 ${
-                  isActiveLink(item.href)
-                    ? " text-black"
-                    : "border-transparent"
+                  isActiveLink(item.href) ? " text-black" : "border-transparent"
                 }`}
               >
                 {item.label}
@@ -79,7 +80,7 @@ const Navbar = () => {
               <SheetTrigger asChild>
                 <button
                   type="button"
-                    className="px-4 py-2 bg-transparent border border-[#2D3D4D] font-medium rounded-[8px] text-[#2D3D4D] text-base leading-normal flex items-center gap-2 hover:bg-primary hover:text-[#2D3D4D] transition duration-300"
+                  className="px-4 py-2 bg-transparent border border-[#2D3D4D] font-medium rounded-[8px] text-[#2D3D4D] text-base leading-normal flex items-center gap-2 hover:bg-primary hover:text-[#2D3D4D] transition duration-300"
                 >
                   Help <MessageCircleQuestionMark className="w-5 h-5" />
                 </button>
@@ -118,9 +119,7 @@ const Navbar = () => {
                 key={item.label}
                 href={item.href}
                 className={`block py-2 text-sm md:text-base font-medium text-[#2D3D4D] leading-normal transition duration-300 ${
-                  isActiveLink(item.href)
-                    ? " text-black"
-                    : "border-transparent"
+                  isActiveLink(item.href) ? " text-black" : "border-transparent"
                 }`}
                 onClick={() => setIsOpen(false)}
               >
@@ -157,5 +156,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
-
