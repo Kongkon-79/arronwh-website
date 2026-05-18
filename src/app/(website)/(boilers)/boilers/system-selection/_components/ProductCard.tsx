@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -18,6 +18,50 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCustomerDetailsPageUrl, sendQuoteEmail } from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-email";
+
+type UpdateQuoteProductResponse = {
+  success?: boolean;
+  status?: boolean;
+  message?: string;
+};
+
+function resolveQuoteEndpoint(): string {
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return `${process.env.NEXT_PUBLIC_API_BASE_URL}/quote`;
+  }
+  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/quote`;
+  }
+  return "/quote";
+}
+
+async function updateQuoteProduct({
+  quoteId,
+  productId,
+}: {
+  quoteId: string;
+  productId: string;
+}): Promise<UpdateQuoteProductResponse> {
+  const response = await fetch(`${resolveQuoteEndpoint()}/${encodeURIComponent(quoteId)}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      productId,
+    }),
+  });
+  console.log(productId)
+
+  const result = (await response.json().catch(() => null)) as UpdateQuoteProductResponse | null;
+  const hasExplicitFailure = result?.success === false || result?.status === false;
+
+  if (!response.ok || hasExplicitFailure) {
+    throw new Error(result?.message || "Failed to update selected product.");
+  }
+
+  return result ?? {};
+}
 
 export type ProductSpec = {
   label: string;
@@ -88,16 +132,24 @@ const formatBoilerAbilityShort = (value: string) => {
   return parts.slice(-2).join(" ");
 };
 
-export function ProductCard({ product }: { product: ProductItem }) {
+export function ProductCard({
+  product,
+  quoteId,
+}: {
+  product: ProductItem;
+  quoteId: string | null;
+}) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [activeImage, setActiveImage] = useState(0);
   const [isFinanceCalculatorOpen, setIsFinanceCalculatorOpen] = useState(false);
   const { mutateAsync: mutateEmailQuote, isPending: isEmailingQuote } = useMutation({
     mutationKey: ["email-quote", String(product.id)],
     mutationFn: sendQuoteEmail,
   });
-  const quoteId = searchParams.get("quoteId");
+  const { mutateAsync: mutateQuoteProduct, isPending: isUpdatingQuoteProduct } = useMutation({
+    mutationKey: ["update-quote-product", quoteId, String(product.id)],
+    mutationFn: updateQuoteProduct,
+  });
   const payTodayPrice = product.payablePriceValue ?? product.priceValue ?? 0;
   const activeImageSrc = product.images[activeImage] || product.images[0] || "/product.png";
   const headingTitle = product.boilerAbility || product.title;
@@ -110,12 +162,25 @@ export function ProductCard({ product }: { product: ProductItem }) {
     setActiveImage((prev) => (prev + 1) % product.images.length);
   };
 
-  const handleChooseProduct = () => {
+  const handleChooseProduct = async () => {
+    if (!quoteId) {
+      toast.error("Quote ID not found. Please start again.");
+      return;
+    }
+
+    try {
+      await mutateQuoteProduct({
+        quoteId,
+        productId: String(product.id),
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update selected product.");
+      return;
+    }
+
     const params = new URLSearchParams();
     params.set("productId", String(product.id));
-    if (quoteId) {
-      params.set("quoteId", quoteId);
-    }
+    params.set("quoteId", quoteId);
 
     router.push(`/boilers/system-selection/controller?${params.toString()}`);
   };
@@ -311,10 +376,11 @@ export function ProductCard({ product }: { product: ProductItem }) {
               </button>
             </div>
             <Button
+              disabled={isUpdatingQuoteProduct}
               className="mt-4 h-[46px] w-full rounded-[6px] bg-[#00A56F] text-[15px] sm:text-[16px] font-medium text-white hover:bg-[#009562]"
               onClick={handleChooseProduct}
             >
-              Choose
+              {isUpdatingQuoteProduct ? "Choosing..." : "Choose"}
             </Button>
 
             <Button
