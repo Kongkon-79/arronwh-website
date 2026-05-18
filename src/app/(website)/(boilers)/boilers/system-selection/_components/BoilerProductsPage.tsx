@@ -241,7 +241,8 @@ const toProductCardItem = (
 export default function BoilerProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const quoteId = searchParams.get("quoteId");
+  const storedQuoteId = usePropertyOverviewStore((state) => state.quoteId);
+  const quoteId = searchParams.get("quoteId") ?? storedQuoteId;
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const { data: quote, isLoading: isQuoteLoading } = useQuoteById(quoteId);
 
@@ -315,7 +316,9 @@ export default function BoilerProductsPage() {
                 {error instanceof Error ? error.message : "Failed to load products."}
               </div>
             ) : products.length ? (
-              products.map((product) => <ProductCard key={product.id} product={product} />)
+              products.map((product) => (
+                <ProductCard key={product.id} product={product} quoteId={quoteId} />
+              ))
             ) : (
               <div className="rounded-[8px] border border-[#E5E7EB] bg-white p-5 text-[15px] text-[#2D3D4D]">
                 No products available right now.

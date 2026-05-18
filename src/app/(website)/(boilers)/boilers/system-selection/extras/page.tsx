@@ -232,7 +232,7 @@ function ExtrasPageContent() {
     ? [
         {
           label: product.boilerAbility || product.title,
-          value: formatMoney(product.price ?? 0),
+          value: formatMoney(product.payablePrice ?? product.price ?? 0),
           highlight: false,
         },
         { label: "View details", value: "", highlight: true, onClick: handleViewDetails },

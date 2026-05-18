@@ -157,7 +157,11 @@ function ChooseControlsPage() {
   // Build dynamic quote items from API data
   const quoteItems: QuoteItem[] = product
     ? [
-        { label: product.boilerAbility || product.title, value: formatMoney(product.price), highlight: false },
+        {
+          label: product.boilerAbility || product.title,
+          value: formatMoney(product.payablePrice ?? product.price ?? 0),
+          highlight: false,
+        },
         { label: "View details", value: "", highlight: true, onClick: handleViewDetails },
         ...(selectedController
           ? [
