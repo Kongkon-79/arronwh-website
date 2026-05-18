@@ -1,7 +1,10 @@
-import React from 'react'
+"use client"
+
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ArrowRight } from 'lucide-react'
+import { RaiseIssueModal } from './raise-issue-modal'
 
 type ContactCard = {
   title: string
@@ -48,6 +51,8 @@ const contactCards: ContactCard[] = [
 ]
 
 const ContactUsHero = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
   return (
     <section className="bg-[#dfe1e3] px-4 pb-10 pt-12 md:pb-12 md:pt-14">
       <div className="container">
@@ -82,6 +87,7 @@ const ContactUsHero = () => {
                   <div className="mt-auto pt-6 md:pt-8 lg:pt-10 xl:pt-12 2xl:pt-14">
                     <Button
                       type="button"
+                      onClick={() => setIsModalOpen(true)}
                       className="h-9 md:h-10 rounded-full bg-[#db860f] px-6 text-base font-semibold text-white shadow-none hover:bg-[#c1760d]"
                     >
                       {card.cta} <ArrowRight />
@@ -105,6 +111,8 @@ const ContactUsHero = () => {
           ))}
         </div>
       </div>
+
+      <RaiseIssueModal open={isModalOpen} onOpenChange={setIsModalOpen} />
     </section>
   )
 }
