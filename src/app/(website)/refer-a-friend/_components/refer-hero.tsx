@@ -5,7 +5,7 @@ import { Lightbulb } from 'lucide-react'
 const ReferHeroSection = () => {
   return (
     <section className="bg-[#dfe1e3] px-4 py-10 sm:px-6 md:py-14 lg:py-16">
-      <div className="mx-auto grid w-full max-w-[1240px] items-center gap-8 lg:grid-cols-[1fr_420px] lg:gap-10">
+      <div className="container grid w-full  items-center gap-8 lg:grid-cols-[1fr_420px] lg:gap-10">
         <div className="max-w-[700px]">
           <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-medium leading-[1.06] tracking-[-0.02em] text-[#161b22] ">
             Refer friends.
@@ -61,7 +61,7 @@ const ReferHeroSection = () => {
               alt="Happy customer holding money"
               width={700}
               height={724}
-              className="object-conver w-full h-[320px] md:h-[350px]"
+              className="object-conver w-full h-[300px] md:h-[420px]"
             />
         </div>
       </div>
