@@ -4,9 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Mail, MapPin, Phone, Star } from "lucide-react";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaTwitter } from "react-icons/fa";
-import { fetchNavbarLogo, NAVBAR_LOGO_QUERY_KEY } from "../Navbar/navbar-logo-data";
-import { Badge } from "@/components/ui/badge"
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+  FaTwitter,
+} from "react-icons/fa";
+import {
+  fetchNavbarLogo,
+  NAVBAR_LOGO_QUERY_KEY,
+} from "../Navbar/navbar-logo-data";
+import { Badge } from "@/components/ui/badge";
 import { FaPoundSign } from "react-icons/fa";
 
 const trustpilotStars = Array.from({ length: 5 });
@@ -42,7 +50,9 @@ const Footer = () => {
 
             <div className="mt-2">
               <div className="flex items-center gap-2 ">
-                <span className="text-[#00A56F]"><Star className="fill-current"/></span>
+                <span className="text-[#00A56F]">
+                  <Star className="fill-current" />
+                </span>
                 <span className="desc">Trustpilot</span>
               </div>
 
@@ -57,9 +67,7 @@ const Footer = () => {
                 ))}
               </div>
 
-              <p className="mt-2 desc">
-                4.8 in 56,714 reviews
-              </p>
+              <p className="mt-2 desc">4.8 in 56,714 reviews</p>
             </div>
 
             <p className="mt-2 desc">
@@ -104,8 +112,15 @@ const Footer = () => {
               <Link href="/terms-and-condition" className="block desc">
                 Terms of Service
               </Link>
-              <Link href="/refer-a-friend" className="desc flex items-center gap-2">
-                Refer a friend <Badge className="rounded-full px-3 py-[2px] ">Get <FaPoundSign/>250</Badge>
+              <Link
+                href="/refer-a-friend"
+                className="desc flex items-center gap-2"
+              >
+                Refer a friend{" "}
+                <Badge className="rounded-full px-3 py-[2px] ">
+                  Get <FaPoundSign />
+                  250
+                </Badge>
               </Link>
             </div>
           </div>
@@ -123,7 +138,9 @@ const Footer = () => {
 
               <div className="flex items-center gap-3 desc">
                 <Mail className="h-4 w-4 text-[#334155]" />
-                <Link href="mailto:hello@yoloheat.co.uk">hello@yoloheat.co.uk</Link>
+                <Link href="mailto:hello@yoloheat.co.uk">
+                  hello@yoloheat.co.uk
+                </Link>
               </div>
 
               <div className="flex items-start gap-3 desc">
@@ -134,7 +151,8 @@ const Footer = () => {
 
             <div className="mt-5 flex items-center gap-2">
               <Link
-                href="/"
+                target="_blank"
+                href="https://www.facebook.com/Yoloheat"
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[#334155] transition-transform hover:-translate-y-0.5"
                 aria-label="Facebook"
               >
@@ -148,7 +166,8 @@ const Footer = () => {
                 <FaTwitter className="h-4 w-4" />
               </Link>
               <Link
-                href="/"
+                target="_blank"
+                href="https://www.instagram.com/yolo.heat"
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[#334155] transition-transform hover:-translate-y-0.5"
                 aria-label="Instagram"
               >
