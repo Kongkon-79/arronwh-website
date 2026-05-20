@@ -169,7 +169,7 @@ const HeroSection = () => {
              <div className="mt-6">
               <Link href="boilers/property-overview">
                 <button className="px-6 py-[10px] bg-black text-white rounded-full hover:scale-105 transition-all duration-300">
-                  Fix my price
+                  Get quote
                 </button>
               </Link>
              </div>

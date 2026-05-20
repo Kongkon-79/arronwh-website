@@ -1,64 +1,73 @@
-"use client"
+"use client";
 
-import React, { FormEvent, useState } from 'react'
-import Image from 'next/image'
-import { Lightbulb } from 'lucide-react'
-import { useMutation } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import React, { FormEvent, useState } from "react";
+import Image from "next/image";
+import { Lightbulb } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 type NewsletterResponse = {
-  success: boolean
-  message?: string
-}
+  success: boolean;
+  message?: string;
+};
 
 const ReferHeroSection = () => {
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState("");
 
   const { mutate, isPending } = useMutation({
     mutationKey: ["refer-newsletter"],
-    mutationFn: async (payload: { email: string }): Promise<NewsletterResponse> => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/newslatter`, {
-        method: "POST",
-        headers: {
-          accept: "*/*",
-          "Content-Type": "application/json",
+    mutationFn: async (payload: {
+      email: string;
+    }): Promise<NewsletterResponse> => {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/newslatter`,
+        {
+          method: "POST",
+          headers: {
+            accept: "*/*",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      })
+      );
 
-      const data = await res.json().catch(() => null)
+      const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(data?.message || "Failed to submit email")
+        throw new Error(data?.message || "Failed to submit email");
       }
 
-      return data
+      return data;
     },
     onSuccess: (data) => {
       if (!data?.success) {
-        toast.error(data?.message || "Something went wrong")
-        return
+        toast.error(data?.message || "Something went wrong");
+        return;
       }
 
-      toast.success(data?.message || "Newslatter created successfully")
-      setEmail("")
+      toast.success(data?.message || "Newslatter created successfully");
+      setEmail("");
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Unable to submit. Please try again.")
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to submit. Please try again.",
+      );
     },
-  })
+  });
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    const trimmedEmail = email.trim()
+    const trimmedEmail = email.trim();
     if (!trimmedEmail) {
-      toast.error("Please enter your email address")
-      return
+      toast.error("Please enter your email address");
+      return;
     }
 
-    mutate({ email: trimmedEmail })
-  }
+    mutate({ email: trimmedEmail });
+  };
 
   return (
     <section className="bg-[#dfe1e3] px-4 py-10 sm:px-6 md:py-14 lg:py-16">
@@ -71,8 +80,8 @@ const ReferHeroSection = () => {
           </h1>
 
           <p className="mt-5 max-w-[560px] leading-[1.4] text-[#222932] text-base lg:text-lg font-medium">
-            Refer a friend or family member to Yolo heat - they&apos;ll save on their new boiler, and
-            you&apos;ll get rewarded too.
+            Refer a friend or family member to Yolo heat - they&apos;ll save on
+            their new boiler, and you&apos;ll get rewarded too.
           </p>
 
           <label
@@ -82,7 +91,10 @@ const ReferHeroSection = () => {
             Enter your email address <span className="text-[#d72638]">*</span>
           </label>
 
-          <form onSubmit={handleSubmit} className="mt-2 flex w-full md:max-w-[580px]">
+          <form
+            onSubmit={handleSubmit}
+            className="mt-2 flex w-full md:max-w-[580px]"
+          >
             <input
               id="refer-email"
               type="email"
@@ -103,13 +115,17 @@ const ReferHeroSection = () => {
           </form>
 
           <div className="mt-4 flex w-full max-w-[580px] items-start gap-2 rounded-[8px] border border-[#e3d291] bg-[#f3e4a8] px-4 py-3 text-sm lg:text-base font-medium leading-[1.4] text-[#212734]">
-            <Lightbulb className="mt-[1px] h-6 w-6 shrink-0" strokeWidth={2.3} />
+            <Lightbulb
+              className="mt-[1px] h-6 w-6 shrink-0"
+              strokeWidth={2.3}
+            />
             <p>
-              Use the same email address linked to your original order. Need help? call{' '}
+              Use the same email address linked to your original order. Need
+              help? call{" "}
               <a className="underline" href="tel:07947125922">
                 07947 125922
-              </a>{' '}
-              or email{' '}
+              </a>{" "}
+              or email{" "}
               <a className="underline" href="mailto:hello@yoloheat.com">
                 hello@yoloheat.com
               </a>
@@ -119,16 +135,17 @@ const ReferHeroSection = () => {
 
         <div className="mx-auto w-full max-w-[420px] lg:justify-self-end">
           <Image
-              src="/assets/images/refer-hero.png"
-              alt="Happy customer holding money"
-              width={700}
-              height={724}
-              className="object-conver w-full h-[300px] md:h-[420px]"
-            />
+            src="/assets/images/refer-hero.png"
+            alt="Happy customer holding money"
+            width={700}
+            height={724}
+            className="w-full h-auto object-cover"
+            priority
+          />
         </div>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default ReferHeroSection
+export default ReferHeroSection;

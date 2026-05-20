@@ -124,7 +124,7 @@ const HowItWorks = () => {
                           alt={step.title}
                           width={600}
                           height={420}
-                          className="h-[200px] md:h-[300px] w-[300px] object-contain "
+                          className="h-[200px] md:h-[300px] w-full md:w-[300px] object-cover md:object-contain"
                         />
                       ) : (
                         <div className="h-[300px] w-[300px] rounded-[16px] bg-[#DDE4EC]" />
