@@ -22,7 +22,7 @@ const Hero = () => {
             asChild
             className="mt-3 lg:mt-4 h-10 md:h-11 rounded-[8px] bg-[#00A56F] px-6 text-sm md:text-base font-medium leading-normal text-white hover:bg-[#059460]"
           >
-            <Link href="/boilers/property-overview">Finish Quote</Link>
+            <Link href="/boilers/property-overview">Get quote</Link>
           </Button>
         </div>
       </div>
