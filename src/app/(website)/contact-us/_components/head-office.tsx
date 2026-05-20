@@ -4,7 +4,7 @@ import Image from "next/image";
 const HeadOffice = () => {
   return (
     <section className="relative bg-[#dfe1e3] px-4 pb-10 pt-3 md:pb-14">
-      <div className="absolute left-4 bottom-24 hidden text-[#20242b] md:block">
+      {/* <div className="absolute left-4 bottom-24 hidden text-[#20242b] md:block">
         <Image
           src="/assets/images/robot.png"
           alt="robot"
@@ -12,7 +12,7 @@ const HeadOffice = () => {
           height={524}
           className="object-contain w-full h-[100px] md:h-[110px]"
         />
-      </div>
+      </div> */}
       <div className="container">
         <article className="relative h-[300px] md:h-[360px] lg:h-[420px] overflow-hidden rounded-[18px]">
           <Image
