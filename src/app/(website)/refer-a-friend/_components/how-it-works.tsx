@@ -1,7 +1,7 @@
 import React from "react";
 import { Handshake, MousePointerClick, SquarePen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import Image from "next/image";
+// import Image from "next/image";
 
 type Step = {
   id: string;
@@ -36,8 +36,8 @@ const steps: Step[] = [
 
 const ReferHowItWorks = () => {
   return (
-    <section className="relative bg-[#dfe1e3] px-4 pb-14 pt-8 sm:px-6 md:pt-10">
-      <div className="absolute left-4 top-8 hidden text-[#20242b] md:block">
+    <section className="bg-[#dfe1e3] px-4 pb-14 pt-8 sm:px-6 md:pt-10">
+      {/* <div className="absolute left-4 top-8 hidden text-[#20242b] md:block">
         <Image
           src="/assets/images/robot.png"
           alt="robot"
@@ -45,7 +45,7 @@ const ReferHowItWorks = () => {
           height={524}
           className="object-contain w-full h-[100px] md:h-[110px]"
         />
-      </div>
+      </div> */}
 
       <div className="container">
         <h2 className="text-center text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-medium leading-none tracking-[-0.02em] text-[#1a2029]">
