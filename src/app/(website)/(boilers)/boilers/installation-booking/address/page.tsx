@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -26,26 +26,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-type PostcodeApiResponse = {
-  statusCode?: number;
-  success?: boolean;
-  status?: boolean;
-  message?: string;
-  errorSources?: Array<{
-    path?: string;
-    message?: string;
-  }>;
-  data?:
-    | {
-        postcode?: string;
-        locations?: string[];
-        addresses?: string[];
-        total?: number;
-      }
-    | string[]
-    | null;
-};
-
 type UpdateInstallAddressResponse = {
   success?: boolean;
   status?: boolean;
@@ -60,72 +40,6 @@ function resolveQuoteEndpoint() {
     return `${process.env.NEXT_PUBLIC_BACKEND_URL}/quote`;
   }
   return "/quote";
-}
-
-function resolvePostcodeEndpoint() {
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return `${process.env.NEXT_PUBLIC_API_BASE_URL}/postcode`;
-  }
-  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
-    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/postcode`;
-  }
-  return "/api/v1/postcode";
-}
-
-function normalizeLocationList(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-
-  return value
-    .filter((item): item is string => typeof item === "string")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function extractLocationsFromPostcodeResponse(result: PostcodeApiResponse | null): string[] {
-  const data = result?.data;
-
-  if (Array.isArray(data)) {
-    return normalizeLocationList(data);
-  }
-
-  if (!data || typeof data !== "object") {
-    return [];
-  }
-
-  const objectData = data as Record<string, unknown>;
-  const addresses = normalizeLocationList(objectData.addresses);
-  if (addresses.length > 0) {
-    return addresses;
-  }
-
-  return normalizeLocationList(objectData.locations);
-}
-
-async function fetchPostcodeLocations(postcode: string): Promise<string[]> {
-  const normalizedPostcode = postcode.trim();
-
-  if (!normalizedPostcode) {
-    return [];
-  }
-
-  const response = await fetch(
-    `${resolvePostcodeEndpoint()}/${encodeURIComponent(normalizedPostcode)}/addresses`
-  );
-
-  const result = (await response.json().catch(() => null)) as PostcodeApiResponse | null;
-  const hasExplicitFailure = result?.success === false || result?.status === false;
-
-  if (!response.ok || hasExplicitFailure) {
-    const firstErrorMessage = result?.errorSources?.find(
-      (source) => typeof source?.message === "string" && source.message.trim()
-    )?.message;
-
-    throw new Error(
-      firstErrorMessage || result?.message || "Failed to fetch postcode locations."
-    );
-  }
-
-  return extractLocationsFromPostcodeResponse(result);
 }
 
 async function updateQuoteInstallAddress({
@@ -404,41 +318,92 @@ function CollapsedStep({
   );
 }
 
+function AddressPageSkeletonContent() {
+  return (
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
+      <section className="space-y-4">
+        <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4 animate-pulse">
+          <div className="mx-auto h-7 w-72 max-w-full rounded bg-[#F0F3F6]" />
+          <div className="mx-auto mt-2 h-5 w-[85%] rounded bg-[#F0F3F6]" />
+        </div>
+
+        {Array.from({ length: 2 }).map((_, index) => (
+          <div
+            key={`address-step-skeleton-${index}`}
+            className="h-[70px] w-full rounded-[8px] bg-white shadow-sm animate-pulse"
+          />
+        ))}
+
+        <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4 animate-pulse">
+          <div className="mx-auto h-6 w-56 rounded bg-[#F0F3F6]" />
+          <div className="mx-auto mt-3 h-5 w-[70%] rounded bg-[#F0F3F6]" />
+          <div className="mt-5 h-5 w-44 rounded bg-[#E2E8F0]" />
+          <div className="mt-2 h-4 w-[82%] rounded bg-[#E2E8F0]" />
+          <div className="mt-4 min-h-[136px] rounded-[6px] border border-[#D5DCE3] bg-white px-4 py-4 sm:min-h-[138px]">
+            <div className="h-10 rounded-[6px] bg-[#F0F3F6]" />
+            <div className="mt-3 h-10 rounded-[6px] bg-[#F0F3F6]" />
+          </div>
+          <div className="mx-auto mt-5 h-5 w-44 rounded bg-[#E2E8F0]" />
+          <div className="mt-5 h-4 w-full rounded bg-[#F0F3F6]" />
+          <div className="mt-2 h-4 w-[70%] rounded bg-[#F0F3F6]" />
+          <div className="mt-4 h-[48px] w-full rounded-[4px] bg-[#00A56F]/30" />
+        </div>
+
+        <div className="h-[70px] w-full rounded-[8px] bg-white shadow-sm animate-pulse" />
+
+        <div className="space-y-2 pt-2 animate-pulse">
+          <div className="h-4 w-full rounded bg-[#DDE4EC]" />
+          <div className="h-4 w-[92%] rounded bg-[#DDE4EC]" />
+          <div className="h-4 w-[80%] rounded bg-[#DDE4EC]" />
+        </div>
+      </section>
+
+      <aside className="h-fit rounded-[8px] bg-white p-3 shadow-sm xl:sticky xl:top-5 animate-pulse">
+        <div className="h-6 w-60 rounded bg-[#F0F3F6]" />
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="h-24 rounded-[6px] bg-[#F0F3F6]" />
+          <div className="h-24 rounded-[6px] bg-[#F0F3F6]" />
+        </div>
+        <div className="mt-3 h-9 rounded-[6px] bg-[#F0F3F6]" />
+        <div className="mt-3 h-28 rounded-[6px] bg-[#F0F3F6]" />
+      </aside>
+    </div>
+  );
+}
+
+function AddressPageSkeleton() {
+  return (
+    <BoilerFlowShell activeStep={4}>
+      <div className="py-12">
+        <div className="mx-auto container">
+          <AddressPageSkeletonContent />
+        </div>
+      </div>
+    </BoilerFlowShell>
+  );
+}
+
 function AddressStep({
   postcode,
+  installAddress,
   onManualAddressClick,
   onSubmitInstallAddress,
   isSubmittingInstallAddress,
 }: {
   postcode: string;
+  installAddress: string;
   onManualAddressClick: () => void;
   onSubmitInstallAddress: (installAddress: string | null) => void;
   isSubmittingInstallAddress: boolean;
 }) {
-  const [selectedAddress, setSelectedAddress] = React.useState<string>("");
-
-  const {
-    data: postcodeLocations = [],
-    isLoading: isPostcodeLoading,
-    isError: isPostcodeError,
-    error: postcodeError,
-  } = useQuery({
-    queryKey: ["postcode-locations", postcode],
-    queryFn: () => fetchPostcodeLocations(postcode),
-    enabled: Boolean(postcode.trim()),
-  });
+  const normalizedInstallAddress = installAddress.trim();
+  const [selectedAddress, setSelectedAddress] = React.useState<string>(
+    normalizedInstallAddress
+  );
 
   React.useEffect(() => {
-    if (postcodeLocations.length === 0) {
-      setSelectedAddress("");
-      return;
-    }
-
-    setSelectedAddress((previous) => {
-      if (previous && postcodeLocations.includes(previous)) return previous;
-      return postcodeLocations[0];
-    });
-  }, [postcodeLocations]);
+    setSelectedAddress(normalizedInstallAddress);
+  }, [normalizedInstallAddress]);
 
   return (
     <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4">
@@ -459,40 +424,27 @@ function AddressStep({
         </label>
 
         <p className="mt-1 text-[14px] leading-5 text-[#2D3D4D]">
-          You already told us your postcode ({postcode || "N/A"}). Choose your location from the list.
+          You already told us your postcode ({postcode || "N/A"}). Confirm your installation address below.
         </p>
 
         <div className="mt-4 min-h-[136px] rounded-[6px] border border-[#94A3B8] bg-white px-4 py-4 sm:min-h-[138px]">
-          {isPostcodeLoading ? (
-            <p className="text-[14px] text-[#2D3D4D]">
-              Loading locations for postcode {postcode}...
-            </p>
-          ) : isPostcodeError ? (
-            <p className="text-[14px] text-red-500">
-              {postcodeError instanceof Error
-                ? postcodeError.message
-                : "Failed to load postcode locations."}
-            </p>
-          ) : postcodeLocations.length > 0 ? (
+          {normalizedInstallAddress ? (
             <div className="space-y-2">
-              {postcodeLocations.map((location, index) => (
-                <button
-                  key={`${location}-${index}`}
-                  type="button"
-                  onClick={() => setSelectedAddress(location)}
-                  className={`block w-full rounded-[6px] px-3 py-2 text-left text-[14px] transition ${
-                    selectedAddress === location
-                      ? "bg-[#00A56F] font-medium text-white"
-                      : "bg-transparent text-[#2D3D4D] hover:bg-[#F0F3F6]"
-                  }`}
-                >
-                  {location}
-                </button>
-              ))}
+              <button
+                type="button"
+                onClick={() => setSelectedAddress(normalizedInstallAddress)}
+                className={`block w-full rounded-[6px] px-3 py-2 text-left text-[14px] transition ${
+                  selectedAddress === normalizedInstallAddress
+                    ? "bg-[#00A56F] font-medium text-white"
+                    : "bg-transparent text-[#2D3D4D] hover:bg-[#F0F3F6]"
+                }`}
+              >
+                {normalizedInstallAddress}
+              </button>
             </div>
           ) : (
             <p className="text-[14px] text-[#2D3D4D]">
-              No location found for this postcode.
+              No installation address found. Please enter your address manually.
             </p>
           )}
         </div>
@@ -649,8 +601,9 @@ function BoilerAddressPageContent() {
   );
 
   const postcode = extractPostcode(quote);
+  const installAddress = extractInstallAddressLabel(quote);
 
-  const installedAtLabel = extractInstallAddressLabel(quote) || "Not selected";
+  const installedAtLabel = installAddress || "Not selected";
 
   const handleSubmitInstallAddress = React.useCallback(
     async (installAddress: string | null) => {
@@ -681,9 +634,7 @@ function BoilerAddressPageContent() {
       <div className="py-12">
         <div className="mx-auto container">
           {isLoading ? (
-            <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">
-              Loading address page...
-            </div>
+            <AddressPageSkeletonContent />
           ) : !product ? (
             <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">
               Product details not found. Please go back and select your boiler again.
@@ -701,6 +652,7 @@ function BoilerAddressPageContent() {
 
                 <AddressStep
                   postcode={postcode}
+                  installAddress={installAddress}
                   onManualAddressClick={handleManualAddressClick}
                   onSubmitInstallAddress={handleSubmitInstallAddress}
                   isSubmittingInstallAddress={isUpdatingInstallAddress}
@@ -730,7 +682,7 @@ function BoilerAddressPageContent() {
 
 export default function BoilerAddressPage() {
   return (
-    <React.Suspense fallback={null}>
+    <React.Suspense fallback={<AddressPageSkeleton />}>
       <BoilerAddressPageContent />
     </React.Suspense>
   );

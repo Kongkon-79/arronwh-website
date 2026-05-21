@@ -155,110 +155,6 @@ function toUniqueLabel(parts: unknown[]): string {
   return uniqueParts.join(", ");
 }
 
-function normalizeLocationPart(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function parsePostcodesIoLocationLabel(payload: unknown): string {
-  if (!payload || typeof payload !== "object") return "";
-  const response = payload as Record<string, unknown>;
-  if (response.status !== 200) return "";
-
-  const resultRaw = response.result;
-  if (!resultRaw || typeof resultRaw !== "object") return "";
-  const result = resultRaw as Record<string, unknown>;
-
-  const area = normalizeLocationPart(result.admin_district) || normalizeLocationPart(result.admin_ward);
-  const city =
-    normalizeLocationPart(result.parish) ||
-    normalizeLocationPart(result.admin_district) ||
-    normalizeLocationPart(result.admin_ward);
-  const region = normalizeLocationPart(result.region) || normalizeLocationPart(result.admin_county);
-  const country = normalizeLocationPart(result.country);
-
-  return toUniqueLabel([area, city, region, country]);
-}
-
-function parseNominatimLocationLabel(payload: unknown): string {
-  if (!Array.isArray(payload) || payload.length === 0) return "";
-  const first = payload[0];
-  if (!first || typeof first !== "object") return "";
-
-  const firstRecord = first as Record<string, unknown>;
-  const addressRaw = firstRecord.address;
-  if (!addressRaw || typeof addressRaw !== "object") return "";
-  const address = addressRaw as Record<string, unknown>;
-
-  const area =
-    normalizeLocationPart(address.suburb) ||
-    normalizeLocationPart(address.neighbourhood) ||
-    normalizeLocationPart(address.quarter) ||
-    normalizeLocationPart(address.village) ||
-    normalizeLocationPart(address.town) ||
-    normalizeLocationPart(address.city_district);
-  const city =
-    normalizeLocationPart(address.city) ||
-    normalizeLocationPart(address.town) ||
-    normalizeLocationPart(address.village) ||
-    normalizeLocationPart(address.municipality) ||
-    normalizeLocationPart(address.county);
-  const region = normalizeLocationPart(address.state) || normalizeLocationPart(address.region);
-  const country = normalizeLocationPart(address.country);
-
-  return toUniqueLabel([area, city, region, country]);
-}
-
-async function fetchPostcodeLocationLabel(postcode: string): Promise<string> {
-  const normalizedPostcode = postcode.trim();
-  if (!normalizedPostcode) return "";
-  const isNumericPostcode = /^\d{4,6}$/.test(normalizedPostcode);
-
-  const sources: Array<{
-    url: string;
-    parser: (payload: unknown) => string;
-  }> = [
-    ...(isNumericPostcode
-      ? [
-          {
-            url: `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&countrycodes=bd&q=${encodeURIComponent(normalizedPostcode)}`,
-            parser: parseNominatimLocationLabel,
-          },
-          {
-            url: `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&q=${encodeURIComponent(`${normalizedPostcode} Dhaka Bangladesh`)}`,
-            parser: parseNominatimLocationLabel,
-          },
-        ]
-      : []),
-    {
-      url: `https://api.postcodes.io/postcodes/${encodeURIComponent(normalizedPostcode)}`,
-      parser: parsePostcodesIoLocationLabel,
-    },
-    {
-      url: `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&postalcode=${encodeURIComponent(normalizedPostcode)}`,
-      parser: parseNominatimLocationLabel,
-    },
-    {
-      url: `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&q=${encodeURIComponent(normalizedPostcode)}`,
-      parser: parseNominatimLocationLabel,
-    },
-  ];
-
-  for (const source of sources) {
-    try {
-      const response = await fetch(source.url);
-      if (!response.ok) continue;
-
-      const payload = await response.json().catch(() => null);
-      const label = source.parser(payload);
-      if (label) return label;
-    } catch {
-      continue;
-    }
-  }
-
-  return "";
-}
-
 function extractPostcode(quote: ApiQuote | null | undefined): string {
   if (!quote) return "";
   const quoteRecord = quote as unknown as Record<string, unknown>;
@@ -305,8 +201,9 @@ function extractAddressOptions(quote: ApiQuote | null | undefined): string[] {
     });
   };
 
-  addIfString(quoteRecord.address);
+  addIfString(quoteRecord.installAddress);
   addIfString(quoteRecord.installationAddress);
+  addIfString(personalInfo?.installAddress);
   addIfString(personalInfo?.address);
   addIfString(personalInfo?.fullAddress);
   addIfString(personalInfo?.location);
@@ -391,6 +288,8 @@ function extractFormDefaults(quote: ApiQuote | null | undefined): ManualAddressF
     sureName: firstNonEmptyString(personalInfo?.sureName, personalInfo?.surname, personalInfo?.lastName, quoteRecord.sureName),
     email: firstNonEmptyString(personalInfo?.email, quoteRecord.email),
     address: firstNonEmptyString(
+      quoteRecord.installAddress,
+      personalInfo?.installAddress,
       personalInfo?.address,
       personalInfo?.fullAddress,
       quoteRecord.installationAddress,
@@ -543,6 +442,82 @@ function CollapsedStep({
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return <label className="mb-1 block text-[16px] font-medium text-[#2f3b4a]">{children}</label>;
+}
+
+function ManualAddressPageSkeletonContent() {
+  return (
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
+      <section className="space-y-4">
+        <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4 animate-pulse">
+          <div className="mx-auto h-7 w-72 max-w-full rounded bg-[#F0F3F6]" />
+          <div className="mx-auto mt-2 h-5 w-[85%] rounded bg-[#F0F3F6]" />
+        </div>
+
+        {Array.from({ length: 2 }).map((_, index) => (
+          <div
+            key={`manual-address-step-skeleton-${index}`}
+            className="h-[70px] w-full rounded-[8px] bg-white shadow-sm animate-pulse"
+          />
+        ))}
+
+        <div className="rounded-[10px] bg-white px-4 py-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-[#e8eaed] sm:px-6 animate-pulse">
+          <div className="mx-auto h-6 w-56 rounded bg-[#F0F3F6]" />
+          <div className="mx-auto mt-3 h-5 w-[70%] rounded bg-[#F0F3F6]" />
+          <div className="mt-5 h-5 w-44 rounded bg-[#E2E8F0]" />
+          <div className="mt-2 h-4 w-[82%] rounded bg-[#E2E8F0]" />
+          <div className="mt-3 h-[72px] rounded-[6px] bg-[#F0F3F6]" />
+          <div className="mx-auto mt-3 h-5 w-32 rounded bg-[#E2E8F0]" />
+          <div className="mt-5 rounded-[8px] bg-[#F0F3F6] p-4 sm:p-5">
+            <div className="h-5 w-52 rounded bg-[#E2E8F0]" />
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="h-5 rounded bg-[#E2E8F0]" />
+              <div className="h-5 rounded bg-[#E2E8F0]" />
+            </div>
+          </div>
+          <div className="mt-4 h-5 w-28 rounded bg-[#E2E8F0]" />
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <div className="h-[42px] rounded-[2px] bg-[#F0F3F6]" />
+            <div className="h-[42px] rounded-[2px] bg-[#F0F3F6]" />
+            <div className="h-[42px] rounded-[2px] bg-[#F0F3F6]" />
+          </div>
+          <div className="mt-3 h-[42px] rounded-[2px] bg-[#F0F3F6]" />
+          <div className="mt-3 h-[42px] rounded-[2px] bg-[#F0F3F6]" />
+          <div className="mt-3 h-[42px] rounded-[2px] bg-[#F0F3F6]" />
+          <div className="mt-4 h-[48px] w-full rounded-[6px] bg-[#00A56F]/30" />
+        </div>
+
+        <div className="h-[70px] w-full rounded-[8px] bg-white shadow-sm animate-pulse" />
+
+        <div className="space-y-2 pt-2 animate-pulse">
+          <div className="h-4 w-full rounded bg-[#DDE4EC]" />
+          <div className="h-4 w-[92%] rounded bg-[#DDE4EC]" />
+          <div className="h-4 w-[80%] rounded bg-[#DDE4EC]" />
+        </div>
+      </section>
+
+      <aside className="h-fit rounded-[8px] bg-white p-3 shadow-sm xl:sticky xl:top-5 animate-pulse">
+        <div className="h-6 w-60 rounded bg-[#F0F3F6]" />
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="h-24 rounded-[6px] bg-[#F0F3F6]" />
+          <div className="h-24 rounded-[6px] bg-[#F0F3F6]" />
+        </div>
+        <div className="mt-3 h-9 rounded-[6px] bg-[#F0F3F6]" />
+        <div className="mt-3 h-28 rounded-[6px] bg-[#F0F3F6]" />
+      </aside>
+    </div>
+  );
+}
+
+function ManualAddressPageSkeleton() {
+  return (
+    <BoilerFlowShell activeStep={4}>
+      <div className="py-12">
+        <div className="mx-auto container">
+          <ManualAddressPageSkeletonContent />
+        </div>
+      </div>
+    </BoilerFlowShell>
+  );
 }
 
 function ManualAddressFormSection({
@@ -779,8 +754,7 @@ function BoilerAddressDetailsCloneContent() {
   const postcode = extractPostcode(quote);
   const addressOptions = extractAddressOptions(quote);
   const locationLabel = extractLocationLabel(quote);
-  const [postcodeLocationLabel, setPostcodeLocationLabel] = React.useState("");
-  const selectedAddress = (addressOptions[0] ?? postcodeLocationLabel) || locationLabel;
+  const selectedAddress = extractInstallAddressLabel(quote) || addressOptions[0] || locationLabel;
 
   const [form, setForm] = React.useState<ManualAddressForm>({
     rentalProperty: "no",
@@ -807,27 +781,6 @@ function BoilerAddressDetailsCloneContent() {
     });
     setDidPrefill(true);
   }, [didPrefill, quote, selectedAddress]);
-
-  React.useEffect(() => {
-    let active = true;
-    const normalizedPostcode = postcode.trim();
-
-    if (!normalizedPostcode) {
-      setPostcodeLocationLabel("");
-      return () => {
-        active = false;
-      };
-    }
-
-    fetchPostcodeLocationLabel(normalizedPostcode).then((label) => {
-      if (!active) return;
-      setPostcodeLocationLabel(label);
-    });
-
-    return () => {
-      active = false;
-    };
-  }, [postcode]);
 
   const editAddressUrl = React.useMemo(() => {
     const query = searchParams.toString();
@@ -935,7 +888,7 @@ function BoilerAddressDetailsCloneContent() {
       <div className="py-12">
         <div className="mx-auto container">
           {isLoading ? (
-            <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">Loading manual address page...</div>
+            <ManualAddressPageSkeletonContent />
           ) : !product ? (
             <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">
               Product details not found. Please go back and select your boiler again.
@@ -985,7 +938,7 @@ function BoilerAddressDetailsCloneContent() {
 
 export default function BoilerAddressDetailsClone() {
   return (
-    <React.Suspense fallback={null}>
+    <React.Suspense fallback={<ManualAddressPageSkeleton />}>
       <BoilerAddressDetailsCloneContent />
     </React.Suspense>
   );

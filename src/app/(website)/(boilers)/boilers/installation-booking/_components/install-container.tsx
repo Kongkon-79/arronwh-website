@@ -404,6 +404,28 @@ function CalendarCell({
   );
 }
 
+function CalendarSkeletonGrid() {
+  return (
+    <div className="mt-4 sm:mt-5 animate-pulse">
+      <div className="grid grid-cols-7 gap-1.5 sm:gap-x-7 sm:gap-y-3 sm:px-2">
+        {Array.from({ length: 7 }).map((_, index) => (
+          <div
+            key={`calendar-weekday-skeleton-${index}`}
+            className="mx-auto h-4 w-8 rounded bg-[#DDE4EC] sm:w-14"
+          />
+        ))}
+
+        {Array.from({ length: 35 }).map((_, index) => (
+          <div
+            key={`calendar-day-skeleton-${index}`}
+            className="h-[38px] rounded-[8px] bg-white shadow-sm sm:h-[54px] sm:rounded-[6px]"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function InstallSection({
   blockedDateKeys,
   surveyDateKey,
@@ -483,9 +505,7 @@ function InstallSection({
 
       <div className="mt-4 rounded-[12px] bg-[#f0f2f4] px-2 py-3 sm:px-5 sm:py-5">
         <p className="text-center text-[12px] font-medium text-[#374151] sm:text-[13px]">
-          {isBookingDatesLoading
-            ? "Loading installation dates..."
-            : "Already booked dates are marked in red. Saturday selections include +£100."}
+          Already booked dates are marked in red. Saturday selections include +£100.
         </p>
 
         <div className="mt-3 flex items-center justify-center gap-1.5 text-[#2f3b4a] sm:mt-2 sm:gap-3">
@@ -561,48 +581,52 @@ function InstallSection({
           </div>
         ) : null}
 
-        <div className="mt-4 sm:mt-5">
-          <div className="w-full">
-            <div className="grid grid-cols-7 gap-1.5 sm:gap-x-7 sm:gap-y-3 sm:px-2">
-              {weekDays.map((day) => (
-                <div
-                  key={day}
-                  className="text-center text-[10px] font-semibold text-[#374151] sm:text-[16px] sm:font-medium"
-                >
-                  <span className="sm:hidden">{day.slice(0, 3)}</span>
-                  <span className="hidden sm:inline">{day}</span>
-                </div>
-              ))}
+        {isBookingDatesLoading ? (
+          <CalendarSkeletonGrid />
+        ) : (
+          <div className="mt-4 sm:mt-5">
+            <div className="w-full">
+              <div className="grid grid-cols-7 gap-1.5 sm:gap-x-7 sm:gap-y-3 sm:px-2">
+                {weekDays.map((day) => (
+                  <div
+                    key={day}
+                    className="text-center text-[10px] font-semibold text-[#374151] sm:text-[16px] sm:font-medium"
+                  >
+                    <span className="sm:hidden">{day.slice(0, 3)}</span>
+                    <span className="hidden sm:inline">{day}</span>
+                  </div>
+                ))}
 
-              {calendarRows.flat().map((cell, idx) => {
-                const cellDateKey = cell?.day
-                  ? `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-${String(cell.day).padStart(2, "0")}`
-                  : null;
+                {calendarRows.flat().map((cell, idx) => {
+                  const cellDateKey = cell?.day
+                    ? `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-${String(cell.day).padStart(2, "0")}`
+                    : null;
 
-                const isRestrictedBySurveyDate = Boolean(
-                  surveyDateKey && cellDateKey && cellDateKey <= surveyDateKey
-                );
+                  const isRestrictedBySurveyDate = Boolean(
+                    surveyDateKey && cellDateKey && cellDateKey <= surveyDateKey
+                  );
 
-                return (
-                  <CalendarCell
-                    key={idx}
-                    day={cell?.day}
-                    blocked={cell?.blocked}
-                    restrictedBySurveyDate={isRestrictedBySurveyDate}
-                    discount={cell?.discount}
-                    isSelected={selectedDay === cell?.day}
-                    onSelect={setSelectedDay}
-                    onRestrictedSelect={() =>
-                      toast.error(
-                        "Please choose a date after your survey date. Need it earlier? Call us and we will see if we can install sooner."
-                      )
-                    }
-                  />
-                );
-              })}
+                  return (
+                    <CalendarCell
+                      key={idx}
+                      day={cell?.day}
+                      blocked={cell?.blocked}
+                      restrictedBySurveyDate={isRestrictedBySurveyDate}
+                      discount={cell?.discount}
+                      isSelected={selectedDay === cell?.day}
+                      onSelect={setSelectedDay}
+                      onRestrictedSelect={() =>
+                        toast.error(
+                          "Please choose a date after your survey date. Need it earlier? Call us and we will see if we can install sooner."
+                        )
+                      }
+                    />
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       <button
@@ -648,6 +672,70 @@ const bottomAccordions = [
   { icon: MapPin, label: "Where are we visiting?" },
   { icon: CreditCard, label: "How would you like to pay?" },
 ];
+
+export function InstallPageSkeletonContent() {
+  return (
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
+      <section className="space-y-4">
+        <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4 animate-pulse">
+          <div className="mx-auto h-7 w-72 max-w-full rounded bg-[#F0F3F6]" />
+          <div className="mx-auto mt-2 h-5 w-[85%] rounded bg-[#F0F3F6]" />
+        </div>
+
+        <div className="h-[70px] w-full rounded-[8px] bg-white shadow-sm animate-pulse" />
+
+        <div className="rounded-[8px] bg-white p-3 shadow-sm sm:p-4 animate-pulse">
+          <div className="mx-auto h-6 w-56 rounded bg-[#F0F3F6]" />
+          <div className="mx-auto mt-3 h-5 w-[82%] rounded bg-[#F0F3F6]" />
+          <div className="mt-4 rounded-[12px] bg-[#f0f2f4] px-2 py-3 sm:px-5 sm:py-5">
+            <div className="mx-auto h-4 w-[80%] rounded bg-[#DDE4EC] sm:w-[60%]" />
+            <div className="mx-auto mt-3 h-7 w-52 rounded bg-[#DDE4EC]" />
+            <CalendarSkeletonGrid />
+          </div>
+          <div className="mt-4 h-[48px] w-full rounded-[4px] bg-[#00A56F]/30" />
+          <div className="mx-auto mt-3 h-4 w-[70%] rounded bg-[#F0F3F6]" />
+        </div>
+
+        <div className="space-y-4">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <div
+              key={`install-bottom-step-skeleton-${index}`}
+              className="h-[70px] w-full rounded-[8px] bg-white shadow-sm animate-pulse"
+            />
+          ))}
+        </div>
+
+        <div className="space-y-2 pt-2 animate-pulse">
+          <div className="h-4 w-full rounded bg-[#DDE4EC]" />
+          <div className="h-4 w-[92%] rounded bg-[#DDE4EC]" />
+          <div className="h-4 w-[80%] rounded bg-[#DDE4EC]" />
+        </div>
+      </section>
+
+      <aside className="h-fit rounded-[8px] bg-white p-3 shadow-sm xl:sticky xl:top-5 animate-pulse">
+        <div className="h-6 w-60 rounded bg-[#F0F3F6]" />
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="h-24 rounded-[6px] bg-[#F0F3F6]" />
+          <div className="h-24 rounded-[6px] bg-[#F0F3F6]" />
+        </div>
+        <div className="mt-3 h-9 rounded-[6px] bg-[#F0F3F6]" />
+        <div className="mt-3 h-28 rounded-[6px] bg-[#F0F3F6]" />
+      </aside>
+    </div>
+  );
+}
+
+export function InstallPageSkeleton() {
+  return (
+    <BoilerFlowShell activeStep={4}>
+      <div className="py-8 sm:py-12">
+        <div className="mx-auto container">
+          <InstallPageSkeletonContent />
+        </div>
+      </div>
+    </BoilerFlowShell>
+  );
+}
 
 export default function InstallContainer() {
   const router = useRouter();
@@ -805,9 +893,7 @@ export default function InstallContainer() {
       <div className="py-8 sm:py-12">
         <div className="mx-auto container">
           {isLoading ? (
-            <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">
-              Loading installation page...
-            </div>
+            <InstallPageSkeletonContent />
           ) : !product ? (
             <div className="rounded-[8px] bg-white p-5 text-[15px] text-[#2D3D4D] shadow-sm">
               Product details not found. Please go back and select your boiler again.

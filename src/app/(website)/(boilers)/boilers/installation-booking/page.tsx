@@ -21,12 +21,12 @@
 
 
 import { Suspense } from "react";
-import InstallContainer from "./_components/install-container";
+import InstallContainer, { InstallPageSkeleton } from "./_components/install-container";
 
 
 const InstallPage = () => {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<InstallPageSkeleton />}>
       <InstallContainer />
     </Suspense>
   );

@@ -29,36 +29,24 @@ import {
   getQuotePriceAdjustmentTotal,
 } from "@/app/(website)/(boilers)/boilers/system-selection/_utils/quote-price-adjustment";
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type UpdateQuotePaymentMethodPayload = {
   payByCard: boolean;
   payMounthly: boolean;
-  payMounthlyData?: {
-    deposit: number;
-    mounthNumber: number;
-    amount: number;
-  };
 };
 
 type UpdateQuotePaymentMethodResponse = {
   success?: boolean;
   status?: boolean;
   message?: string;
-};
-
-type CreateBookingPayload = {
-  quote: string;
-  price: number;
-};
-
-type CreateBookingResponse = {
-  statusCode?: number;
-  success?: boolean;
-  status?: boolean;
-  message?: string;
-  data?: {
-    _id?: string;
-  };
 };
 
 type FinancePlan = {
@@ -85,16 +73,6 @@ function resolveQuoteEndpoint() {
   return "/quote";
 }
 
-function resolveBookingEndpoint() {
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return `${process.env.NEXT_PUBLIC_API_BASE_URL}/booking`;
-  }
-  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
-    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/booking`;
-  }
-  return "/booking";
-}
-
 async function updateQuotePaymentMethod({
   quoteId,
   payload,
@@ -118,26 +96,6 @@ async function updateQuotePaymentMethod({
   }
 
   return result ?? {};
-}
-
-async function createBooking(payload: CreateBookingPayload): Promise<string> {
-  const response = await fetch(resolveBookingEndpoint(), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  const result = (await response.json().catch(() => null)) as CreateBookingResponse | null;
-  const hasExplicitFailure = result?.success === false || result?.status === false;
-  const bookingId = typeof result?.data?._id === "string" ? result.data._id : "";
-
-  if (!response.ok || hasExplicitFailure || !bookingId) {
-    throw new Error(result?.message || "Failed to create booking.");
-  }
-
-  return bookingId;
 }
 
 function getOrdinalDay(day: number): string {
@@ -371,23 +329,6 @@ function CollapsedStep({ label }: { label: string }) {
   );
 }
 
-function CardBadges() {
-  return (
-    <div className="flex items-center gap-2 text-[11px] font-semibold text-[#2f3b4a]">
-      <span className="text-[#1a49d3]">VISA</span>
-      <span className="rounded bg-[#2b66dd] px-1 py-[2px] text-[9px] text-white">AMEX</span>
-      <span className="inline-flex items-center gap-[2px]">
-        <span className="h-4 w-4 rounded-full bg-[#ea4f24]" />
-        <span className="-ml-2 h-4 w-4 rounded-full bg-[#f7b500]" />
-      </span>
-      <span className="inline-flex items-center gap-1 rounded bg-white px-1 py-[2px] text-[18px] text-[#5f6977]">
-        <span className="font-bold text-[#4285F4]">G</span>
-        <span>Pay</span>
-      </span>
-    </div>
-  );
-}
-
 function PaymentMethodRow({
   title,
   active,
@@ -575,11 +516,9 @@ function SelectedPlanCard({
 function PaymentSection({
   totalPrice,
   paymentType,
-  onSelectCard,
   onSelectMonthly,
   isUpdatingMethod,
-  onSubmitMonthlyData,
-  isSubmittingMonthlyData,
+  onOpenFinanceComingSoon,
   depositPercent,
   onDepositPercentChange,
   selectedPlanId,
@@ -587,15 +526,9 @@ function PaymentSection({
 }: {
   totalPrice: number;
   paymentType: "card" | "monthly";
-  onSelectCard: () => void;
   onSelectMonthly: () => void;
   isUpdatingMethod: boolean;
-  onSubmitMonthlyData: (payload: {
-    deposit: number;
-    mounthNumber: number;
-    amount: number;
-  }) => Promise<void>;
-  isSubmittingMonthlyData: boolean;
+  onOpenFinanceComingSoon: () => void;
   depositPercent: number;
   onDepositPercentChange: (value: number) => void;
   selectedPlanId: string;
@@ -603,7 +536,6 @@ function PaymentSection({
 }) {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
-  const [submitError, setSubmitError] = useState("");
 
   const depositAmount = (totalPrice * depositPercent) / 100;
   const financeAmount = Math.max(totalPrice - depositAmount, 0);
@@ -619,7 +551,6 @@ function PaymentSection({
       };
     });
   }, [financeAmount]);
-  const selectedPlan = planDetails.find((plan) => plan.id === selectedPlanId) ?? null;
 
   const handleChangeDepositAmount = () => {
     const depositSection = document.getElementById("deposit-amount-section");
@@ -627,33 +558,9 @@ function PaymentSection({
       depositSection.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
-  const handlePayViaStripe = React.useCallback(async () => {
-    setSubmitError("");
-
-    if (!agreeTerms || !agreePrivacy) {
-      setSubmitError("Please accept Terms & Conditions and Privacy Policy before continuing.");
-      return;
-    }
-
-    if (!selectedPlan) {
-      setSubmitError("Please choose your monthly plan before continuing.");
-      return;
-    }
-
-    try {
-      await onSubmitMonthlyData({
-        deposit: Number(depositAmount.toFixed(2)),
-        mounthNumber: selectedPlan.months,
-        amount: Number(selectedPlan.monthlyPayment.toFixed(2)),
-      });
-    } catch (error) {
-      const message =
-        error instanceof Error && error.message
-          ? error.message
-          : "Failed to continue with monthly payment. Please try again.";
-      setSubmitError(message);
-    }
-  }, [agreePrivacy, agreeTerms, depositAmount, onSubmitMonthlyData, selectedPlan]);
+  const handlePayViaStripe = React.useCallback(() => {
+    onOpenFinanceComingSoon();
+  }, [onOpenFinanceComingSoon]);
 
   return (
     <div className="rounded-[10px] bg-white px-4 py-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-[#e8eaed] sm:px-6">
@@ -667,13 +574,6 @@ function PaymentSection({
       </p>
 
       <div className="mt-4 space-y-3">
-        <PaymentMethodRow
-          title="Pay by card"
-          active={paymentType === "card"}
-          onClick={onSelectCard}
-          right={<CardBadges />}
-          disabled={isUpdatingMethod}
-        />
         <PaymentMethodRow
           title="Pay monthly"
           active={paymentType === "monthly"}
@@ -755,7 +655,6 @@ function PaymentSection({
                       price={`${formatMoney(plan.monthlyPayment)}/mo`}
                       selected={isSelected}
                       onClick={() => {
-                        setSubmitError("");
                         onSelectPlan(plan.id);
                       }}
                     />
@@ -789,7 +688,6 @@ function PaymentSection({
               <button
                 type="button"
                 onClick={() => {
-                  setSubmitError("");
                   setAgreeTerms((value) => !value);
                 }}
                 aria-pressed={agreeTerms}
@@ -815,7 +713,6 @@ function PaymentSection({
               <button
                 type="button"
                 onClick={() => {
-                  setSubmitError("");
                   setAgreePrivacy((value) => !value);
                 }}
                 aria-pressed={agreePrivacy}
@@ -838,19 +735,13 @@ function PaymentSection({
             </label>
           </div>
 
-          {submitError ? (
-            <p className="rounded-[6px] border border-[#f4b8b3] bg-[#fff4f3] px-3 py-2 text-[14px] text-[#c43d33]">
-              {submitError}
-            </p>
-          ) : null}
-
           <button
             type="button"
             onClick={handlePayViaStripe}
-            disabled={isUpdatingMethod || isSubmittingMonthlyData}
-            className="w-full rounded-[6px] bg-[#F0F3F6] px-4 py-3 text-[18px] font-medium text-[#2D3D4D] disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={isUpdatingMethod}
+            className="w-full rounded-[6px] bg-[#00aa63] px-4 py-3 text-[18px] font-medium text-[#fff] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {isSubmittingMonthlyData ? "Processing..." : "Pay via Stripe"}
+            Pay via Stripe
           </button>
 
           <p className="text-center text-[10px] text-[#4f5b67] sm:text-[11px]">
@@ -859,6 +750,58 @@ function PaymentSection({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function FinanceComingSoonModal({
+  open,
+  onOpenChange,
+  onPayByCard,
+  isSubmittingCard,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onPayByCard: () => void;
+  isSubmittingCard: boolean;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[92%] rounded-[14px] border-0 bg-white p-0 shadow-2xl sm:max-w-[460px]">
+        <div className="overflow-hidden rounded-[14px]">
+          <div className="bg-[#F0F3F6] px-6 py-6 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#00aa63]/10">
+              <CreditCard className="h-7 w-7 text-[#00aa63]" />
+            </div>
+            <DialogHeader className="mt-4 space-y-2 text-center">
+              <DialogTitle className="text-[22px] font-semibold text-[#2D3D4D]">
+                Finance payment coming soon
+              </DialogTitle>
+              <DialogDescription className="text-[15px] leading-6 text-[#4f5b67]">
+                Monthly finance through Stripe is not available yet. You can continue today by paying with card.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <DialogFooter className="grid gap-3 px-6 py-5 sm:grid-cols-2 sm:space-x-0">
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="h-11 rounded-[6px] border border-[#8f99a6] bg-white text-[15px] font-medium text-[#2D3D4D] transition hover:bg-[#F7F8FA]"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              onClick={onPayByCard}
+              disabled={isSubmittingCard}
+              className="h-11 rounded-[6px] bg-[#00aa63] text-[15px] font-medium text-white transition hover:bg-[#009a59] disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {isSubmittingCard ? "Redirecting..." : "Pay by card "}
+            </button>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -884,22 +827,15 @@ function BoilerFinanceCloneContent() {
   const [paymentType, setPaymentType] = useState<"card" | "monthly">("monthly");
   const [depositPercent, setDepositPercent] = useState(0);
   const [selectedPlanId, setSelectedPlanId] = useState("");
+  const [isFinanceComingSoonOpen, setIsFinanceComingSoonOpen] = useState(false);
   const { mutateAsync: mutatePaymentMethod, isPending: isUpdatingPaymentMethod } = useMutation({
     mutationKey: ["update-quote-payment-method"],
     mutationFn: updateQuotePaymentMethod,
   });
-  const { mutateAsync: mutatePayMonthlyData, isPending: isSubmittingMonthlyData } = useMutation({
-    mutationKey: ["update-quote-pay-monthly-data"],
-    mutationFn: updateQuotePaymentMethod,
-  });
-  const { mutateAsync: mutateCreateBooking, isPending: isCreatingBooking } = useMutation({
-    mutationKey: ["create-booking"],
-    mutationFn: createBooking,
-  });
   const paymentPageUrl = React.useMemo(() => {
     const query = searchParams.toString();
     return query
-      ? `/boilers/installation-booking/payment?${query}`
+      ? `/boilers/installation-booking/payment-method?${query}`
       : "/boilers/installation-booking/payment";
   }, [searchParams]);
   const handleSelectMonthly = React.useCallback(async () => {
@@ -923,6 +859,8 @@ function BoilerFinanceCloneContent() {
     }
   }, [mutatePaymentMethod, queryClient, quoteId]);
   const handleSelectCard = React.useCallback(async () => {
+    setIsFinanceComingSoonOpen(false);
+
     if (!quoteId) {
       router.push(paymentPageUrl);
       return;
@@ -942,32 +880,6 @@ function BoilerFinanceCloneContent() {
       console.error("Failed to update payment method (card).", error);
     }
   }, [mutatePaymentMethod, paymentPageUrl, queryClient, quoteId, router]);
-  const handleSubmitMonthlyData = React.useCallback(
-    async (payload: { deposit: number; mounthNumber: number; amount: number }) => {
-      if (!quoteId) {
-        throw new Error("Quote ID missing. Please restart your booking flow.");
-      }
-
-      await mutatePayMonthlyData({
-        quoteId,
-        payload: {
-          payByCard: false,
-          payMounthly: true,
-          payMounthlyData: payload,
-        },
-      });
-      const bookingId = await mutateCreateBooking({
-        quote: quoteId,
-        price: payload.deposit,
-      });
-      await queryClient.invalidateQueries({ queryKey: ["quote", quoteId] });
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("bookingId", bookingId);
-      const query = params.toString();
-      router.push(query ? `/boilers/installation-booking/payment?${query}` : "/boilers/installation-booking/payment");
-    },
-    [mutateCreateBooking, mutatePayMonthlyData, queryClient, quoteId, router, searchParams]
-  );
 
   const { data: quote, isLoading: quoteLoading } = useQuoteById(quoteId);
   const quoteProductId =
@@ -1039,11 +951,9 @@ function BoilerFinanceCloneContent() {
               <PaymentSection
                 totalPrice={totalPrice}
                 paymentType={paymentType}
-                onSelectCard={handleSelectCard}
                 onSelectMonthly={handleSelectMonthly}
                 isUpdatingMethod={isUpdatingPaymentMethod}
-                onSubmitMonthlyData={handleSubmitMonthlyData}
-                isSubmittingMonthlyData={isSubmittingMonthlyData || isCreatingBooking}
+                onOpenFinanceComingSoon={() => setIsFinanceComingSoonOpen(true)}
                 depositPercent={depositPercent}
                 onDepositPercentChange={(value) => setDepositPercent(Math.min(50, Math.max(0, value)))}
                 selectedPlanId={selectedPlanId}
@@ -1066,6 +976,12 @@ function BoilerFinanceCloneContent() {
               />
             </div>
           </div>
+          <FinanceComingSoonModal
+            open={isFinanceComingSoonOpen}
+            onOpenChange={setIsFinanceComingSoonOpen}
+            onPayByCard={handleSelectCard}
+            isSubmittingCard={isUpdatingPaymentMethod}
+          />
         </div>
       </div>
     </BoilerFlowShell>

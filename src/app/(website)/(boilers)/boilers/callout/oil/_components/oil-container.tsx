@@ -24,6 +24,7 @@ const OilContainer = () => {
         email: "",
         mobleNumber: "",
         postcode: "",
+        installAddress: "",
       },
       isSubmitting: false,
       submitError: null,

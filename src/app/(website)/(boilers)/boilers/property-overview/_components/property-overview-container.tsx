@@ -80,7 +80,8 @@ const PropertyOverviewContainer = () => {
         personalInfo.sureName.trim() &&
         personalInfo.email.trim() &&
         personalInfo.mobleNumber.trim() &&
-        personalInfo.postcode.trim(),
+        personalInfo.postcode.trim() &&
+        personalInfo.installAddress.trim(),
       );
     }
     if (step?.id === "currentBoilerLocation" && isOtherRoomPrompt) {

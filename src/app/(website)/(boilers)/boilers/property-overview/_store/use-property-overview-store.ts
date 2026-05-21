@@ -7,6 +7,7 @@ export type PersonalInfo = {
   email: string;
   mobleNumber: string;
   postcode: string;
+  installAddress: string;
 };
 
 type ApiQuizAnswer = {
@@ -51,6 +52,7 @@ const defaultPersonalInfo: PersonalInfo = {
   email: "",
   mobleNumber: "",
   postcode: "",
+  installAddress: "",
 };
 
 const resolveQuoteEndpoint = () => {
@@ -145,6 +147,7 @@ export const usePropertyOverviewStore = create<PropertyOverviewState>((set, get)
           productId: selectedProductId,
           quizAnswers,
           personalInfo,
+          installAddress: personalInfo.installAddress,
         }),
       });
 
