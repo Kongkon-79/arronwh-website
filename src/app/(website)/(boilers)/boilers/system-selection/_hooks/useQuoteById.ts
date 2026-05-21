@@ -49,6 +49,7 @@ export interface ApiQuotePersonalInfo {
   email?: string;
   mobleNumber?: string;
   postcode?: string | null;
+  installAddress?: string | null;
 }
 
 export interface ApiQuote {
