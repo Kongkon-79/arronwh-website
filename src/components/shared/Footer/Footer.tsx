@@ -26,6 +26,15 @@ const Footer = () => {
   });
   const logoSrc = logo?.image?.trim() || "/assets/images/navlogo.png";
 
+  const { data: socialData } = useQuery({
+    queryKey: ["socialPartnership"],
+    queryFn: async () => {
+      const res = await fetch("http://localhost:5001/api/v1/socialpartership");
+      const result = await res.json();
+      return result?.data?.[0];
+    },
+  });
+
   return (
     <footer className="shadow-[0px_-2px_4px_0px_#0000001A] bg-[#EAEBEC]">
       <div className="container mx-auto px-4 py-6 md:py-8 lg:py-10">
@@ -150,36 +159,58 @@ const Footer = () => {
             </div>
 
             <div className="mt-5 flex items-center gap-2">
-              <Link
-                target="_blank"
-                href="https://www.facebook.com/Yoloheat"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[#334155] transition-transform hover:-translate-y-0.5"
-                aria-label="Facebook"
-              >
-                <FaFacebookF className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[#334155] transition-transform hover:-translate-y-0.5"
-                aria-label="Twitter"
-              >
-                <FaTwitter className="h-4 w-4" />
-              </Link>
-              <Link
-                target="_blank"
-                href="https://www.instagram.com/yolo.heat"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[#334155] transition-transform hover:-translate-y-0.5"
-                aria-label="Instagram"
-              >
-                <FaInstagram className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[#334155] transition-transform hover:-translate-y-0.5"
-                aria-label="LinkedIn"
-              >
-                <FaLinkedinIn className="h-4 w-4" />
-              </Link>
+              {socialData?.socialLink?.length > 0 ? (
+                socialData.socialLink.map((social: { link: string; icon: string }, index: number) => (
+                  <Link
+                    key={index}
+                    target="_blank"
+                    href={social.link}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[#334155] transition-transform hover:-translate-y-0.5 overflow-hidden"
+                    aria-label="Social Link"
+                  >
+                    <Image
+                      src={social.icon}
+                      alt="Social Icon"
+                      width={36}
+                      height={36}
+                      className="h-full w-full object-cover"
+                    />
+                  </Link>
+                ))
+              ) : (
+                <>
+                  <Link
+                    target="_blank"
+                    href="https://www.facebook.com/Yoloheat"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[#334155] transition-transform hover:-translate-y-0.5"
+                    aria-label="Facebook"
+                  >
+                    <FaFacebookF className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    href="/"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[#334155] transition-transform hover:-translate-y-0.5"
+                    aria-label="Twitter"
+                  >
+                    <FaTwitter className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    target="_blank"
+                    href="https://www.instagram.com/yolo.heat"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[#334155] transition-transform hover:-translate-y-0.5"
+                    aria-label="Instagram"
+                  >
+                    <FaInstagram className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    href="/"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[#334155] transition-transform hover:-translate-y-0.5"
+                    aria-label="LinkedIn"
+                  >
+                    <FaLinkedinIn className="h-4 w-4" />
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
