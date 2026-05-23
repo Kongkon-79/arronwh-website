@@ -730,6 +730,7 @@ export function ChatBot() {
     return () => {
       isCancelled = true
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const extractStreamText = (chunk: string): string => {

@@ -114,10 +114,10 @@ const OurPartners = () => {
               4.8 Out of 5 based on 56,714 reviews
             </span>
 
-            <span className="flex items-center gap-1 text-sm md:text-base text-[#2D3D4D]">
+            {/* <span className="flex items-center gap-1 text-sm md:text-base text-[#2D3D4D]">
               <Star className="text-[#00A56F] w-5 h-5 fill-[#00A56F]" />
               Trustpilot
-            </span>
+            </span> */}
           </div>
 
           <h2 className="pt-5 font-bold text-[#2D3D4D] text-xl md:text-2xl lg:text-3xl">

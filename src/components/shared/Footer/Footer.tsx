@@ -49,12 +49,12 @@ const Footer = () => {
             </Link>
 
             <div className="mt-2">
-              <div className="flex items-center gap-2 ">
+              {/* <div className="flex items-center gap-2 ">
                 <span className="text-[#00A56F]">
                   <Star className="fill-current" />
                 </span>
                 <span className="desc">Trustpilot</span>
-              </div>
+              </div> */}
 
               <div className="mt-2 flex items-center gap-1">
                 {trustpilotStars.map((_, index) => (
