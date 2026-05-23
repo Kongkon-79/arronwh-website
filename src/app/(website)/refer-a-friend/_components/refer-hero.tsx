@@ -3,59 +3,14 @@
 import React, { FormEvent, useState } from "react";
 import Image from "next/image";
 import { Lightbulb } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-type NewsletterResponse = {
-  success: boolean;
-  message?: string;
-};
+import { useEffect } from "react";
+import ReferModal from "./refer-modal";
 
 const ReferHeroSection = () => {
   const [email, setEmail] = useState("");
-
-  const { mutate, isPending } = useMutation({
-    mutationKey: ["refer-newsletter"],
-    mutationFn: async (payload: {
-      email: string;
-    }): Promise<NewsletterResponse> => {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/newslatter`,
-        {
-          method: "POST",
-          headers: {
-            accept: "*/*",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        },
-      );
-
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        throw new Error(data?.message || "Failed to submit email");
-      }
-
-      return data;
-    },
-    onSuccess: (data) => {
-      if (!data?.success) {
-        toast.error(data?.message || "Something went wrong");
-        return;
-      }
-
-      toast.success(data?.message || "Newslatter created successfully");
-      setEmail("");
-    },
-    onError: (error) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Unable to submit. Please try again.",
-      );
-    },
-  });
+  const [showModal, setShowModal] = useState(false);
+  const [referredBy, setReferredBy] = useState<string>("");
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -66,9 +21,17 @@ const ReferHeroSection = () => {
       return;
     }
 
-    mutate({ email: trimmedEmail });
+    // Store email in localStorage and open the referral modal
+    localStorage.setItem("refer_email", trimmedEmail);
+    setReferredBy(trimmedEmail);
+    setShowModal(true);
   };
-
+  useEffect(() => {
+    const stored = localStorage.getItem("refer_email");
+    if (stored) {
+      setReferredBy(stored);
+    }
+  }, []);
   return (
     <section className="bg-[#dfe1e3] px-4 py-10 sm:px-6 md:py-14 lg:py-16">
       <div className="container grid w-full  items-center gap-8 lg:grid-cols-[1fr_420px] lg:gap-10">
@@ -101,18 +64,24 @@ const ReferHeroSection = () => {
               placeholder="a.smith@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={isPending}
               required
               className="w-full h-11 md:h-12 flex-1 rounded-l-[8px] border border-[#d4d8de] bg-[#efefef] px-5 text-[18px] text-[#202734] placeholder:text-[#a9afb8] focus:border-[#1a56db] focus:outline-none"
             />
             <button
               type="submit"
-              disabled={isPending}
               className="h-11 md:h-12 rounded-r-[8px] bg-[#1450e6] px-7 text-base md:text-[18px] font-medium text-white transition hover:bg-[#1148cf] sm:ml-0 sm:rounded-l-none"
             >
-              {isPending ? "Submitting..." : "Submit"}
+             Continue
             </button>
           </form>
+          <ReferModal
+            open={showModal}
+            onClose={() => {
+              setShowModal(false);
+              setEmail("");
+            }}
+            referredBy={referredBy}
+          />
 
           <div className="mt-4 flex w-full max-w-[580px] items-start gap-2 rounded-[8px] border border-[#e3d291] bg-[#f3e4a8] px-4 py-3 text-sm lg:text-base font-medium leading-[1.4] text-[#212734]">
             <Lightbulb
