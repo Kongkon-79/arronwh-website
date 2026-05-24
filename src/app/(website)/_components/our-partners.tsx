@@ -1,9 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import { Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { PartnerApiResponse } from "@/components/types/our-partners-data-type";
+import { RatingSummary } from "./rating-summary";
+
+type ReviewItem = {
+  _id: string;
+  rating: number;
+  isActive?: boolean;
+};
+
+type ReviewResponse = {
+  data: ReviewItem[];
+  meta?: { page?: number; limit?: number; total?: number };
+};
 
 const OurPartners = () => {
   const { data, isLoading, isError } = useQuery<PartnerApiResponse>({
@@ -20,6 +31,55 @@ const OurPartners = () => {
       return res.json();
     },
   });
+
+  const { data: reviewData } = useQuery<ReviewResponse>({
+    queryKey: ["reviews-summary"],
+    queryFn: async () => {
+      const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/review`;
+      const firstRes = await fetch(
+        `${baseUrl}?sortBy=createdAt&sortOrder=desc&limit=50&page=1`
+      );
+      if (!firstRes.ok) throw new Error("Failed to fetch reviews");
+
+      const firstPage: ReviewResponse = await firstRes.json();
+      const firstPageData = firstPage?.data || [];
+      const total = firstPage?.meta?.total || firstPageData.length;
+      const limit = firstPage?.meta?.limit || 50;
+      const totalPages = Math.max(1, Math.ceil(total / limit));
+
+      if (totalPages === 1) return { ...firstPage, data: firstPageData };
+
+      const remainingPages = await Promise.all(
+        Array.from({ length: totalPages - 1 }).map((_, i) =>
+          fetch(
+            `${baseUrl}?sortBy=createdAt&sortOrder=desc&limit=${limit}&page=${i + 2}`
+          ).then(async (res) => {
+            if (!res.ok) throw new Error("Failed to fetch all reviews");
+            const pageData: ReviewResponse = await res.json();
+            return pageData?.data || [];
+          })
+        )
+      );
+
+      const flattenedData = [firstPageData, ...remainingPages].flat();
+      return { ...firstPage, data: flattenedData, meta: { ...firstPage.meta, total: flattenedData.length } };
+    },
+  });
+
+  const reviews = (reviewData?.data || []).filter((item) => item?.isActive !== false);
+  const totalReviews = reviews.length;
+  const averageRating = totalReviews
+    ? reviews.reduce((sum, item) => sum + (item.rating || 0), 0) / totalReviews
+    : 0;
+  const formattedAverageRating = averageRating.toFixed(1);
+  const ratingLabel =
+    averageRating >= 4.5
+      ? "Excellent"
+      : averageRating >= 3.5
+      ? "Great"
+      : averageRating >= 2.5
+      ? "Good"
+      : "Average";
 
   const partners = data?.data?.[0];
 
@@ -94,31 +154,12 @@ const OurPartners = () => {
     <section className="overflow-hidden bg-[#EAEBEC] py-7 md:py-8">
       <div className="px-0">
         <div className="flex flex-col items-center">
-          <div className="flex flex-wrap items-center justify-center gap-2 px-4 text-center text-[#334155]">
-            <span className="text-sm md:text-base font-medium text-[#2D3D4D]">
-              Excellent
-            </span>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <span
-                  key={index}
-                  className="flex h-[14px] w-[14px] items-center justify-center rounded-[2px] bg-[#00B67A] text-white"
-                >
-                  <Star className="h-2 w-2 fill-current" />
-                </span>
-              ))}
-            </div>
-
-            <span className="text-sm md:text-base text-[#2D3D4D]">
-              4.8 Out of 5 based on 56,714 reviews
-            </span>
-
-            {/* <span className="flex items-center gap-1 text-sm md:text-base text-[#2D3D4D]">
-              <Star className="text-[#00A56F] w-5 h-5 fill-[#00A56F]" />
-              Trustpilot
-            </span> */}
-          </div>
+          <RatingSummary
+            ratingLabel={ratingLabel}
+            averageRating={averageRating}
+            formattedAverageRating={formattedAverageRating}
+            totalReviews={totalReviews}
+          />
 
           <h2 className="pt-5 font-bold text-[#2D3D4D] text-xl md:text-2xl lg:text-3xl">
             {partners?.title || "Our Partners"}
