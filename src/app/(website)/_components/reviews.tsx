@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RatingSummary } from "./rating-summary";
 
 type CustomerSayItem = {
   _id: string;
@@ -109,26 +110,12 @@ const Reviews = () => {
         <div className="px-4 text-center">
           <h2 className="heading">What Our Customers Say</h2>
 
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-[10px] leading-none text-[#334155] md:text-[11px]">
-            <span className="text-sm md:text-base leading-normal font-medium text-[#2D3D4D]">
-              {ratingLabel}
-            </span>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <span
-                  key={index}
-                  className="flex h-[14px] w-[14px] items-center justify-center rounded-[2px] bg-[#00B67A] text-white md:h-[15px] md:w-[15px]"
-                >
-                  <Star className="h-2.5 w-2.5 fill-current" />
-                </span>
-              ))}
-            </div>
-
-            <span className="text-sm md:text-base font-normal leading-normal text-[#2D3D4D]">
-              {formattedAverageRating} Out of 5 based on {totalReviews.toLocaleString()} reviews
-            </span>
-          </div>
+          <RatingSummary
+            ratingLabel={ratingLabel}
+            averageRating={averageRating}
+            formattedAverageRating={formattedAverageRating}
+            totalReviews={totalReviews}
+          />
         </div>
 
         {/* Carousel */}
@@ -214,14 +201,7 @@ const Reviews = () => {
                         ))}
                       </div>
 
-                      {review.video?.trim() && (
-                        <video
-                          className="mt-3 h-[180px] w-full rounded-[8px] object-cover"
-                          src={review.video}
-                          controls
-                          preload="metadata"
-                        />
-                      )}
+
 
                       {/* Review */}
                       <p className="mt-3 desc">{`"${review.review?.trim() || "No written review provided."}"`}</p>
@@ -260,8 +240,8 @@ const Reviews = () => {
       </div>
 
       {selectedReview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6">
-          <div className="relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[12px] bg-white p-5 md:p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6" onClick={() => setSelectedReview(null)}>
+          <div className="relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[12px] bg-white p-5 md:p-6" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
               onClick={() => setSelectedReview(null)}
@@ -270,16 +250,6 @@ const Reviews = () => {
             >
               ×
             </button>
-
-            <h3 className="pr-8 text-lg font-bold leading-normal text-[#2D3D4D]">
-              {selectedReview.title?.trim() || "Customer Review"}
-            </h3>
-
-            {selectedReview.subtitle?.trim() && (
-              <p className="mt-1 text-sm font-medium leading-normal text-[#334155]">
-                {selectedReview.subtitle}
-              </p>
-            )}
 
             <div className="mt-4 flex items-center gap-1">
               {Array.from({ length: 5 }).map((_, starIndex) => (

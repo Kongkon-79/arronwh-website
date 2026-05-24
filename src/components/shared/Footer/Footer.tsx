@@ -17,7 +17,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { FaPoundSign } from "react-icons/fa";
 
-const trustpilotStars = Array.from({ length: 5 });
+type ReviewItem = {
+  _id: string;
+  rating: number;
+  isActive?: boolean;
+};
+
+type ReviewResponse = {
+  data: ReviewItem[];
+  meta?: { page?: number; limit?: number; total?: number };
+};
 
 const Footer = () => {
   const { data: logo, isLoading: isLogoLoading } = useQuery({
@@ -25,6 +34,51 @@ const Footer = () => {
     queryFn: fetchNavbarLogo,
   });
   const logoSrc = logo?.image?.trim() || "/assets/images/navlogo.png";
+
+  const { data: reviewData } = useQuery<ReviewResponse>({
+    queryKey: ["reviews-summary"],
+    queryFn: async () => {
+      const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/review`;
+      const firstRes = await fetch(
+        `${baseUrl}?sortBy=createdAt&sortOrder=desc&limit=50&page=1`
+      );
+      if (!firstRes.ok) throw new Error("Failed to fetch reviews");
+
+      const firstPage: ReviewResponse = await firstRes.json();
+      const firstPageData = firstPage?.data || [];
+      const total = firstPage?.meta?.total || firstPageData.length;
+      const limit = firstPage?.meta?.limit || 50;
+      const totalPages = Math.max(1, Math.ceil(total / limit));
+
+      if (totalPages === 1) return { ...firstPage, data: firstPageData };
+
+      const remainingPages = await Promise.all(
+        Array.from({ length: totalPages - 1 }).map((_, i) =>
+          fetch(
+            `${baseUrl}?sortBy=createdAt&sortOrder=desc&limit=${limit}&page=${i + 2}`
+          ).then(async (res) => {
+            if (!res.ok) throw new Error("Failed to fetch all reviews");
+            const pageData: ReviewResponse = await res.json();
+            return pageData?.data || [];
+          })
+        )
+      );
+
+      const flattenedData = [firstPageData, ...remainingPages].flat();
+      return {
+        ...firstPage,
+        data: flattenedData,
+        meta: { ...firstPage.meta, total: flattenedData.length },
+      };
+    },
+  });
+
+  const reviews = (reviewData?.data || []).filter((item) => item?.isActive !== false);
+  const totalReviews = reviews.length;
+  const averageRating = totalReviews
+    ? reviews.reduce((sum, item) => sum + (item.rating || 0), 0) / totalReviews
+    : 0;
+  const formattedAverageRating = averageRating.toFixed(1);
 
   const { data: socialData } = useQuery({
     queryKey: ["socialPartnership"],
@@ -34,6 +88,7 @@ const Footer = () => {
       return result?.data?.[0];
     },
   });
+
 
   return (
     <footer className="shadow-[0px_-2px_4px_0px_#0000001A] bg-[#EAEBEC]">
@@ -58,25 +113,24 @@ const Footer = () => {
             </Link>
 
             <div className="mt-2">
-              {/* <div className="flex items-center gap-2 ">
-                <span className="text-[#00A56F]">
-                  <Star className="fill-current" />
-                </span>
-                <span className="desc">Trustpilot</span>
-              </div> */}
-
               <div className="mt-2 flex items-center gap-1">
-                {trustpilotStars.map((_, index) => (
+                {Array.from({ length: 5 }).map((_, index) => (
                   <span
                     key={index}
-                    className="flex h-6 w-6 items-center justify-center rounded-[2px] bg-[#00A56F] text-[10px] text-white"
+                    className={`flex h-6 w-6 items-center justify-center rounded-[2px] text-[10px] text-white ${
+                      index < Math.round(averageRating) ? "bg-[#00A56F]" : "bg-[#CFD6DD]"
+                    }`}
                   >
                     <Star className="h-4 w-4 fill-current" />
                   </span>
                 ))}
               </div>
 
-              <p className="mt-2 desc">4.8 in 56,714 reviews</p>
+              <p className="mt-2 desc">
+                {totalReviews > 0
+                  ? `${formattedAverageRating} in ${totalReviews.toLocaleString()} reviews`
+                  : "4.8 in 56,714 reviews"}
+              </p>
             </div>
 
             <p className="mt-2 desc">
