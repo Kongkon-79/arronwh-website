@@ -3,43 +3,102 @@
 import { useQuery } from "@tanstack/react-query";
 import { Star } from "lucide-react";
 import Autoplay from "embla-carousel-autoplay";
+import { useState } from "react";
 
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type CustomerSayItem = {
   _id: string;
-  review: string;
+  title?: string;
+  subtitle?: string;
+  review?: string;
   rating: number;
   name: string;
   location: string;
+  video?: string;
   isActive?: boolean;
+  isVerified?: boolean;
+  createdAt?: string;
 };
 
 type CustomerSayResponse = {
   data: CustomerSayItem[];
   meta?: {
+    page?: number;
+    limit?: number;
     total?: number;
   };
 };
 
 const Reviews = () => {
+  const [selectedReview, setSelectedReview] = useState<CustomerSayItem | null>(null);
   const { data, isLoading, isError } = useQuery<CustomerSayResponse>({
     queryKey: ["reviews"],
     queryFn: async () => {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/customersay?sortBy=createdAt&sortOrder=desc&limit=20&page=1`,
+      const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/review`;
+
+      const firstRes = await fetch(
+        `${baseUrl}?sortBy=createdAt&sortOrder=desc&limit=50&page=1`,
       );
 
-      if (!res.ok) {
+      if (!firstRes.ok) {
         throw new Error("Failed to fetch reviews");
       }
 
-      return res.json();
+      const firstPage: CustomerSayResponse = await firstRes.json();
+      const firstPageData = firstPage?.data || [];
+      const total = firstPage?.meta?.total || firstPageData.length;
+      const limit = firstPage?.meta?.limit || 50;
+      const totalPages = Math.max(1, Math.ceil(total / limit));
+
+      if (totalPages === 1) {
+        return {
+          ...firstPage,
+          data: firstPageData,
+        };
+      }
+
+      const remainingPagePromises = Array.from({ length: totalPages - 1 }).map((_, index) =>
+        fetch(`${baseUrl}?sortBy=createdAt&sortOrder=desc&limit=${limit}&page=${index + 2}`).then(
+          async (res) => {
+            if (!res.ok) {
+              throw new Error("Failed to fetch all reviews");
+            }
+            const pageData: CustomerSayResponse = await res.json();
+            return pageData?.data || [];
+          },
+        ),
+      );
+
+      const remainingPages = await Promise.all(remainingPagePromises);
+      const flattenedData = [firstPageData, ...remainingPages].flat();
+
+      return {
+        ...firstPage,
+        data: flattenedData,
+        meta: {
+          ...firstPage.meta,
+          total: flattenedData.length,
+        },
+      };
     },
   });
 
   const reviews = (data?.data || []).filter((item) => item?.isActive !== false);
+  const totalReviews = reviews.length;
+  const averageRating = totalReviews
+    ? reviews.reduce((sum, item) => sum + (item.rating || 0), 0) / totalReviews
+    : 0;
+  const formattedAverageRating = averageRating.toFixed(1);
+  const ratingLabel =
+    averageRating >= 4.5
+      ? "Excellent"
+      : averageRating >= 3.5
+      ? "Great"
+      : averageRating >= 2.5
+      ? "Good"
+      : "Average";
 
   return (
     <section
@@ -52,7 +111,7 @@ const Reviews = () => {
 
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-[10px] leading-none text-[#334155] md:text-[11px]">
             <span className="text-sm md:text-base leading-normal font-medium text-[#2D3D4D]">
-              Excellent
+              {ratingLabel}
             </span>
 
             <div className="flex items-center gap-1">
@@ -67,13 +126,8 @@ const Reviews = () => {
             </div>
 
             <span className="text-sm md:text-base font-normal leading-normal text-[#2D3D4D]">
-              4.8 Out of 5 based on 56,714 reviews
+              {formattedAverageRating} Out of 5 based on {totalReviews.toLocaleString()} reviews
             </span>
-
-            {/* <span className="flex items-center gap-1 font-normal leading-normal text-sm md:text-base text-[#2D3D4D]">
-              <Star className="text-[#00A56F] w-5 h-5 fill-[#00A56F]" />
-              Trustpilot
-            </span> */}
           </div>
         </div>
 
@@ -160,8 +214,17 @@ const Reviews = () => {
                         ))}
                       </div>
 
+                      {review.video?.trim() && (
+                        <video
+                          className="mt-3 h-[180px] w-full rounded-[8px] object-cover"
+                          src={review.video}
+                          controls
+                          preload="metadata"
+                        />
+                      )}
+
                       {/* Review */}
-                      <p className="mt-3 desc">{`"${review.review}"`}</p>
+                      <p className="mt-3 desc">{`"${review.review?.trim() || "No written review provided."}"`}</p>
 
                       {/* Footer */}
                       <div className="mt-auto pt-5">
@@ -170,13 +233,22 @@ const Reviews = () => {
                             {review.name}
                           </h3>
                           <span className="text-xs font-medium text-black leading-normal">
-                            Verified customer
+                            {review.isVerified ? "Verified customer" : "Customer"}
                           </span>
                         </div>
 
-                        <p className="mt-3 text-xs md:text-sm font-normal leading-normal text-[#2D3D4D]">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="mt-3 text-xs md:text-sm font-normal leading-normal text-[#2D3D4D]">
                           {review.location}
-                        </p>
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedReview(review)}
+                            className="mt-3 text-xs md:text-sm font-semibold leading-normal text-[#EE6766] underline underline-offset-2"
+                          >
+                            View More
+                          </button>
+                        </div>
                       </div>
                     </article>
                   </CarouselItem>
@@ -186,6 +258,79 @@ const Reviews = () => {
           )}
         </div>
       </div>
+
+      {selectedReview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6">
+          <div className="relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[12px] bg-white p-5 md:p-6">
+            <button
+              type="button"
+              onClick={() => setSelectedReview(null)}
+              className="absolute right-4 top-3 text-xl font-medium leading-none text-[#2D3D4D]"
+              aria-label="Close popup"
+            >
+              ×
+            </button>
+
+            <h3 className="pr-8 text-lg font-bold leading-normal text-[#2D3D4D]">
+              {selectedReview.title?.trim() || "Customer Review"}
+            </h3>
+
+            {selectedReview.subtitle?.trim() && (
+              <p className="mt-1 text-sm font-medium leading-normal text-[#334155]">
+                {selectedReview.subtitle}
+              </p>
+            )}
+
+            <div className="mt-4 flex items-center gap-1">
+              {Array.from({ length: 5 }).map((_, starIndex) => (
+                <span
+                  key={starIndex}
+                  className={`flex h-6 w-6 items-center justify-center rounded-[2px] text-white ${
+                    starIndex < selectedReview.rating ? "bg-[#00A56F]" : "bg-[#CFD6DD]"
+                  }`}
+                >
+                  <Star className="h-4 w-4 fill-current" />
+                </span>
+              ))}
+            </div>
+
+            {selectedReview.video?.trim() && (
+              <video
+                className="mt-4 h-[220px] w-full rounded-[8px] object-cover"
+                src={selectedReview.video}
+                controls
+                preload="metadata"
+              />
+            )}
+
+            <p className="mt-4 text-sm md:text-base font-normal leading-relaxed text-[#2D3D4D]">
+              {selectedReview.review?.trim() || "No written review provided."}
+            </p>
+
+            <div className="mt-5 grid grid-cols-1 gap-2 text-sm text-[#2D3D4D]">
+              <p>
+                <span className="font-semibold">Name:</span> {selectedReview.name}
+              </p>
+              <p>
+                <span className="font-semibold">Location:</span> {selectedReview.location}
+              </p>
+              <p>
+                <span className="font-semibold">Status:</span>{" "}
+                {selectedReview.isVerified ? "Verified customer" : "Customer"}
+              </p>
+              <p>
+                <span className="font-semibold">Rating:</span> {selectedReview.rating} / 5
+              </p>
+              {selectedReview.createdAt && (
+                <p>
+                  <span className="font-semibold">Date:</span>{" "}
+                  {new Date(selectedReview.createdAt).toLocaleDateString()}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
