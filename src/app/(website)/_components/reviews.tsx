@@ -187,19 +187,21 @@ const Reviews = () => {
                       hover:shadow-[0_6px_25px_rgba(238,103,102,0.5)]
                       hover:-translate-y-1"
                     >
-                      {/* Stars */}
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: 5 }).map((_, starIndex) => (
-                          <span
-                            key={starIndex}
-                            className={`flex h-6 w-6 items-center justify-center rounded-[2px] text-white ${
-                              starIndex < review.rating ? "bg-[#00A56F]" : "bg-[#CFD6DD]"
-                            }`}
-                          >
-                            <Star className="h-4 w-4 fill-current" />
-                          </span>
-                        ))}
-                      </div>
+                      {/* Stars — hidden when video is present */}
+                      {!review.video?.trim() && (
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: 5 }).map((_, starIndex) => (
+                            <span
+                              key={starIndex}
+                              className={`flex h-6 w-6 items-center justify-center rounded-[2px] text-white ${
+                                starIndex < review.rating ? "bg-[#00A56F]" : "bg-[#CFD6DD]"
+                              }`}
+                            >
+                              <Star className="h-4 w-4 fill-current" />
+                            </span>
+                          ))}
+                        </div>
+                      )}
 
                       {/* Video */}
                       {review.video?.trim() && (
@@ -265,18 +267,21 @@ const Reviews = () => {
               ×
             </button>
 
-            <div className="mt-4 flex items-center gap-1">
-              {Array.from({ length: 5 }).map((_, starIndex) => (
-                <span
-                  key={starIndex}
-                  className={`flex h-6 w-6 items-center justify-center rounded-[2px] text-white ${
-                    starIndex < selectedReview.rating ? "bg-[#00A56F]" : "bg-[#CFD6DD]"
-                  }`}
-                >
-                  <Star className="h-4 w-4 fill-current" />
-                </span>
-              ))}
-            </div>
+            {/* Stars — hidden when video is present */}
+            {!selectedReview.video?.trim() && (
+              <div className="mt-4 flex items-center gap-1">
+                {Array.from({ length: 5 }).map((_, starIndex) => (
+                  <span
+                    key={starIndex}
+                    className={`flex h-6 w-6 items-center justify-center rounded-[2px] text-white ${
+                      starIndex < selectedReview.rating ? "bg-[#00A56F]" : "bg-[#CFD6DD]"
+                    }`}
+                  >
+                    <Star className="h-4 w-4 fill-current" />
+                  </span>
+                ))}
+              </div>
+            )}
 
             {selectedReview.video?.trim() && (
               <video
@@ -287,9 +292,12 @@ const Reviews = () => {
               />
             )}
 
-            <p className="mt-4 text-sm md:text-base font-normal leading-relaxed text-[#2D3D4D]">
-              {selectedReview.review?.trim() || "No written review provided."}
-            </p>
+            {/* Review text — hide fallback message when video is present */}
+            {(selectedReview.review?.trim() || !selectedReview.video?.trim()) && (
+              <p className="mt-4 text-sm md:text-base font-normal leading-relaxed text-[#2D3D4D]">
+                {selectedReview.review?.trim() || "No written review provided."}
+              </p>
+            )}
 
             <div className="mt-5 grid grid-cols-1 gap-2 text-sm text-[#2D3D4D]">
               <p>
@@ -302,9 +310,12 @@ const Reviews = () => {
                 <span className="font-semibold">Status:</span>{" "}
                 {selectedReview.isVerified ? "Verified customer" : "Customer"}
               </p>
-              <p>
-                <span className="font-semibold">Rating:</span> {selectedReview.rating} / 5
-              </p>
+              {/* Rating — hidden when video is present */}
+              {!selectedReview.video?.trim() && (
+                <p>
+                  <span className="font-semibold">Rating:</span> {selectedReview.rating} / 5
+                </p>
+              )}
               {selectedReview.createdAt && (
                 <p>
                   <span className="font-semibold">Date:</span>{" "}

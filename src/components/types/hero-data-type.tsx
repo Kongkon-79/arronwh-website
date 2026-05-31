@@ -19,6 +19,7 @@ export interface Banner {
   secondTitle: string;
   subTitle: string;
   feature: string[]; 
+  buttonText: string;
   image: string;
   imageText: string;
   backgroundColor: string;
