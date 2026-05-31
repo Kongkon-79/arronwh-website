@@ -1,5 +1,7 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
+
 import BoilerFlowShell from "@/app/(website)/(boilers)/_components/boiler-flow-shell";
 import HelpContainer from "@/app/(website)/helps/_components.tsx/help-container";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -52,6 +54,17 @@ const PropertyOverviewContainer = () => {
   const [otherRoomName, setOtherRoomName] = useState("");
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
+  const { data: priceData } = useQuery({
+    queryKey: ["quize-price-management"],
+    queryFn: async () => {
+      const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001/api/v1";
+      const res = await fetch(`${baseUrl}/quize-price-management`);
+      if (!res.ok) throw new Error("Failed to fetch prices");
+      const data = await res.json();
+      return data?.data?.[0]?.value || [];
+    },
+  });
+
   const step = propertyChoiceSteps[currentStep];
   const maxStep = propertyChoiceSteps.length - 1;
   const activeTopStep = useMemo(() => {
@@ -103,9 +116,17 @@ const PropertyOverviewContainer = () => {
       propertyChoiceSteps
         .map((item) => {
           const selectedAnswer = answers[item.id] || "";
-          const selectedOption = item.options.find(
+          let selectedOption = item.options.find(
             (option) => option.value === selectedAnswer,
           );
+
+          if (item.id === "newBoilerLocation" && priceData && priceData.length > 0 && selectedOption) {
+            const dynamicPrice = priceData.find((p: { name: string; value: string }) => p.name === selectedOption?.label);
+            if (dynamicPrice) {
+              selectedOption = { ...selectedOption, priceTag: dynamicPrice.value };
+            }
+          }
+
           const parsedPrice = parsePriceTag(selectedOption?.priceTag);
 
           return {
@@ -115,21 +136,34 @@ const PropertyOverviewContainer = () => {
           };
         })
         .filter((item) => item.answer),
-    [answers],
+    [answers, priceData],
   );
   const stepOptions = useMemo(() => {
     if (!step) return [];
+    
+    let options = step.options;
+    
     if (
       step.id === "differentPlace" &&
       answers.currentBoilerLocation === "Airing cupboard"
     ) {
-      return step.options.filter(
+      options = options.filter(
         (option) => option.value !== "Move to airing cupboard",
       );
     }
 
-    return step.options;
-  }, [answers.currentBoilerLocation, step]);
+    if (step.id === "newBoilerLocation" && priceData && priceData.length > 0) {
+      options = options.map((opt) => {
+        const dynamicPrice = priceData.find((p: { name: string; value: string }) => p.name === opt.label);
+        if (dynamicPrice) {
+          return { ...opt, priceTag: dynamicPrice.value };
+        }
+        return opt;
+      });
+    }
+
+    return options;
+  }, [answers.currentBoilerLocation, step, priceData]);
   const optionCardWidthClass = useMemo(() => {
     if (step?.id === "convertToCombi") return "w-[300px]";
     if (step?.id === "currentBoilerLocation") return "w-[300px]";
@@ -1268,7 +1302,7 @@ const PropertyOverviewContainer = () => {
                         className={cn(
                           "absolute top-2 right-2 rounded-[10px] px-3 py-1 text-sm font-bold text-white",
                           option.priceTag === "Free"
-                            ? "bg-primary"
+                            ? "bg-primary text-black"
                             : "bg-[#24384B]",
                         )}
                       >

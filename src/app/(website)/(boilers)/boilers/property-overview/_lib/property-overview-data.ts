@@ -99,14 +99,14 @@ export type ChoiceStep = {
   cols?: string;
 };
 
-export type BoilerProduct = {
-  id: string;
-  name: string;
-  badge: string;
-  monthlyPrice: string;
-  yearlyService: string;
-  efficiency: string;
-};
+// export type BoilerProduct = {
+//   id: string;
+//   name: string;
+//   badge: string;
+//   monthlyPrice: string;
+//   yearlyService: string;
+//   efficiency: string;
+// };
 
 export const propertyChoiceSteps: ChoiceStep[] = [
   {
@@ -331,12 +331,22 @@ export const propertyChoiceSteps: ChoiceStep[] = [
         image: AiringCupboard,
         priceTag: "Free",
       },
-      { label: "Utility room", value: "Utility room", image: UtilityRoom, priceTag: "+£1,300" },
-      { label: "Kitchen", value: "Kitchen", image: Kitchen, priceTag: "+£1,300" },
-      { label: "Garage", value: "Garage", image: Garage, priceTag: "+£1,300" },
-      { label: "Bathroom", value: "Bathroom", image: Bathroom, priceTag: "+£1,300" },
-      { label: "Bedroom", value: "Bedroom", image: Bedroom, priceTag: "+£1,300" },
-      { label: "Loft or attic", value: "Loft or attic", image: LoftAttic, priceTag: "+£1,500" },
+
+      { label: "Utility room", value: "Utility room", image: UtilityRoom },
+      { label: "Kitchen", value: "Kitchen", image: Kitchen },
+      { label: "Garage", value: "Garage", image: Garage },
+      { label: "Bathroom", value: "Bathroom", image: Bathroom },
+      { label: "Bedroom", value: "Bedroom", image: Bedroom },
+      { label: "Loft or attic", value: "Loft or attic", image: LoftAttic },
+
+      // { label: "Utility room", value: "Utility room", image: UtilityRoom, priceTag: "+£1,300" },
+      // { label: "Kitchen", value: "Kitchen", image: Kitchen, priceTag: "+£1,300" },
+      // { label: "Garage", value: "Garage", image: Garage, priceTag: "+£1,300" },
+      // { label: "Bathroom", value: "Bathroom", image: Bathroom, priceTag: "+£1,300" },
+      // { label: "Bedroom", value: "Bedroom", image: Bedroom, priceTag: "+£1,300" },
+      // { label: "Loft or attic", value: "Loft or attic", image: LoftAttic, priceTag: "+£1,500" },
+
+
       { label: "Other", value: "Somewhere else", image: Other },
     ],
   },
@@ -592,29 +602,29 @@ export const propertyChoiceSteps: ChoiceStep[] = [
   },
 ];
 
-export const boilerProducts: BoilerProduct[] = [
-  {
-    id: "alpha-e-tech",
-    name: "Alpha E-Tech 30",
-    badge: "Most popular",
-    monthlyPrice: "GBP 29.99 / month",
-    yearlyService: "GBP 120 / year",
-    efficiency: "A-Rated, 93%",
-  },
-  {
-    id: "worcester-4000",
-    name: "Worcester Bosch 4000",
-    badge: "Best value",
-    monthlyPrice: "GBP 34.99 / month",
-    yearlyService: "GBP 140 / year",
-    efficiency: "A-Rated, 94%",
-  },
-  {
-    id: "ideal-logic-max",
-    name: "Ideal Logic Max",
-    badge: "Long warranty",
-    monthlyPrice: "GBP 39.99 / month",
-    yearlyService: "GBP 150 / year",
-    efficiency: "A-Rated, 94%",
-  },
-];
+// export const boilerProducts: BoilerProduct[] = [
+//   {
+//     id: "alpha-e-tech",
+//     name: "Alpha E-Tech 30",
+//     badge: "Most popular",
+//     monthlyPrice: "GBP 29.99 / month",
+//     yearlyService: "GBP 120 / year",
+//     efficiency: "A-Rated, 93%",
+//   },
+//   {
+//     id: "worcester-4000",
+//     name: "Worcester Bosch 4000",
+//     badge: "Best value",
+//     monthlyPrice: "GBP 34.99 / month",
+//     yearlyService: "GBP 140 / year",
+//     efficiency: "A-Rated, 94%",
+//   },
+//   {
+//     id: "ideal-logic-max",
+//     name: "Ideal Logic Max",
+//     badge: "Long warranty",
+//     monthlyPrice: "GBP 39.99 / month",
+//     yearlyService: "GBP 150 / year",
+//     efficiency: "A-Rated, 94%",
+//   },
+// ];
