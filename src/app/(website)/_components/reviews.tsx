@@ -181,7 +181,7 @@ const Reviews = () => {
                     className="basis-[88%] pl-6 sm:basis-[62%] md:basis-[38%] lg:basis-[31%] xl:basis-[28%]"
                   >
                     {/* CARD */}
-                    <article className="flex min-h-[240px] flex-col rounded-[10px] bg-white p-4 
+                    <article className="flex h-full flex-col rounded-[10px] bg-white p-4 
                       shadow-[0_0px_12px_#EE6766] 
                       transition-all duration-300
                       hover:shadow-[0_6px_25px_rgba(238,103,102,0.5)]
@@ -201,30 +201,44 @@ const Reviews = () => {
                         ))}
                       </div>
 
-
+                      {/* Video */}
+                      {review.video?.trim() && (
+                        <video
+                          className="mt-4 h-[140px] w-full rounded-[8px] object-cover"
+                          src={review.video}
+                          controls
+                          preload="metadata"
+                        />
+                      )}
 
                       {/* Review */}
-                      <p className="mt-3 desc">{`"${review.review?.trim() || "No written review provided."}"`}</p>
+                      {review.review?.trim() ? (
+                        <p className="mt-3 desc line-clamp-3">{`"${review.review.trim()}"`}</p>
+                      ) : (
+                        !review.video?.trim() && (
+                          <p className="mt-3 desc italic text-gray-500">No written review provided.</p>
+                        )
+                      )}
 
                       {/* Footer */}
                       <div className="mt-auto pt-5">
                         <div className="flex items-center justify-between gap-3">
-                          <h3 className="text-sm md:text-base leading-normal font-bold text-[#2D3D4D]">
+                          <h3 className="text-sm md:text-base leading-normal font-bold text-[#2D3D4D] line-clamp-1">
                             {review.name}
                           </h3>
-                          <span className="text-xs font-medium text-black leading-normal">
+                          <span className="text-xs font-medium text-black leading-normal whitespace-nowrap">
                             {review.isVerified ? "Verified customer" : "Customer"}
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between gap-3">
-                          <p className="mt-3 text-xs md:text-sm font-normal leading-normal text-[#2D3D4D]">
+                          <p className="mt-3 text-xs md:text-sm font-normal leading-normal text-[#2D3D4D] line-clamp-1">
                           {review.location}
                           </p>
                           <button
                             type="button"
                             onClick={() => setSelectedReview(review)}
-                            className="mt-3 text-xs md:text-sm font-semibold leading-normal text-[#EE6766] underline underline-offset-2"
+                            className="mt-3 text-xs md:text-sm font-semibold leading-normal text-[#EE6766] underline underline-offset-2 whitespace-nowrap"
                           >
                             View More
                           </button>
