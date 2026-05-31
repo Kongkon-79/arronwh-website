@@ -28,12 +28,84 @@ type ReviewResponse = {
   meta?: { page?: number; limit?: number; total?: number };
 };
 
+type FooterManagement = {
+  location?: string;
+  email?: string;
+  phone?: string;
+  reviewDescription?: string;
+};
+
+type FooterManagementResponse = {
+  success?: boolean;
+  message?: string;
+  data?: FooterManagement[];
+};
+
+const FOOTER_MANAGEMENT_QUERY_KEY = ["footer-management"];
+
+const footerFallback: Required<FooterManagement> = {
+  location: "London, United Kingdom",
+  email: "hello@yoloheat.co.uk",
+  phone: "0800 123 4567",
+  reviewDescription:
+    "Your trusted boiler installation experts. Fast, professional, and affordable heating solutions.",
+};
+
+const resolveFooterManagementEndpoint = () => {
+  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/footer-management`;
+  }
+
+  return "/api/v1/footer-management";
+};
+
+const fetchFooterManagement = async (): Promise<FooterManagement | null> => {
+  const response = await fetch(resolveFooterManagementEndpoint(), {
+    headers: {
+      accept: "application/json",
+    },
+  });
+
+  const result = (await response
+    .json()
+    .catch(() => null)) as FooterManagementResponse | null;
+
+  if (!response.ok || !result?.success) {
+    throw new Error(result?.message || "Failed to fetch footer management");
+  }
+
+  return result.data?.[0] ?? null;
+};
+
+const FooterSkeletonLine = ({ className }: { className: string }) => (
+  <span
+    aria-hidden="true"
+    className={`block animate-pulse rounded bg-[#DDE4EC] ${className}`}
+  />
+);
+
 const Footer = () => {
   const { data: logo, isLoading: isLogoLoading } = useQuery({
     queryKey: NAVBAR_LOGO_QUERY_KEY,
     queryFn: fetchNavbarLogo,
   });
   const logoSrc = logo?.image?.trim() || "/assets/images/navlogo.png";
+
+  const { data: footerManagement, isLoading: isFooterManagementLoading } =
+    useQuery({
+      queryKey: FOOTER_MANAGEMENT_QUERY_KEY,
+      queryFn: fetchFooterManagement,
+    });
+
+  const footerContact = {
+    location: footerManagement?.location?.trim() || footerFallback.location,
+    email: footerManagement?.email?.trim() || footerFallback.email,
+    phone: footerManagement?.phone?.trim() || footerFallback.phone,
+    reviewDescription:
+      footerManagement?.reviewDescription?.trim() ||
+      footerFallback.reviewDescription,
+  };
+  const phoneHref = `tel:${footerContact.phone.replace(/[^\d+]/g, "")}`;
 
   const { data: reviewData } = useQuery<ReviewResponse>({
     queryKey: ["reviews-summary"],
@@ -133,10 +205,15 @@ const Footer = () => {
               </p>
             </div>
 
-            <p className="mt-2 desc">
-              Your trusted boiler installation experts. Fast, professional, and
-              affordable heating solutions.
-            </p>
+            {isFooterManagementLoading ? (
+              <div className="mt-2 space-y-2">
+                <FooterSkeletonLine className="h-3 w-full" />
+                <FooterSkeletonLine className="h-3 w-11/12" />
+                <FooterSkeletonLine className="h-3 w-4/5" />
+              </div>
+            ) : (
+              <p className="mt-2 desc">{footerContact.reviewDescription}</p>
+            )}
           </div>
 
           <div>
@@ -194,22 +271,43 @@ const Footer = () => {
             </h3>
 
             <div className="mt-4 space-y-3">
-              <div className="flex items-center gap-3 desc">
-                <Phone className="h-4 w-4 text-[#334155]" />
-                <Link href="tel:08001234567">0800 123 4567</Link>
-              </div>
+              {isFooterManagementLoading ? (
+                <>
+                  <div className="flex items-center gap-3 desc">
+                    <Phone className="h-4 w-4 text-[#334155]" />
+                    <FooterSkeletonLine className="h-4 w-28" />
+                  </div>
 
-              <div className="flex items-center gap-3 desc">
-                <Mail className="h-4 w-4 text-[#334155]" />
-                <Link href="mailto:hello@yoloheat.co.uk">
-                  hello@yoloheat.co.uk
-                </Link>
-              </div>
+                  <div className="flex items-center gap-3 desc">
+                    <Mail className="h-4 w-4 text-[#334155]" />
+                    <FooterSkeletonLine className="h-4 w-40" />
+                  </div>
 
-              <div className="flex items-start gap-3 desc">
-                <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#334155]" />
-                <span>London, United Kingdom</span>
-              </div>
+                  <div className="flex items-start gap-3 desc">
+                    <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#334155]" />
+                    <FooterSkeletonLine className="h-4 w-36" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3 desc">
+                    <Phone className="h-4 w-4 text-[#334155]" />
+                    <Link href={phoneHref}>{footerContact.phone}</Link>
+                  </div>
+
+                  <div className="flex items-center gap-3 desc">
+                    <Mail className="h-4 w-4 text-[#334155]" />
+                    <Link href={`mailto:${footerContact.email}`}>
+                      {footerContact.email}
+                    </Link>
+                  </div>
+
+                  <div className="flex items-start gap-3 desc">
+                    <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#334155]" />
+                    <span>{footerContact.location}</span>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="mt-5 flex items-center gap-2">
