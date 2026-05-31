@@ -1249,10 +1249,10 @@ const PropertyOverviewContainer = () => {
                     key={option.value}
                     onClick={() => handleOptionSelect(option.value)}
                     className={cn(
-                      "group relative rounded-[12px] px-3 py-3 text-[#2D3D4D] transition ",
+                      "group relative rounded-[12px] px-3 py-3 text-[#2D3D4D] transition  ",
                       isConvertStep || isWaterFlowStep
-                        ? "h-[400px]"
-                        : "h-[400px]",
+                        ? "h-[250px] md:h-[400px]"
+                        : "h-[250px] md:h-[400px]",
                       optionCardWidthClass,
                       selected
                         ? isNewBoilerLocationStep
@@ -1284,7 +1284,7 @@ const PropertyOverviewContainer = () => {
                           height={220}
                           className={cn(
                             "w-auto object-contain transition-all duration-200 ",
-                            isFuelTypeCard ? "h-[150px]" : "h-[150px]",
+                            isFuelTypeCard ? "h-24 md:h-[150px]" : "h-24 md:h-[150px]",
                           )}
                         />
                       ) : Icon ? (
@@ -1301,7 +1301,7 @@ const PropertyOverviewContainer = () => {
                       ) : null}
                       <span
                         className={cn(
-                          "text-center text-lg md:text-xl leading-normal font-semibold transition-colors duration-200",
+                          "text-center text-base md:text-lg xl:text-xl leading-normal font-semibold transition-colors duration-200",
                           selected ? "text-[#2D3D4D]" : "text-[#2D3D4D]",
                           !selected && "group-hover:text-[#2D3D4D]",
                         )}
