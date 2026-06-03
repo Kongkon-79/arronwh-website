@@ -135,7 +135,7 @@ const HeroSection = () => {
       <div className="container px-1 py-2 md:py-16 lg:py-20">
         <div className="grid items-center lg:grid-cols-2 gap-6 md:gap-8 lg:gap-8">
           {/* LEFT */}
-          <div className="order-2 md:order-1 mx-auto w-full p-6 md:p-8">
+          <div className="order-2 md:order-1 mx-auto w-full p-2 md:p-4">
             <h1
               style={{ color: banner?.textColor || "#2D3D4D" }}
               className="text-4xl md:text-5xl lg:text-6xl xl:text-8xl font-semibold leading-normal"
