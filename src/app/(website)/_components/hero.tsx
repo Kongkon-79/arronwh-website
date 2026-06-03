@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
+  fetchPostcodeLocations,
+  clearPostcodeLocationSelection,
   isValidUKPostcode,
   loadPostcodeLocationSelection,
   savePostcodeLocationSelection,
@@ -17,6 +19,11 @@ const HeroSection = () => {
   const router = useRouter();
   const [postcode, setPostcode] = useState("");
   const [postcodeError, setPostcodeError] = useState<string | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState("");
+  const [addressOptions, setAddressOptions] = useState<string[]>([]);
+  const [addressError, setAddressError] = useState<string | null>(null);
+  const [isAddressLoading, setIsAddressLoading] = useState(false);
+  const [isAddressDropdownOpen, setIsAddressDropdownOpen] = useState(false);
 
   const { data, isLoading, isError } = useQuery<BannerApiResponse>({
     queryKey: ["heroData"],
@@ -46,10 +53,68 @@ const HeroSection = () => {
     if (storedSelection.postcode) {
       setPostcode(storedSelection.postcode);
     }
+
+    if (storedSelection.installAddress) {
+      setSelectedAddress(storedSelection.installAddress);
+    }
   }, []);
+
+  useEffect(() => {
+    const trimmedPostcode = postcode.trim();
+
+    if (!trimmedPostcode || !isValidUKPostcode(trimmedPostcode)) {
+      setAddressOptions([]);
+      setAddressError(null);
+      setIsAddressLoading(false);
+      setIsAddressDropdownOpen(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      setIsAddressLoading(true);
+      setAddressError(null);
+      setIsAddressDropdownOpen(true);
+
+      fetchPostcodeLocations(trimmedPostcode, controller.signal)
+        .then((locations) => {
+          setAddressOptions(locations);
+          setIsAddressDropdownOpen(true);
+          if (locations.length === 0) {
+            setAddressError("No addresses found for this postcode.");
+          }
+        })
+        .catch((error) => {
+          if (error instanceof DOMException && error.name === "AbortError") {
+            return;
+          }
+
+          setAddressOptions([]);
+          setAddressError(
+            error instanceof Error
+              ? error.message
+              : "Unable to fetch addresses for this postcode.",
+          );
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) {
+            setIsAddressLoading(false);
+          }
+        });
+    }, 400);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [postcode]);
 
   const handlePostcodeChange = (value: string) => {
     setPostcode(value);
+    setSelectedAddress("");
+    setAddressOptions([]);
+    setAddressError(null);
+    setIsAddressDropdownOpen(false);
 
     if (postcodeError) {
       setPostcodeError(null);
@@ -58,24 +123,43 @@ const HeroSection = () => {
 
   const handleGetQuote = () => {
     const trimmedPostcode = postcode.trim();
+    const hasPostcode = Boolean(trimmedPostcode);
+    const hasAddress = Boolean(selectedAddress.trim());
 
-    if (!trimmedPostcode) {
-      setPostcodeError("Postcode is required.");
-    } else if (!isValidUKPostcode(trimmedPostcode)) {
+    if (hasPostcode && !isValidUKPostcode(trimmedPostcode)) {
       setPostcodeError("Only valid UK postcode is allowed.");
-    } else {
-      setPostcodeError(null);
-    }
-
-    if (!trimmedPostcode || !isValidUKPostcode(trimmedPostcode)) {
       toast.error("Please enter a valid postcode to continue.");
       return;
     }
 
+    if (hasPostcode && !hasAddress) {
+      setAddressError("Please select your address.");
+      setIsAddressDropdownOpen(true);
+      toast.error("Please select an address to continue.");
+      return;
+    }
+
+    if (!hasPostcode) {
+      setPostcodeError(null);
+      setAddressError(null);
+      setSelectedAddress("");
+      setAddressOptions([]);
+      setIsAddressDropdownOpen(false);
+      clearPostcodeLocationSelection();
+      router.push("/boilers/property-overview");
+      return;
+    }
+
+    if (!trimmedPostcode) {
+      setPostcodeError("Postcode is required.");
+    } else {
+      setPostcodeError(null);
+    }
+
     savePostcodeLocationSelection({
       postcode: trimmedPostcode,
-      installAddress: "",
-    });
+      installAddress: selectedAddress.trim(),
+    }, "hero");
 
     router.push("/boilers/property-overview");
   };
@@ -212,28 +296,97 @@ const HeroSection = () => {
               }}
               className="mt-6 w-full md:w-[80%]"
             >
-              <div className="h-[52px] mt-6 flex justify-between items-center gap-4 bg-white p-1 rounded-full w-full shadow-md">
-                <input
-                  type="text"
-                  placeholder="Enter postcode"
-                  value={postcode}
-                  onChange={(event) =>
-                    handlePostcodeChange(event.target.value.toUpperCase())
-                  }
-                  className="px-4 py-2 w-1/2 rounded-full focus:outline-none"
-                />
+              <div className="relative rounded-[999px] bg-white p-1 shadow-md">
+                <div className="flex h-[52px] items-center gap-4 rounded-[999px]">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      placeholder="Enter postcode"
+                      value={postcode}
+                      onChange={(event) =>
+                        handlePostcodeChange(event.target.value.toUpperCase())
+                      }
+                      onFocus={() => {
+                        if (
+                          isAddressLoading ||
+                          addressOptions.length > 0 ||
+                          addressError
+                        ) {
+                          setIsAddressDropdownOpen(true);
+                        }
+                      }}
+                      onBlur={() => {
+                        window.setTimeout(
+                          () => setIsAddressDropdownOpen(false),
+                          150,
+                        );
+                      }}
+                      className="h-full w-full rounded-full px-4 py-2 focus:outline-none"
+                    />
+                  </div>
 
-                <button
-                  type="submit"
-                  className="px-6 py-[10px] bg-black text-white rounded-full hover:scale-105 transition-all duration-300"
-                >
-                  {banner?.buttonText || "Get quote"}
-                </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-[10px] bg-black text-white rounded-full hover:scale-105 transition-all duration-300"
+                  >
+                    {banner?.buttonText || "Get quote"}
+                  </button>
+                </div>
+
+                {isAddressDropdownOpen &&
+                  (isAddressLoading ||
+                    addressOptions.length > 0 ||
+                    addressError) && (
+                    <div
+                      className="absolute left-0 right-0 top-full z-50 mt-1 max-h-40 overflow-y-auto rounded-2xl border border-[#D5DCE3] bg-white shadow-lg"
+                      data-lenis-prevent
+                      data-lenis-prevent-wheel
+                      data-lenis-prevent-touch
+                    >
+                      {isAddressLoading ? (
+                        <div className="space-y-2 px-4 py-3 animate-pulse">
+                          <div className="h-5 w-full rounded bg-[#F0F3F6]" />
+                          <div className="h-5 w-[88%] rounded bg-[#F0F3F6]" />
+                          <div className="h-5 w-[72%] rounded bg-[#F0F3F6]" />
+                        </div>
+                      ) : addressOptions.length > 0 ? (
+                        addressOptions.map((address) => (
+                          <button
+                            key={address}
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              setSelectedAddress(address);
+                              setAddressError(null);
+                              setIsAddressDropdownOpen(false);
+                            }}
+                            className={`block w-full px-4 py-3 text-left text-base text-[#2D3D4D] hover:bg-[#F0F3F6] ${
+                              selectedAddress === address
+                                ? "bg-[#F0F3F6] font-medium"
+                                : ""
+                            }`}
+                          >
+                            {address}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-base text-red-500">
+                          {addressError || "No addresses found for this postcode."}
+                        </div>
+                      )}
+                    </div>
+                  )}
               </div>
 
               {postcodeError && (
                 <p className="mt-2 text-sm font-medium text-red-500">
                   {postcodeError}
+                </p>
+              )}
+
+              {selectedAddress && !addressError && (
+                <p className="mt-2 text-sm font-medium text-[#2D3D4D]">
+                  Selected address: {selectedAddress}
                 </p>
               )}
             </form>
