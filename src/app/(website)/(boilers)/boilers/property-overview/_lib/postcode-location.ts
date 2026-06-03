@@ -3,6 +3,7 @@ export const POSTCODE_LOCATION_STORAGE_KEY = "property-overview-postcode-locatio
 export type PostcodeLocationSelection = {
   postcode: string;
   installAddress: string;
+  source?: "hero" | "manual";
 };
 
 type PostcodeApiResponse = {
@@ -120,6 +121,10 @@ export const loadPostcodeLocationSelection = ():
       typeof parsedValue.installAddress === "string"
         ? parsedValue.installAddress.trim()
         : "";
+    const source =
+      parsedValue.source === "hero" || parsedValue.source === "manual"
+        ? parsedValue.source
+        : undefined;
 
     if (!postcode && !installAddress) {
       return null;
@@ -128,6 +133,7 @@ export const loadPostcodeLocationSelection = ():
     return {
       postcode,
       installAddress,
+      source,
     };
   } catch {
     return null;
@@ -136,6 +142,7 @@ export const loadPostcodeLocationSelection = ():
 
 export const savePostcodeLocationSelection = (
   selection: PostcodeLocationSelection,
+  source: "hero" | "manual" = "hero",
 ) => {
   if (typeof window === "undefined") {
     return;
@@ -146,6 +153,7 @@ export const savePostcodeLocationSelection = (
     JSON.stringify({
       postcode: selection.postcode.trim(),
       installAddress: selection.installAddress.trim(),
+      source,
     }),
   );
 };

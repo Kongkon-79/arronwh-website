@@ -28,6 +28,7 @@ interface PersonalInfoFormProps {
   isSubmitting: boolean;
   submitError: string | null;
   canMoveNext: boolean;
+  isLocationLocked: boolean;
 }
 
 const getCountryDialCodeVariants = (dialCode: string): string[] => {
@@ -97,6 +98,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   isSubmitting,
   submitError,
   canMoveNext,
+  isLocationLocked,
 }) => {
   const [selectedCountry, setSelectedCountry] = useState(
     countries.find((c) => c.code === "GB") || countries[0],
@@ -113,6 +115,14 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   const titles = ["Mr", "Mrs", "Ms", "Dr"];
 
   useEffect(() => {
+    if (isLocationLocked) {
+      setAddressOptions([]);
+      setAddressError(null);
+      setIsAddressLoading(false);
+      setIsAddressDropdownOpen(false);
+      return;
+    }
+
     const postcode = personalInfo.postcode.trim();
 
     if (!postcode || !isValidUKPostcode(postcode)) {
@@ -160,9 +170,13 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [personalInfo.postcode]);
+  }, [isLocationLocked, personalInfo.postcode]);
 
   const handlePostcodeChange = (value: string) => {
+    if (isLocationLocked) {
+      return;
+    }
+
     setPersonalInfo("postcode", value);
     setPersonalInfo("installAddress", "");
     setAddressOptions([]);
@@ -319,92 +333,110 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
         <label className="block text-base md:text-[17px] font-medium text-[#2D3D4D]">
           Enter your postcode
         </label>
-        <div className="relative">
+        {isLocationLocked ? (
           <input
             type="text"
             value={personalInfo.postcode}
-            onChange={(e) => handlePostcodeChange(e.target.value.toUpperCase())}
-            onFocus={() => {
-              if (isAddressLoading || addressOptions.length > 0 || addressError) {
-                setIsAddressDropdownOpen(true);
-              }
-            }}
-            onBlur={() => {
-              window.setTimeout(() => setIsAddressDropdownOpen(false), 150);
-            }}
-            placeholder="e.g. SW1A 1AA"
-            className={cn(
-              "h-12 w-full rounded-none border-b bg-[#F0F3F6] px-4 pr-11 text-base text-[#2D3D4D] placeholder:text-[#7D8A98] focus:outline-none focus:ring-1",
-              postcodeError || (addressError && !personalInfo.installAddress)
-                ? "border-red-500 focus:ring-red-500"
-                : "border-[#2D3D4D] focus:ring-primary",
-            )}
+            disabled
+            readOnly
+            className="h-12 w-full cursor-not-allowed border-b border-[#2D3D4D] bg-[#E9EEF3] px-4 text-base text-[#2D3D4D] opacity-100 focus:outline-none"
           />
-          <ChevronDown
-            className={cn(
-              "pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#2D3D4D] transition-transform",
-              isAddressDropdownOpen && "rotate-180",
-            )}
-          />
+        ) : (
+          <div className="relative">
+            <input
+              type="text"
+              value={personalInfo.postcode}
+              onChange={(e) => handlePostcodeChange(e.target.value.toUpperCase())}
+              onFocus={() => {
+                if (isAddressLoading || addressOptions.length > 0 || addressError) {
+                  setIsAddressDropdownOpen(true);
+                }
+              }}
+              onBlur={() => {
+                window.setTimeout(() => setIsAddressDropdownOpen(false), 150);
+              }}
+              placeholder="e.g. SW1A 1AA"
+              className={cn(
+                "h-12 w-full rounded-none border-b bg-[#F0F3F6] px-4 pr-11 text-base text-[#2D3D4D] placeholder:text-[#7D8A98] focus:outline-none focus:ring-1",
+                postcodeError || (addressError && !personalInfo.installAddress)
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-[#2D3D4D] focus:ring-primary",
+              )}
+            />
+            <ChevronDown
+              className={cn(
+                "pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#2D3D4D] transition-transform",
+                isAddressDropdownOpen && "rotate-180",
+              )}
+            />
 
-          {isAddressDropdownOpen &&
-            (isAddressLoading || addressOptions.length > 0 || addressError) && (
-              <div
-                data-lenis-prevent
-                data-lenis-prevent-wheel
-                data-lenis-prevent-touch
-                onWheel={(event) => event.stopPropagation()}
-                onTouchMove={(event) => event.stopPropagation()}
-                className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto overscroll-contain rounded-md border border-[#D5DCE3] bg-white shadow-lg"
-              >
-                {isAddressLoading ? (
-                  <div className="space-y-2 px-4 py-3 animate-pulse">
-                    <div className="h-5 w-full rounded bg-[#F0F3F6]" />
-                    <div className="h-5 w-[88%] rounded bg-[#F0F3F6]" />
-                    <div className="h-5 w-[72%] rounded bg-[#F0F3F6]" />
-                  </div>
-                ) : addressOptions.length > 0 ? (
-                  addressOptions.map((address) => (
-                    <button
-                      key={address}
-                      type="button"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => {
-                        setPersonalInfo("installAddress", address);
-                        setAddressError(null);
-                        setIsAddressDropdownOpen(false);
-                      }}
-                      className={cn(
-                        "block w-full px-4 py-3 text-left text-base text-[#2D3D4D] hover:bg-[#F0F3F6]",
-                        personalInfo.installAddress === address &&
-                          "bg-[#F0F3F6] font-medium",
-                      )}
-                    >
-                      {address}
-                    </button>
-                  ))
-                ) : (
-                  <div className="px-4 py-3 text-base text-red-500">
-                    {addressError || "No addresses found for this postcode."}
-                  </div>
-                )}
-              </div>
-            )}
-        </div>
+            {isAddressDropdownOpen &&
+              (isAddressLoading || addressOptions.length > 0 || addressError) && (
+                <div
+                  data-lenis-prevent
+                  data-lenis-prevent-wheel
+                  data-lenis-prevent-touch
+                  onWheel={(event) => event.stopPropagation()}
+                  onTouchMove={(event) => event.stopPropagation()}
+                  className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto overscroll-contain rounded-md border border-[#D5DCE3] bg-white shadow-lg"
+                >
+                  {isAddressLoading ? (
+                    <div className="space-y-2 px-4 py-3 animate-pulse">
+                      <div className="h-5 w-full rounded bg-[#F0F3F6]" />
+                      <div className="h-5 w-[88%] rounded bg-[#F0F3F6]" />
+                      <div className="h-5 w-[72%] rounded bg-[#F0F3F6]" />
+                    </div>
+                  ) : addressOptions.length > 0 ? (
+                    addressOptions.map((address) => (
+                      <button
+                        key={address}
+                        type="button"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => {
+                          setPersonalInfo("installAddress", address);
+                          setAddressError(null);
+                          setIsAddressDropdownOpen(false);
+                        }}
+                        className={cn(
+                          "block w-full px-4 py-3 text-left text-base text-[#2D3D4D] hover:bg-[#F0F3F6]",
+                          personalInfo.installAddress === address &&
+                            "bg-[#F0F3F6] font-medium",
+                        )}
+                      >
+                        {address}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-base text-red-500">
+                      {addressError || "No addresses found for this postcode."}
+                    </div>
+                  )}
+                </div>
+              )}
+          </div>
+        )}
 
         {postcodeError && (
           <p className="text-sm font-medium text-red-500">{postcodeError}</p>
         )}
 
-        {addressError && !isAddressDropdownOpen && (
+        {!isLocationLocked && addressError && !isAddressDropdownOpen && (
           <p className="text-sm font-medium text-red-500">{addressError}</p>
         )}
 
-        {personalInfo.installAddress && (
+        {isLocationLocked ? (
+          <input
+            type="text"
+            value={personalInfo.installAddress}
+            disabled
+            readOnly
+            className="h-12 w-full cursor-not-allowed border-b border-[#2D3D4D] bg-[#E9EEF3] px-4 text-base text-[#2D3D4D] opacity-100 focus:outline-none"
+          />
+        ) : personalInfo.installAddress ? (
           <p className="text-sm font-medium text-[#2D3D4D]">
             Selected address: {personalInfo.installAddress}
           </p>
-        )}
+        ) : null}
       </div>
 
       {/* Mobile Number */}

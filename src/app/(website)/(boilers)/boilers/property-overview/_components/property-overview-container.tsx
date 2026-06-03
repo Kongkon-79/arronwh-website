@@ -56,17 +56,29 @@ const PropertyOverviewContainer = () => {
   const [isOtherRoomPrompt, setIsOtherRoomPrompt] = useState(false);
   const [otherRoomName, setOtherRoomName] = useState("");
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isLocationLocked, setIsLocationLocked] = useState(false);
 
   useEffect(() => {
     const storedSelection = loadPostcodeLocationSelection();
     if (!storedSelection) {
+      setIsLocationLocked(false);
       return;
     }
 
-    if (!personalInfo.postcode.trim() && storedSelection.postcode) {
+    const shouldLockLocation =
+      storedSelection.source === "hero" &&
+      Boolean(storedSelection.postcode) &&
+      Boolean(storedSelection.installAddress);
+    setIsLocationLocked(shouldLockLocation);
+
+    if (shouldLockLocation && !personalInfo.postcode.trim() && storedSelection.postcode) {
       setPersonalInfo("postcode", storedSelection.postcode);
     }
-  }, [personalInfo.postcode, setPersonalInfo]);
+
+    if (shouldLockLocation && !personalInfo.installAddress.trim() && storedSelection.installAddress) {
+      setPersonalInfo("installAddress", storedSelection.installAddress);
+    }
+  }, [personalInfo.installAddress, personalInfo.postcode, setPersonalInfo]);
 
   const { data: priceData } = useQuery({
     queryKey: ["quize-price-management"],
@@ -1416,6 +1428,7 @@ const PropertyOverviewContainer = () => {
               isSubmitting={isSubmitting}
               submitError={submitError}
               canMoveNext={canMoveNext}
+              isLocationLocked={isLocationLocked}
             />
           )}
         </div>
