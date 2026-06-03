@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { clearPostcodeLocationSelection } from "../_lib/postcode-location";
 
 export type PersonalInfo = {
   title: string;
@@ -156,6 +157,8 @@ export const usePropertyOverviewStore = create<PropertyOverviewState>((set, get)
       if (!response.ok || !data?.success) {
         throw new Error(data?.message || "Failed to create quote");
       }
+
+      clearPostcodeLocationSelection();
 
       set({
         isSubmitting: false,

@@ -4,10 +4,20 @@ import { BannerApiResponse } from "@/components/types/hero-data-type";
 import { useQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import {
+  isValidUKPostcode,
+  loadPostcodeLocationSelection,
+  savePostcodeLocationSelection,
+} from "../(boilers)/boilers/property-overview/_lib/postcode-location";
 
 const HeroSection = () => {
-  
+  const router = useRouter();
+  const [postcode, setPostcode] = useState("");
+  const [postcodeError, setPostcodeError] = useState<string | null>(null);
+
   const { data, isLoading, isError } = useQuery<BannerApiResponse>({
     queryKey: ["heroData"],
     queryFn: async () => {
@@ -26,6 +36,49 @@ const HeroSection = () => {
   const heroPoints: string[] = Array.isArray(banner?.feature)
     ? banner.feature.map((item) => item.replace(/[\[\]"]/g, "").trim())
     : [];
+
+  useEffect(() => {
+    const storedSelection = loadPostcodeLocationSelection();
+    if (!storedSelection) {
+      return;
+    }
+
+    if (storedSelection.postcode) {
+      setPostcode(storedSelection.postcode);
+    }
+  }, []);
+
+  const handlePostcodeChange = (value: string) => {
+    setPostcode(value);
+
+    if (postcodeError) {
+      setPostcodeError(null);
+    }
+  };
+
+  const handleGetQuote = () => {
+    const trimmedPostcode = postcode.trim();
+
+    if (!trimmedPostcode) {
+      setPostcodeError("Postcode is required.");
+    } else if (!isValidUKPostcode(trimmedPostcode)) {
+      setPostcodeError("Only valid UK postcode is allowed.");
+    } else {
+      setPostcodeError(null);
+    }
+
+    if (!trimmedPostcode || !isValidUKPostcode(trimmedPostcode)) {
+      toast.error("Please enter a valid postcode to continue.");
+      return;
+    }
+
+    savePostcodeLocationSelection({
+      postcode: trimmedPostcode,
+      installAddress: "",
+    });
+
+    router.push("/boilers/property-overview");
+  };
 
   // =========================
   // Skeleton (UNCHANGED - your design kept)
@@ -152,27 +205,38 @@ const HeroSection = () => {
               {banner.subTitle}
             </p>
 
-            {/* <div className="h-[52px] mt-6 flex justify-between items-center gap-4 bg-white p-1 rounded-full w-full md:w-[80%] shadow-md">
-              <input
-                type="text"
-                placeholder="Enter postcode"
-                className="px-4 py-2 w-1/2 rounded-full focus:outline-none"
-              />
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                handleGetQuote();
+              }}
+              className="mt-6 w-full md:w-[80%]"
+            >
+              <div className="h-[52px] mt-6 flex justify-between items-center gap-4 bg-white p-1 rounded-full w-full shadow-md">
+                <input
+                  type="text"
+                  placeholder="Enter postcode"
+                  value={postcode}
+                  onChange={(event) =>
+                    handlePostcodeChange(event.target.value.toUpperCase())
+                  }
+                  className="px-4 py-2 w-1/2 rounded-full focus:outline-none"
+                />
 
-              <Link href="boilers/property-overview">
-                <button className="px-6 py-[10px] bg-black text-white rounded-full hover:scale-105 transition-all duration-300">
-                  Fix my price
-                </button>
-              </Link>
-            </div> */}
-
-             <div className="mt-6">
-              <Link href="boilers/property-overview">
-                <button className="px-6 py-[10px] bg-black text-white rounded-full hover:scale-105 transition-all duration-300">
+                <button
+                  type="submit"
+                  className="px-6 py-[10px] bg-black text-white rounded-full hover:scale-105 transition-all duration-300"
+                >
                   {banner?.buttonText || "Get quote"}
                 </button>
-              </Link>
-             </div>
+              </div>
+
+              {postcodeError && (
+                <p className="mt-2 text-sm font-medium text-red-500">
+                  {postcodeError}
+                </p>
+              )}
+            </form>
 
             <ul className="mt-6 space-y-2">
               {heroPoints.map((point, index) => (

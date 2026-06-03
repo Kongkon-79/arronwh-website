@@ -171,7 +171,7 @@ const Footer = () => {
               {isLogoLoading ? (
                 <div
                   aria-hidden="true"
-                  className="h-[80px] w-[220px] animate-pulse rounded-[8px] bg-[#DDE4EC]"
+                  className="h-[80px] w-[170px] animate-pulse rounded-[8px] bg-[#DDE4EC]"
                 />
               ) : (
                 <Image
@@ -179,7 +179,7 @@ const Footer = () => {
                   alt="Yolo Heat logo"
                   width={1000}
                   height={1000}
-                  className="h-[80px] w-[220px] object-cover"
+                  className="h-[80px] w-[170px] object-contain"
                 />
               )}
             </Link>
