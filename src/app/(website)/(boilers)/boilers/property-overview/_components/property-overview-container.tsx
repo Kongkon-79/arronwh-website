@@ -8,9 +8,12 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, Info, MessageCircleQuestion } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { propertyChoiceSteps } from "../_lib/property-overview-data";
+import {
+  loadPostcodeLocationSelection,
+} from "../_lib/postcode-location";
 import { usePropertyOverviewStore } from "../_store/use-property-overview-store";
 import Image from "next/image";
 import PersonalInfoForm from "./personal-info-form";
@@ -53,6 +56,17 @@ const PropertyOverviewContainer = () => {
   const [isOtherRoomPrompt, setIsOtherRoomPrompt] = useState(false);
   const [otherRoomName, setOtherRoomName] = useState("");
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+
+  useEffect(() => {
+    const storedSelection = loadPostcodeLocationSelection();
+    if (!storedSelection) {
+      return;
+    }
+
+    if (!personalInfo.postcode.trim() && storedSelection.postcode) {
+      setPersonalInfo("postcode", storedSelection.postcode);
+    }
+  }, [personalInfo.postcode, setPersonalInfo]);
 
   const { data: priceData } = useQuery({
     queryKey: ["quize-price-management"],
