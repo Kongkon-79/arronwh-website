@@ -300,7 +300,7 @@ const ReferModal: React.FC<ReferModalProps> = ({ open, onClose, referredBy }) =>
 
     setIsSubmitting(true);
     try {
-      const res = await fetch("http://localhost:5001/api/v1/refer", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/refer`, {
         method: "POST",
         headers: { "Content-Type": "application/json", accept: "*/*" },
         body: JSON.stringify(formData),
@@ -316,14 +316,16 @@ const ReferModal: React.FC<ReferModalProps> = ({ open, onClose, referredBy }) =>
     }
   };
 
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === overlayRef.current) onClose();
-  };
+  // const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  //   if (e.target === overlayRef.current) onClose();
+  // };
+
+  // onClick={handleOverlayClick}
 
   if (!open) return null;
 
   return (
-    <div ref={overlayRef} onClick={handleOverlayClick} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+    <div ref={overlayRef}  className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
       <div className="relative w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl">
         {/* Header */}
         <div className="bg-[#1450e6] px-6 py-5 flex items-center justify-between">
